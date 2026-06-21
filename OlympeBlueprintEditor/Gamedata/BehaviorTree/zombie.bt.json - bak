@@ -1,0 +1,476 @@
+{
+  "annotations": [],
+  "blackboard": [],
+  "blueprintType": "BehaviorTree",
+  "data": {
+    "links": [
+      {
+        "fromPin": {
+          "nodeId": 3,
+          "pinId": "output"
+        },
+        "id": 1,
+        "toPin": {
+          "nodeId": 4,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 3,
+        "toPin": {
+          "nodeId": 6,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 4,
+        "toPin": {
+          "nodeId": 8,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 5,
+          "pinId": "output"
+        },
+        "id": 6,
+        "toPin": {
+          "nodeId": 10,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 7,
+          "pinId": "output"
+        },
+        "id": 7,
+        "toPin": {
+          "nodeId": 12,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 7,
+          "pinId": "output"
+        },
+        "id": 8,
+        "toPin": {
+          "nodeId": 14,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 15,
+          "pinId": "output"
+        },
+        "id": 10,
+        "toPin": {
+          "nodeId": 16,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 15,
+          "pinId": "output"
+        },
+        "id": 12,
+        "toPin": {
+          "nodeId": 20,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 7,
+          "pinId": "output"
+        },
+        "id": 13,
+        "toPin": {
+          "nodeId": 22,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 23,
+          "pinId": "output"
+        },
+        "id": 14,
+        "toPin": {
+          "nodeId": 24,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 23,
+          "pinId": "output"
+        },
+        "id": 15,
+        "toPin": {
+          "nodeId": 18,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 9,
+          "pinId": "output"
+        },
+        "id": 16,
+        "toPin": {
+          "nodeId": 26,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 9,
+          "pinId": "output"
+        },
+        "id": 17,
+        "toPin": {
+          "nodeId": 28,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 9,
+          "pinId": "output"
+        },
+        "id": 18,
+        "toPin": {
+          "nodeId": 30,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 9,
+          "pinId": "output"
+        },
+        "id": 19,
+        "toPin": {
+          "nodeId": 32,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 9,
+          "pinId": "output"
+        },
+        "id": 20,
+        "toPin": {
+          "nodeId": 34,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 11,
+          "pinId": "output"
+        },
+        "id": 21,
+        "toPin": {
+          "nodeId": 36,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 11,
+          "pinId": "output"
+        },
+        "id": 22,
+        "toPin": {
+          "nodeId": 38,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 11,
+          "pinId": "output"
+        },
+        "id": 23,
+        "toPin": {
+          "nodeId": 40,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 11,
+          "pinId": "output"
+        },
+        "id": 24,
+        "toPin": {
+          "nodeId": 42,
+          "pinId": "input"
+        }
+      }
+    ],
+    "nodes": [
+      {
+        "children": [],
+        "id": 1,
+        "name": "Root",
+        "parameters": {},
+        "position": {
+          "x": 113,
+          "y": 309
+        },
+        "type": "BT_Root"
+      },
+      {
+        "children": [],
+        "id": 2,
+        "name": "Root Selector",
+        "parameters": {},
+        "position": {
+          "x": 313,
+          "y": 311
+        },
+        "type": "BT_Selector"
+      },
+      {
+        "children": [],
+        "id": 3,
+        "name": "Combat",
+        "parameters": {},
+        "position": {
+          "x": 620,
+          "y": 102
+        },
+        "type": "BT_Sequence"
+      },
+      {
+        "children": [],
+        "id": 4,
+        "name": "Investigation",
+        "parameters": {},
+        "position": {
+          "x": 629,
+          "y": 404
+        },
+        "type": "BT_Sequence"
+      },
+      {
+        "children": [],
+        "id": 5,
+        "name": "Patrol",
+        "parameters": {},
+        "position": {
+          "x": 593,
+          "y": 919
+        },
+        "type": "BT_Sequence"
+      },
+      {
+        "children": [],
+        "id": 6,
+        "name": "Has Target ?",
+        "parameters": {},
+        "position": {
+          "x": 892,
+          "y": 7
+        },
+        "type": "BT_HasTarget"
+      },
+      {
+        "children": [],
+        "id": 7,
+        "name": "Approach",
+        "parameters": {},
+        "position": {
+          "x": 883,
+          "y": 127
+        },
+        "type": "BT_Selector"
+      },
+      {
+        "children": [],
+        "id": 8,
+        "name": "Is Target In Range?",
+        "parameters": {},
+        "position": {
+          "x": 1155.74,
+          "y": 33.5029
+        },
+        "type": "BT_IsTargetInRange"
+      },
+      {
+        "children": [],
+        "id": 9,
+        "name": "Attack Target",
+        "parameters": {},
+        "position": {
+          "x": 1155.74,
+          "y": 344.503
+        },
+        "type": "BT_AttackTarget"
+      },
+      {
+        "children": [],
+        "id": 10,
+        "name": "BT_MoveToTarget_10",
+        "parameters": {},
+        "position": {
+          "x": 1153.74,
+          "y": 133.503
+        },
+        "type": "BT_MoveToTarget"
+      },
+      {
+        "children": [],
+        "id": 11,
+        "name": "Attack",
+        "parameters": {},
+        "position": {
+          "x": 887.736,
+          "y": 259.503
+        },
+        "type": "BT_Selector"
+      },
+      {
+        "children": [],
+        "id": 12,
+        "name": "Can Attack?",
+        "parameters": {},
+        "position": {
+          "x": 1154.74,
+          "y": 244.503
+        },
+        "type": "BT_CanAttack"
+      },
+      {
+        "children": [],
+        "id": 13,
+        "name": "Heard Noise?",
+        "parameters": {},
+        "position": {
+          "x": 937.736,
+          "y": 392.503
+        },
+        "type": "BT_HeardNoise"
+      },
+      {
+        "children": [],
+        "id": 14,
+        "name": "Set Move Goal To Last Known Target Pos",
+        "parameters": {},
+        "position": {
+          "x": 944.736,
+          "y": 486.503
+        },
+        "type": "BT_SetMoveGoalToLastKnownTargetPos"
+      },
+      {
+        "children": [],
+        "id": 15,
+        "name": "Request Pathfinding",
+        "parameters": {},
+        "position": {
+          "x": 957.736,
+          "y": 590.503
+        },
+        "type": "BT_RequestPathfinding"
+      },
+      {
+        "children": [],
+        "id": 16,
+        "name": "Follow Path",
+        "parameters": {},
+        "position": {
+          "x": 959.736,
+          "y": 699.503
+        },
+        "type": "BT_FollowPath"
+      },
+      {
+        "children": [],
+        "id": 17,
+        "name": "Wait Random Time",
+        "parameters": {},
+        "position": {
+          "x": 888.736,
+          "y": 800.503
+        },
+        "type": "BT_WaitRandomTime"
+      },
+      {
+        "children": [],
+        "id": 18,
+        "name": "Set Move Goal To Patrol Point",
+        "parameters": {},
+        "position": {
+          "x": 868.736,
+          "y": 935.503
+        },
+        "type": "BT_SetMoveGoalToPatrolPoint"
+      },
+      {
+        "children": [],
+        "id": 19,
+        "name": "Request Path finding",
+        "parameters": {},
+        "position": {
+          "x": 867.736,
+          "y": 1046.5
+        },
+        "type": "BT_RequestPathfinding"
+      },
+      {
+        "children": [],
+        "id": 20,
+        "name": "Follow Path",
+        "parameters": {},
+        "position": {
+          "x": 868.736,
+          "y": 1150.5
+        },
+        "type": "BT_FollowPath"
+      },
+      {
+        "children": [],
+        "id": 21,
+        "name": "Wait Random Time",
+        "parameters": {},
+        "position": {
+          "x": 878.736,
+          "y": 1261.5
+        },
+        "type": "BT_WaitRandomTime"
+      }
+    ],
+    "rootNodeId": 0
+  },
+  "editorState": {
+    "layoutDirection": "TopToBottom",
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "selectedNodes": [],
+    "zoom": 1
+  },
+  "graphKind": "BehaviorTree",
+  "metadata": {},
+  "schemaVersion": 2,
+  "type": "Untitled-BehaviorTree-1"
+}

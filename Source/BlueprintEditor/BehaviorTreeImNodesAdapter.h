@@ -127,6 +127,43 @@ namespace Olympe
             SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Initialized with graph ID: " << graphId << "\n";
         }
 
+        // Mapping between canonical NodeId (document) and ImNodes uids used for rendering
+        // We keep a stable small uid space to avoid passing large or legacy-encoded ids
+        std::map<uint32_t,int> m_nodeIdToUid; // NodeId.value -> uid
+        std::map<int,uint32_t> m_uidToNodeId; // uid -> NodeId.value
+        int m_nextUid = 1;
+        // Registered attribute ids for the current render pass (input/output pin ids)
+        // Used as a defensive check before calling ImNodes::Link to avoid passing
+        // attribute ids that were never registered in this ImNodes editor context.
+        std::set<int> m_registeredAttributes;
+        // Attributes registered on the previous render frame - used to reduce log spam
+        std::set<int> m_lastRegisteredAttributes;
+        /**
+         * @brief Convert an ImNodes uid to canonical NodeId (document id)
+         * @param uid ImNodes uid
+         * @return canonical NodeId as int, or -1 if no mapping
+         */
+        int GetCanonicalNodeIdFromUid(int uid) const
+        {
+            auto it = m_uidToNodeId.find(uid);
+            if (it == m_uidToNodeId.end()) return -1;
+            return static_cast<int>(it->second);
+        }
+
+        /**
+         * @brief Convert canonical NodeId to ImNodes uid
+         * @param canonicalId canonical NodeId value
+         * @return uid or -1 if not mapped
+         */
+        int GetUidFromCanonicalNodeId(uint32_t canonicalId) const
+        {
+            auto it = m_nodeIdToUid.find(canonicalId);
+            if (it == m_nodeIdToUid.end()) return -1;
+            return it->second;
+        }
+        // Remember which links we've already warned about to avoid spamming the console
+        std::set<int> m_reportedSkippedLinks;
+
         /**
          * @brief Main render call - draws entire BehaviorTree with ImNodes
          * @param minimapRenderCallback Optional callback to render minimap between RenderConnections and EndNodeEditor
@@ -150,6 +187,61 @@ namespace Olympe
                 ImNodes::SetCurrentContext(m_imnodesContext);
             if (m_editorContext)
                 ImNodes::EditorContextSet(m_editorContext);
+
+            // Ensure mapping exists between NodeId and ImNodes uid before rendering
+            // We prefer a stable mapping that preserves existing uids where possible
+            // to avoid selection/interaction jitter. Only assign new uids for newly
+            // discovered node ids and remove mappings for deleted nodes.
+            GraphDocument* mappingDoc = NodeGraph::NodeGraphManager::Get().GetActiveGraph();
+            std::set<uint32_t> currentNodeIds;
+            if (mappingDoc)
+            {
+                const auto& nodes = mappingDoc->GetNodes();
+                for (const auto& n : nodes) currentNodeIds.insert(n.id.value);
+            }
+
+            // Remove mappings for nodes that no longer exist
+            std::vector<int> removedUids;
+            for (auto it = m_nodeIdToUid.begin(); it != m_nodeIdToUid.end(); )
+            {
+                if (currentNodeIds.find(it->first) == currentNodeIds.end())
+                {
+                    removedUids.push_back(it->second);
+                    m_uidToNodeId.erase(it->second);
+                    it = m_nodeIdToUid.erase(it);
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+
+            // Assign uids to newly discovered nodes (preserve existing uids)
+            for (uint32_t nid : currentNodeIds)
+            {
+                if (m_nodeIdToUid.find(nid) == m_nodeIdToUid.end())
+                {
+                    // Find next free uid starting from 1
+                    int candidate = 1;
+                    while (m_uidToNodeId.find(candidate) != m_uidToNodeId.end()) ++candidate;
+                    m_nodeIdToUid[nid] = candidate;
+                    m_uidToNodeId[candidate] = nid;
+                    if (candidate >= m_nextUid) m_nextUid = candidate + 1;
+                }
+            }
+
+            // Remove any initialized node entries that referenced removed uids
+            for (int ru : removedUids) m_initializedNodes.erase(ru);
+
+            // Clear registered attributes cache for this render pass (re-registered each frame)
+            m_registeredAttributes.clear();
+            // Reset last registered attributes only when mapping changed
+            // If node count changed, mapping may have changed; update m_lastRegisteredAttributes
+            if (m_nodeIdToUid.size() != m_lastRegisteredAttributes.size())
+            {
+                m_lastRegisteredAttributes.clear();
+            }
+            // Do not clear m_reportedSkippedLinks here; we want to avoid spamming logs across frames
 
             // Begin node editor
             ImNodes::BeginNodeEditor();
@@ -184,7 +276,7 @@ namespace Olympe
             // MOVED outside BeginNodeEditor/EndNodeEditor scope to fix assertion 
             // "GImNodes->CurrentScope == ImNodesScope_None" in ImNodes::IsLinkCreated
             int startPinId, endPinId;
-            if (ImNodes::IsLinkCreated(&startPinId, &endPinId))
+                    if (ImNodes::IsLinkCreated(&startPinId, &endPinId))
             {
                 GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetActiveGraph();
                 if (graphDoc)
@@ -202,13 +294,30 @@ namespace Olympe
                         std::swap(startPinId, endPinId);
                     }
 
-                    if (startPinId % 2 != 0 && endPinId % 2 == 0)
-                    {
-                        graphDoc->ConnectPins(NodeGraphTypes::PinId{static_cast<uint32_t>(startPinId)}, 
-                                             NodeGraphTypes::PinId{static_cast<uint32_t>(endPinId)});
-                        graphDoc->SetDirty(true);
-                        SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Link created: " << startPinId << " -> " << endPinId << "\n";
-                    }
+                            if (startPinId % 2 != 0 && endPinId % 2 == 0)
+                            {
+                                // Map attribute ids back to node ids using uid mapping
+                                int startUid = startPinId / 2;
+                                int endUid = endPinId / 2;
+                                uint32_t startNode = 0, endNode = 0;
+                                auto itS = m_uidToNodeId.find(startUid);
+                                if (itS != m_uidToNodeId.end()) startNode = itS->second;
+                                auto itE = m_uidToNodeId.find(endUid);
+                                if (itE != m_uidToNodeId.end()) endNode = itE->second;
+
+                                if (startNode != 0 && endNode != 0)
+                                {
+                                    graphDoc->ConnectPins(NodeGraphTypes::PinId{startNode}, 
+                                                         NodeGraphTypes::PinId{endNode});
+                                    graphDoc->SetDirty(true);
+                                    SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Link created (mapped): " << startNode << " -> " << endNode << "\n";
+                                }
+                                else
+                                {
+                                    SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Failed to map created link attrs to NodeIds: "
+                                               << startPinId << " -> " << endPinId << "\n";
+                                }
+                            }
                 }
             }
 
@@ -470,13 +579,16 @@ namespace Olympe
             for (size_t i = 0; i < nodes.size(); ++i)
             {
                 const auto& node = nodes[i];
-                int nodeUid = static_cast<int>(node.id.value);
+                int canonicalNodeId = static_cast<int>(node.id.value);
+                int mappedUid = canonicalNodeId;
+                auto itMap = m_nodeIdToUid.find(node.id.value);
+                if (itMap != m_nodeIdToUid.end()) mappedUid = itMap->second;
 
-                // Phase 62 FIX: Only set position once for new nodes
-                if (m_initializedNodes.find(nodeUid) == m_initializedNodes.end())
+                // Phase 62 FIX: Only set position once for new nodes (use mapped uid)
+                if (m_initializedNodes.find(mappedUid) == m_initializedNodes.end())
                 {
-                    ImNodes::SetNodeGridSpacePos(nodeUid, ImVec2(node.position.x, node.position.y));
-                    m_initializedNodes.insert(nodeUid);
+                    ImNodes::SetNodeGridSpacePos(mappedUid, ImVec2(node.position.x, node.position.y));
+                    m_initializedNodes.insert(mappedUid);
                 }
 
                 // LEGACY RESTORATION: Use NodeStyleRegistry for colors and icons
@@ -487,7 +599,7 @@ namespace Olympe
                 ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, style.headerHoveredColor);
                 ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, style.headerSelectedColor);
 
-                ImNodes::BeginNode(nodeUid);
+                ImNodes::BeginNode(mappedUid);
 
                 // PHASE 84: Node Width Spacer (Parity with VisualScript)
                 // Ensures nodes have enough width for horizontal pin layout
@@ -500,7 +612,7 @@ namespace Olympe
                 if (node.parameters.count("breakpoint") && node.parameters.at("breakpoint") == "true")
                 {
                     // Draw red dot for breakpoint
-                    ImVec2 nodePos = ImNodes::GetNodeScreenSpacePos(nodeUid);
+                    ImVec2 nodePos = ImNodes::GetNodeScreenSpacePos(mappedUid);
                     ImGui::GetWindowDrawList()->AddCircleFilled(
                         ImVec2(nodePos.x - 10, nodePos.y - 10), 6.0f, IM_COL32(255, 50, 50, 255));
                 }
@@ -531,7 +643,9 @@ namespace Olympe
                 {
                     if (hasInputPin)
                     {
-                        int inputPinId = nodeUid * 2;
+                        int inputPinId = mappedUid * 2;
+                        // Record attribute for this render pass
+                        m_registeredAttributes.insert(inputPinId);
                         ImNodes::BeginInputAttribute(inputPinId);
                         ImGui::TextUnformatted("In");
                         ImNodes::EndInputAttribute();
@@ -548,7 +662,8 @@ namespace Olympe
                 {
                     if (hasOutputPin)
                     {
-                        int outputPinId = nodeUid * 2 + 1;
+                        int outputPinId = mappedUid * 2 + 1;
+                        m_registeredAttributes.insert(outputPinId);
                         ImNodes::BeginOutputAttribute(outputPinId);
                         // Match VisualScript right-alignment for outputs
                         float textWidth = ImGui::CalcTextSize("Out").x;
@@ -610,44 +725,92 @@ namespace Olympe
 
             const auto& links = graphDoc->GetLinks();
             
-            // Build a map of output pin -> list of links to find indices for child nodes
-            // In BT, the order of children (links from an output pin) is vital
+            // Build a map of parent node -> list of links from that parent. In GraphDocument
+            // links.fromPin.value/toPin.value are canonical node IDs (not raw ImNodes attr ids).
             std::map<uint32_t, std::vector<size_t>> outputToLinks;
             for (size_t i = 0; i < links.size(); ++i)
             {
                 outputToLinks[links[i].fromPin.value].push_back(i);
             }
 
-            // Phase 85: Sort links for each output pin based on target node Y position (Legacy Parity)
+            // Phase 85: Sort links for each output pin based on target node Y position
             for (auto& pair : outputToLinks)
             {
                 std::sort(pair.second.begin(), pair.second.end(), [&](size_t a, size_t b) {
-                    uint32_t nodeAId = links[a].toPin.value / 2;
-                    uint32_t nodeBId = links[b].toPin.value / 2;
+                    uint32_t nodeAId = links[a].toPin.value;
+                    uint32_t nodeBId = links[b].toPin.value;
+                    // Map canonical node ids to ImNodes uid
+                    int uidA = nodeAId;
+                    int uidB = nodeBId;
+                    auto ita = m_nodeIdToUid.find(nodeAId);
+                    if (ita != m_nodeIdToUid.end()) uidA = ita->second;
+                    auto itb = m_nodeIdToUid.find(nodeBId);
+                    if (itb != m_nodeIdToUid.end()) uidB = itb->second;
                     // Use Grid Space for stable sorting independent of panning
-                    ImVec2 posA = ImNodes::GetNodeGridSpacePos(static_cast<int>(nodeAId));
-                    ImVec2 posB = ImNodes::GetNodeGridSpacePos(static_cast<int>(nodeBId));
+                    ImVec2 posA = ImNodes::GetNodeGridSpacePos(static_cast<int>(uidA));
+                    ImVec2 posB = ImNodes::GetNodeGridSpacePos(static_cast<int>(uidB));
                     if (posA.y != posB.y) return posA.y < posB.y;
                     return posA.x < posB.x;
                 });
             }
+
+            auto computeAttributeId = [&](uint32_t nodeId, const std::string& pinName, bool preferOutput)->int {
+                // Map canonical node id to mapped uid used by ImNodes
+                int uid = static_cast<int>(nodeId);
+                auto it = m_nodeIdToUid.find(nodeId);
+                if (it != m_nodeIdToUid.end()) uid = it->second;
+                // ImNodes attribute ids used when rendering: input = uid*2, output = uid*2+1
+                if (!pinName.empty())
+                {
+                    if (pinName == "output" || pinName == "out") return static_cast<int>(uid * 2 + 1);
+                    if (pinName == "input" || pinName == "in") return static_cast<int>(uid * 2);
+                }
+                // Fallback: prefer output for fromPin, input for toPin
+                return static_cast<int>(uid * 2 + (preferOutput ? 1 : 0));
+            };
 
             for (size_t i = 0; i < links.size(); ++i)
             {
                 const auto& link = links[i];
                 int linkUid = static_cast<int>(i);
 
-                int fromPinValue = static_cast<int>(link.fromPin.value);
-                int toPinValue = static_cast<int>(link.toPin.value);
+                uint32_t fromNodeId = static_cast<uint32_t>(link.fromPin.value);
+                uint32_t toNodeId = static_cast<uint32_t>(link.toPin.value);
 
-                ImNodes::Link(linkUid, fromPinValue, toPinValue);
+                // Ensure both endpoints have mapping; skip rendering link if mapping missing
+                if (m_nodeIdToUid.find(fromNodeId) == m_nodeIdToUid.end() || m_nodeIdToUid.find(toNodeId) == m_nodeIdToUid.end())
+                {
+                   
+                    continue;
+                }
+
+                int fromAttr = computeAttributeId(fromNodeId, link.fromPinName, true);
+                int toAttr = computeAttributeId(toNodeId, link.toPinName, false);
+                // Link rendering is performance-sensitive and executed every frame;
+                // avoid verbose per-frame logging here to prevent console spam.
+
+                // Defensive check: ensure both attribute ids were registered in this render pass.
+                // If an attribute id is missing, skip the link to avoid triggering asserts
+                // inside imnodes (e.g., MiniMapDrawLink expects valid attribute types).
+                if (m_registeredAttributes.find(fromAttr) == m_registeredAttributes.end() ||
+                    m_registeredAttributes.find(toAttr) == m_registeredAttributes.end())
+                {
+                    if (m_reportedSkippedLinks.find(linkUid) == m_reportedSkippedLinks.end())
+                    {
+                        m_reportedSkippedLinks.insert(linkUid);
+                    }
+                    continue;
+                }
+
+                ImNodes::Link(linkUid, fromAttr, toAttr);
+                // Update last-registered set after links drawn
+                m_lastRegisteredAttributes.insert(fromAttr);
+                m_lastRegisteredAttributes.insert(toAttr);
 
                 // LEGACY RESTORATION: Draw child index on links if source is a Composite
-                // We identify composite nodes (Selector, Sequence, etc.) and number their links
-                uint32_t parentNodeId = link.fromPin.value / 2;
                 const auto& nodes = graphDoc->GetNodes();
                 const NodeData* parentNode = nullptr;
-                for (const auto& n : nodes) { if (n.id.value == parentNodeId) { parentNode = &n; break; } }
+                for (const auto& n : nodes) { if (n.id.value == fromNodeId) { parentNode = &n; break; } }
 
                 if (parentNode)
                 {
@@ -657,7 +820,7 @@ namespace Olympe
 
                     if (isComposite)
                     {
-                        // Find index of this link among all links from this output pin
+                        // Find index of this link among all links from this parent node
                         const auto& siblingLinks = outputToLinks[link.fromPin.value];
                         int childIndex = -1;
                         for (int idx = 0; idx < (int)siblingLinks.size(); ++idx)
@@ -665,41 +828,52 @@ namespace Olympe
                             if (siblingLinks[idx] == i) { childIndex = idx; break; }
                         }
 
-                                                                                 // PHASE 85: Draw child index label EXACTLY on the connection line
-                                                                                 // Calculate precise pin positions in grid space for the midpoint
-                                                                                 int childNodeId = static_cast<int>(link.toPin.value / 2);
+                        // PHASE 85: Draw child index label EXACTLY on the connection line
+                        // Use mapped ImNodes uids and per-node dimensions to compute true pin midpoint.
+                        int parentUid = static_cast<int>(fromNodeId);
+                        int childUid = static_cast<int>(toNodeId);
+                        auto itParentUid = m_nodeIdToUid.find(fromNodeId);
+                        if (itParentUid != m_nodeIdToUid.end()) parentUid = itParentUid->second;
+                        auto itChildUid = m_nodeIdToUid.find(toNodeId);
+                        if (itChildUid != m_nodeIdToUid.end()) childUid = itChildUid->second;
 
-                                                                                 ImVec2 parentGridPos = ImNodes::GetNodeGridSpacePos(static_cast<int>(parentNodeId));
-                                                                                 ImVec2 childGridPos = ImNodes::GetNodeGridSpacePos(childNodeId);
+                        ImVec2 parentGridPos = ImNodes::GetNodeGridSpacePos(parentUid);
+                        ImVec2 childGridPos = ImNodes::GetNodeGridSpacePos(childUid);
 
-                                                                                 // Retrieve node width to find output pin X (Mirroring RenderNodes)
-                                                                                 float nodeWidth = 140.0f;
-                                                                                 ImVec2 titleSize = ImGui::CalcTextSize(parentNode->name.c_str());
-                                                                                 if (titleSize.x + 30.0f > nodeWidth) nodeWidth = titleSize.x + 30.0f;
+                        // Parent output X depends on parent visual width (mirrors RenderNodes min width logic)
+                        float parentNodeWidth = 140.0f;
+                        ImVec2 parentTitleSize = ImGui::CalcTextSize(parentNode->name.c_str());
+                        if (parentTitleSize.x + 30.0f > parentNodeWidth) parentNodeWidth = parentTitleSize.x + 30.0f;
 
-                                                                                 // Pin vertical offset: TitleBar + half-row
-                                                                                 float pinYOffset = 35.0f; 
+                        // Child-specific offset so midpoint uses each node's local pin row
+                        const NodeData* childNode = nullptr;
+                        for (const auto& n : nodes) { if (n.id.value == toNodeId) { childNode = &n; break; } }
 
-                                                                                 // Pin positions in grid space
-                                                                                 ImVec2 pOut = ImVec2(parentGridPos.x + nodeWidth, parentGridPos.y + pinYOffset);
-                                                                                 ImVec2 pIn = ImVec2(childGridPos.x, childGridPos.y + pinYOffset);
+                        float parentPinYOffset = parentTitleSize.y + 19.0f;
+                        float childPinYOffset = parentPinYOffset;
+                        if (childNode)
+                        {
+                            ImVec2 childTitleSize = ImGui::CalcTextSize(childNode->name.c_str());
+                            childPinYOffset = childTitleSize.y + 19.0f;
+                        }
 
-                                                                                 // Midpoint calculation on the link
-                                                                                 ImVec2 midPointGrid = ImVec2((pOut.x + pIn.x) * 0.5f, (pOut.y + pIn.y) * 0.5f);
+                        ImVec2 pOut = ImVec2(parentGridPos.x + parentNodeWidth, parentGridPos.y + parentPinYOffset);
+                        ImVec2 pIn = ImVec2(childGridPos.x, childGridPos.y + childPinYOffset);
+                        ImVec2 midPointGrid = ImVec2((pOut.x + pIn.x) * 0.5f, (pOut.y + pIn.y) * 0.5f);
 
-                                                                                 char idxBuf[16];
+                        char idxBuf[16];
                                                      #ifdef _MSC_VER
                                                                                  sprintf_s(idxBuf, sizeof(idxBuf), "%d", childIndex);
                                                      #else
                                                                                  sprintf(idxBuf, "%d", childIndex);
                                                      #endif
 
-                                                                                 // Convert Grid Space to Screen Space
-                                                                                 ImVec2 pan = ImNodes::EditorContextGetPanning();
-                                                                                 ImVec2 screenMidPoint = ImVec2(
-                                                                                     midPointGrid.x + pan.x + m_canvasScreenPos.x,
-                                                                                     midPointGrid.y + pan.y + m_canvasScreenPos.y
-                                                                                 );
+                        // Convert Grid Space to Screen Space
+                        ImVec2 pan = ImNodes::EditorContextGetPanning();
+                        ImVec2 screenMidPoint = ImVec2(
+                            midPointGrid.x + pan.x + m_canvasScreenPos.x,
+                            midPointGrid.y + pan.y + m_canvasScreenPos.y
+                        );
 
                                                                                  // Draw background circle for readability
                                                                                  ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -726,7 +900,11 @@ namespace Olympe
                 auto& nodes = graphDoc->GetNodesRef();
                 for (auto& node : nodes)
                 {
-                    ImVec2 pos = ImNodes::GetNodeGridSpacePos(static_cast<int>(node.id.value));
+                    // Map canonical NodeId -> ImNodes uid to fetch position
+                    int uid = static_cast<int>(node.id.value);
+                    auto it = m_nodeIdToUid.find(node.id.value);
+                    if (it != m_nodeIdToUid.end()) uid = it->second;
+                    ImVec2 pos = ImNodes::GetNodeGridSpacePos(uid);
                     if (pos.x != node.position.x || pos.y != node.position.y)
                     {
                         node.position.x = pos.x;

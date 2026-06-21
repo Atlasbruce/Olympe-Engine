@@ -186,6 +186,9 @@ namespace Olympe
         // Phase 43: Framework modal rendering
         void RenderFrameworkModals();
 
+        // Put the panel into read-only visualization mode (no edits, pan allowed)
+        void SetReadOnly(bool ro) { m_ReadOnly = ro; }
+
         // -----------------------------------------------------------------------
         // Legacy Save/SaveAs Methods (Phase 44.4 Restoration)
         // -----------------------------------------------------------------------
@@ -257,6 +260,9 @@ namespace Olympe
 
         /// Grid cell size in canvas units used when snap-to-grid is enabled.
         float m_SnapGridSize = 16.0f;
+
+        // When true the panel is read-only (no node/link edits allowed)
+        bool m_ReadOnly = false;
 
     private:
         /// Backing storage for SetActiveDebugNode: the local node ID currently

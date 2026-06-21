@@ -158,6 +158,15 @@ namespace Olympe
         if (str == "CanSeeTarget" || str == "BT_CanSeeTarget") return NodeType::BT_Condition;
         if (str == "CanSetTarget" || str == "BT_CanSetTarget") return NodeType::BT_Condition;
         if (str == "Monitor" || str == "BT_Monitor") return NodeType::BT_Condition;  // Monitor is a condition variant
+        // Additional runtime condition mappings
+        if (str == "CanAttack" || str == "BT_CanAttack") return NodeType::BT_Condition;
+        if (str == "HasMoveGoal" || str == "BT_HasMoveGoal") return NodeType::BT_Condition;
+        if (str == "HasNavigableDestination" || str == "BT_HasNavigableDestination") return NodeType::BT_Condition;
+        if (str == "HasValidPath" || str == "BT_HasValidPath") return NodeType::BT_Condition;
+        if (str == "HasReachedDestination" || str == "BT_HasReachedDestination") return NodeType::BT_Condition;
+        if (str == "HealthBelow" || str == "BT_HealthBelow") return NodeType::BT_Condition;
+        if (str == "HeardNoise" || str == "BT_HeardNoise") return NodeType::BT_Condition;
+        if (str == "IsWaitTimerExpired" || str == "BT_IsWaitTimerExpired") return NodeType::BT_Condition;
 
         // ====== DECORATORS (PLUM) ======
         // Generic decorator
@@ -166,6 +175,7 @@ namespace Olympe
         // Specific decorator implementations
         if (str == "Inverter" || str == "BT_Inverter") return NodeType::BT_Decorator;
         if (str == "Cooldown" || str == "BT_Cooldown") return NodeType::BT_Decorator;
+        if (str == "Monitor" || str == "BT_Monitor") return NodeType::BT_Decorator;
 
         // ====== REPEATERS (YELLOW) ======
         if (str == "Repeater" || str == "BT_Repeater") return NodeType::BT_Repeater;

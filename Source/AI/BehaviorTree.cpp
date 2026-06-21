@@ -14,9 +14,14 @@ Behavior Tree implementation: JSON loading and built-in node execution.
 #include "../ECS_Components_AI.h"
 #include "../ECS_Components.h"
 #include "../World.h"
+// Avoid including full debug window header here to keep compilation units independent.
+// Use a tiny API header to interact with the optional debugger (weak dependency).
+#include "BehaviorTreeDebugAPI.h"
 #include "../system/system_utils.h"
 #include "../system/EventQueue.h"
 #include "../json_helper.h"
+#include "../NodeGraphCore/GraphDocument.h"
+#include "../NodeGraphCore/GraphMigrator.h"
 #include "../CollisionMap.h"
 #include "../GameEngine.h"
 #include <cmath>
@@ -46,9 +51,17 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         }
         std::cout << "[BehaviorTreeManager] JSON loaded successfully" << std::endl;
         
-        // 2. Detect version
+        // 2. Detect version (accept both snake_case and camelCase keys and nested schemaVersion)
         std::cout << "[BehaviorTreeManager] Step 2: Detecting format version..." << std::endl;
-        bool isV2 = j.contains("schema_version") && j["schema_version"].get<int>() == 2;
+        bool isV2 = false;
+        if (j.contains("schema_version") && j["schema_version"].is_number())
+            isV2 = (j["schema_version"].get<int>() == 2);
+        if (!isV2 && j.contains("schemaVersion") && j["schemaVersion"].is_number())
+            isV2 = (j["schemaVersion"].get<int>() == 2);
+        // Also support schemaVersion inside data (some exports nest it)
+        if (!isV2 && j.contains("data") && j["data"].is_object() && j["data"].contains("schemaVersion") && j["data"]["schemaVersion"].is_number())
+            isV2 = (j["data"]["schemaVersion"].get<int>() == 2);
+
         std::cout << "[BehaviorTreeManager] Version: " << (isV2 ? "v2" : "v1") << std::endl;
         
         // 3. Extract tree metadata and data section
@@ -61,6 +74,26 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         if (isV2)
         {
             tree.name = JsonHelper::GetString(j, "name", "Unnamed Tree");
+
+            // If the asset has no explicit name, derive it from the filepath
+            if (tree.name.empty() || tree.name == "Unnamed Tree")
+            {
+                auto extract = [&](const std::string& p)->std::string {
+                    size_t lastSlash = p.find_last_of("/\\");
+                    std::string fname = (lastSlash == std::string::npos) ? p : p.substr(lastSlash + 1);
+                    // Prefer stripping ".bt.json" specifically, otherwise remove final extension
+                    if (fname.size() > 8 && fname.substr(fname.size() - 8) == ".bt.json")
+                        fname = fname.substr(0, fname.size() - 8);
+                    else
+                    {
+                        size_t dot = fname.find_last_of('.');
+                        if (dot != std::string::npos) fname = fname.substr(0, dot);
+                    }
+                    return fname;
+                };
+
+                tree.name = extract(filepath);
+            }
             
             if (!j.contains("data"))
             {
@@ -76,218 +109,533 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         {
             tree.name = JsonHelper::GetString(j, "name", "Unnamed Tree");
             std::cout << "[BehaviorTreeManager] Using root as data section (v1 format)" << std::endl;
+
+            if (tree.name.empty() || tree.name == "Unnamed Tree")
+            {
+                size_t lastSlash = filepath.find_last_of("/\\");
+                std::string fname = (lastSlash == std::string::npos) ? filepath : filepath.substr(lastSlash + 1);
+                size_t dot = fname.find_last_of('.');
+                if (dot != std::string::npos) fname = fname.substr(0, dot);
+                tree.name = fname;
+            }
         }
         
         tree.rootNodeId = JsonHelper::GetUInt(*dataSection, "rootNodeId", 0);
         std::cout << "[BehaviorTreeManager] Tree name: " << tree.name << std::endl;
         std::cout << "[BehaviorTreeManager] Root node ID: " << tree.rootNodeId << std::endl;
         
-        // 4. Parse nodes
+        // 4. Parse nodes - prefer using GraphDocument::FromJson for v2 assets (editor parity)
         std::cout << "[BehaviorTreeManager] Step 4: Parsing nodes..." << std::endl;
-        if (!JsonHelper::IsArray(*dataSection, "nodes"))
+        // docLinks holds GraphDocument links so reconstruction can run after parsing
+        std::vector<Olympe::NodeGraphTypes::LinkData> docLinks;
+        if (isV2)
         {
-            std::cerr << "[BehaviorTreeManager] ERROR: No 'nodes' array in data section" << std::endl;
-            std::cerr << "[BehaviorTreeManager] This may be an empty or invalid tree" << std::endl;
-            
-            // For debug: display JSON structure
-            std::cout << "[BehaviorTreeManager] JSON structure:" << std::endl;
-            std::cout << j.dump(2) << std::endl;
-            
-            std::cout << "[BehaviorTreeManager] ========================================+n" << std::endl;
-            return false;
-        }
-        
-        // Count nodes first
-        int nodeCount = 0;
-        JsonHelper::ForEachInArray(*dataSection, "nodes", [&nodeCount](const json& nodeJson, size_t i) { nodeCount++; });
-        std::cout << "[BehaviorTreeManager] Found " << nodeCount << " nodes to parse" << std::endl;
-        
-        JsonHelper::ForEachInArray(*dataSection, "nodes", [&tree, isV2](const json& nodeJson, size_t i)
-        {
-            BTNode node;
-            node.id = JsonHelper::GetInt(nodeJson, "id", 0);
-            node.name = JsonHelper::GetString(nodeJson, "name", "");
+            try
+            {
+                // Use the migrator/parser used by the editor/debugger to ensure identical interpretation
+                Olympe::NodeGraphTypes::GraphDocument doc = Olympe::GraphMigrator::LoadWithMigration(j);
 
-            // Phase 38: Load editor positions for execution order sorting
-            if (nodeJson.contains("position") && nodeJson["position"].is_object())
-            {
-                node.editorPosX = JsonHelper::GetFloat(nodeJson["position"], "x", 0.0f);
-                node.editorPosY = JsonHelper::GetFloat(nodeJson["position"], "y", 0.0f);
-            }
-            else
-            {
-                node.editorPosX = 0.0f;
-                node.editorPosY = 0.0f;
-            }
+                // Convert GraphDocument nodes to BTNode entries
+                for (const auto& nd : doc.GetNodes())
+                {
+                    BTNode bn;
+                    bn.id = nd.id.value;
+                    bn.name = nd.name;
+                    bn.editorPosX = nd.position.x;
+                    bn.editorPosY = nd.position.y;
 
-            std::string typeStr = JsonHelper::GetString(nodeJson, "type", "Action");
-            if (typeStr == "Selector") node.type = BTNodeType::Selector;
-            else if (typeStr == "Sequence") node.type = BTNodeType::Sequence;
-            else if (typeStr == "Condition") node.type = BTNodeType::Condition;
-            else if (typeStr == "Action") node.type = BTNodeType::Action;
-            else if (typeStr == "Inverter") node.type = BTNodeType::Inverter;
-            else if (typeStr == "Repeater") node.type = BTNodeType::Repeater;
-            else if (typeStr == "Root") node.type = BTNodeType::Root;
-            else if (typeStr == "OnEvent") node.type = BTNodeType::OnEvent;
-            else if (typeStr == "SubGraph") node.type = BTNodeType::SubGraph;
-            
-            // Parse child IDs for composite nodes
-            if (JsonHelper::IsArray(nodeJson, "children"))
-            {
-                JsonHelper::ForEachInArray(nodeJson, "children", [&node](const json& childId, size_t j)
-                {
-                    node.childIds.push_back(childId.get<uint32_t>());
-                });
-            }
-            
-            // Parse condition type
-            if (node.type == BTNodeType::Condition && nodeJson.contains("conditionType"))
-            {
-                std::string condStr = JsonHelper::GetString(nodeJson, "conditionType", "");
-                node.conditionTypeString = condStr; // Store string for flexible conditions
-                
-                if (condStr == "TargetVisible" || condStr == "HasTarget") 
-                    node.conditionType = BTConditionType::TargetVisible;
-                else if (condStr == "TargetInRange" || condStr == "IsTargetInAttackRange") 
-                    node.conditionType = BTConditionType::TargetInRange;
-                else if (condStr == "HealthBelow") 
-                    node.conditionType = BTConditionType::HealthBelow;
-                else if (condStr == "HasMoveGoal") 
-                    node.conditionType = BTConditionType::HasMoveGoal;
-                else if (condStr == "CanAttack") 
-                    node.conditionType = BTConditionType::CanAttack;
-                else if (condStr == "HeardNoise") 
-                    node.conditionType = BTConditionType::HeardNoise;
-                // NEW: Wander behavior conditions
-                else if (condStr == "IsWaitTimerExpired")
-                    node.conditionType = BTConditionType::IsWaitTimerExpired;
-                else if (condStr == "HasNavigableDestination")
-                    node.conditionType = BTConditionType::HasNavigableDestination;
-                else if (condStr == "HasValidPath")
-                    node.conditionType = BTConditionType::HasValidPath;
-                else if (condStr == "HasReachedDestination")
-                    node.conditionType = BTConditionType::HasReachedDestination;
-                // NEW: CheckBlackboardValue is handled via string type, not enum
-                
-                // Handle v2 format parameters (nested in "parameters" object)
-                if (isV2 && nodeJson.contains("parameters") && nodeJson["parameters"].is_object())
-                {
-                    const json& params = nodeJson["parameters"];
-                    node.conditionParam = JsonHelper::GetFloat(params, "param", 0.0f);
-                    
-                    // Parse flexible parameters for conditions like CheckBlackboardValue
-                    for (auto it = params.begin(); it != params.end(); ++it)
+                    std::string typeStr = nd.type;
+                    if (typeStr.find("Selector") != std::string::npos) bn.type = BTNodeType::Selector;
+                    else if (typeStr.find("Sequence") != std::string::npos) bn.type = BTNodeType::Sequence;
+                    else if (typeStr.find("Root") != std::string::npos) bn.type = BTNodeType::Root;
+                    else if (typeStr.find("Inverter") != std::string::npos) bn.type = BTNodeType::Inverter;
+                    else if (typeStr.find("Repeater") != std::string::npos) bn.type = BTNodeType::Repeater;
+                    else if (typeStr.find("OnEvent") != std::string::npos) bn.type = BTNodeType::OnEvent;
+                    else if (typeStr.find("BT_") != std::string::npos && typeStr.find("BT_") == 0)
                     {
-                        if (it.value().is_string())
-                            node.stringParams[it.key()] = it.value().get<std::string>();
-                        else if (it.value().is_number_integer())
-                            node.intParams[it.key()] = it.value().get<int>();
-                        else if (it.value().is_number_float())
-                            node.floatParams[it.key()] = it.value().get<float>();
+                        if (typeStr.find("Has") != std::string::npos || typeStr.find("Is") != std::string::npos || typeStr.find("Can") != std::string::npos)
+                            bn.type = BTNodeType::Condition;
+                        else
+                            bn.type = BTNodeType::Action;
+                    }
+                    else bn.type = BTNodeType::Action;
+
+                    // Copy decorator child if present
+                    if (nd.decoratorChild.value != 0)
+                        bn.decoratorChildId = nd.decoratorChild.value;
+
+                    // Copy simple string parameters
+                    for (const auto& kv : nd.parameters)
+                    {
+                        bn.stringParams[kv.first] = kv.second;
+                    }
+
+                    tree.nodes.push_back(bn);
+                }
+
+                // Use document root if present
+                if (doc.rootNodeId.value != 0)
+                    tree.rootNodeId = doc.rootNodeId.value;
+
+                // Copy GraphDocument links into docLinks so the reconstruction step below can use them
+                docLinks = doc.GetLinks();
+
+                // COPY: transfer GraphDocument node children (already reconstructed in GraphDocument) to BTNode.childIds
+                // Build id index for tree.nodes
+                std::unordered_map<uint32_t, size_t> tmpIndex;
+                for (size_t i = 0; i < tree.nodes.size(); ++i) tmpIndex[tree.nodes[i].id] = i;
+                // For each source node in document, copy children into corresponding BTNode
+                for (const auto& ndSrc : doc.GetNodes())
+                {
+                    auto itIdx = tmpIndex.find(ndSrc.id.value);
+                    if (itIdx == tmpIndex.end()) continue;
+                    auto& targetNode = tree.nodes[itIdx->second];
+                    targetNode.childIds.clear();
+                    for (const auto& cid : ndSrc.children)
+                    {
+                        targetNode.childIds.push_back(cid.value);
                     }
                 }
-                else
-                {
-                    // v1 format (flat)
-                    node.conditionParam = JsonHelper::GetFloat(nodeJson, "param", 0.0f);
-                }
+
+                std::cout << "[BehaviorTreeManager] Parsed V2 BehaviorTree asset: nodes=" << tree.nodes.size() << std::endl;
             }
-            
-            // Parse action type
-            if (node.type == BTNodeType::Action && nodeJson.contains("actionType"))
+            catch (const std::exception& e)
             {
-                std::string actStr = JsonHelper::GetString(nodeJson, "actionType", "");
-                if (actStr == "SetMoveGoalToLastKnownTargetPos") 
-                    node.actionType = BTActionType::SetMoveGoalToLastKnownTargetPos;
-                else if (actStr == "SetMoveGoalToTarget") 
-                    node.actionType = BTActionType::SetMoveGoalToTarget;
-                else if (actStr == "SetMoveGoalToPatrolPoint") 
-                    node.actionType = BTActionType::SetMoveGoalToPatrolPoint;
-                else if (actStr == "MoveToGoal" || actStr == "MoveTo") 
-                    node.actionType = BTActionType::MoveToGoal;
-                else if (actStr == "AttackIfClose" || actStr == "AttackMelee") 
-                    node.actionType = BTActionType::AttackIfClose;
-                else if (actStr == "PatrolPickNextPoint") 
-                    node.actionType = BTActionType::PatrolPickNextPoint;
-                else if (actStr == "ClearTarget") 
-                    node.actionType = BTActionType::ClearTarget;
-                else if (actStr == "Idle") 
-                    node.actionType = BTActionType::Idle;
-                // NEW: Wander behavior actions
-                else if (actStr == "WaitRandomTime")
-                    node.actionType = BTActionType::WaitRandomTime;
-                else if (actStr == "ChooseRandomNavigablePoint")
-                    node.actionType = BTActionType::ChooseRandomNavigablePoint;
-                else if (actStr == "RequestPathfinding")
-                    node.actionType = BTActionType::RequestPathfinding;
-                else if (actStr == "FollowPath")
-                    node.actionType = BTActionType::FollowPath;
-                
-                // Handle v2 format parameters (nested in "parameters" object)
-                if (isV2 && nodeJson.contains("parameters") && nodeJson["parameters"].is_object())
+                std::cerr << "[BehaviorTreeManager] ERROR: V2 parsing failed: " << e.what() << std::endl;
+                return false;
+            }
+        }
+        else
+        {
+            // legacy parsing for v1 format
+            if (!JsonHelper::IsArray(*dataSection, "nodes"))
+            {
+                std::cerr << "[BehaviorTreeManager] ERROR: No 'nodes' array in data section" << std::endl;
+                std::cerr << "[BehaviorTreeManager] This may be an empty or invalid tree" << std::endl;
+                std::cout << "[BehaviorTreeManager] JSON structure:" << std::endl;
+                std::cout << j.dump(2) << std::endl;
+                return false;
+            }
+
+            static const std::unordered_map<std::string, BTNodeType> btTypeMap = {
+                {"Root", BTNodeType::Root},
+                {"RootSelector", BTNodeType::Root},
+                {"Selector", BTNodeType::Selector},
+                {"Sequence", BTNodeType::Sequence},
+                {"Inverter", BTNodeType::Inverter},
+                {"Repeater", BTNodeType::Repeater},
+                {"SubGraph", BTNodeType::SubGraph}
+            };
+
+            static const std::unordered_map<std::string, BTConditionType> btCondMap = {
+                {"HasTarget", BTConditionType::TargetVisible},
+                {"Has Target", BTConditionType::TargetVisible},
+                {"HasTarget?", BTConditionType::TargetVisible},
+                {"TargetVisible", BTConditionType::TargetVisible},
+                {"IsTargetInRange", BTConditionType::TargetInRange},
+                {"Is Target In Range?", BTConditionType::TargetInRange},
+                {"HealthBelow", BTConditionType::HealthBelow},
+                {"HasMoveGoal", BTConditionType::HasMoveGoal},
+                {"CanAttack", BTConditionType::CanAttack},
+                {"HeardNoise", BTConditionType::HeardNoise},
+                {"IsWaitTimerExpired", BTConditionType::IsWaitTimerExpired},
+                {"HasNavigableDestination", BTConditionType::HasNavigableDestination},
+                {"HasValidPath", BTConditionType::HasValidPath},
+                {"HasReachedDestination", BTConditionType::HasReachedDestination}
+            };
+
+            static const std::unordered_map<std::string, BTActionType> btActionMap = {
+                {"SetMoveGoalToLastKnownTargetPos", BTActionType::SetMoveGoalToLastKnownTargetPos},
+                {"SetMoveGoalToTarget", BTActionType::SetMoveGoalToTarget},
+                {"SetMoveGoalToPatrolPoint", BTActionType::SetMoveGoalToPatrolPoint},
+                {"MoveToGoal", BTActionType::MoveToGoal},
+                {"MoveTo", BTActionType::MoveToGoal},
+                {"MoveToTarget", BTActionType::MoveToGoal},
+                {"AttackIfClose", BTActionType::AttackIfClose},
+                {"AttackMelee", BTActionType::AttackIfClose},
+                {"AttackTarget", BTActionType::AttackIfClose},
+                {"PatrolPickNextPoint", BTActionType::PatrolPickNextPoint},
+                {"ClearTarget", BTActionType::ClearTarget},
+                {"Idle", BTActionType::Idle},
+                {"WaitRandomTime", BTActionType::WaitRandomTime},
+                {"ChooseRandomNavigablePoint", BTActionType::ChooseRandomNavigablePoint},
+                {"RequestPathfinding", BTActionType::RequestPathfinding},
+                {"FollowPath", BTActionType::FollowPath},
+                {"SendMessage", BTActionType::SendMessage}
+            };
+
+            // Count nodes first
+            int nodeCount = 0;
+            JsonHelper::ForEachInArray(*dataSection, "nodes", [&nodeCount](const json& nodeJson, size_t i) { nodeCount++; });
+            std::cout << "[BehaviorTreeManager] Found " << nodeCount << " nodes to parse" << std::endl;
+
+            JsonHelper::ForEachInArray(*dataSection, "nodes", [&tree, isV2](const json& nodeJson, size_t i)
+            {
+                BTNode node;
+                node.id = JsonHelper::GetInt(nodeJson, "id", 0);
+                node.name = JsonHelper::GetString(nodeJson, "name", "");
+                node.editorPosX = JsonHelper::GetFloat(nodeJson, "editorPosX", 0.0f);
+                node.editorPosY = JsonHelper::GetFloat(nodeJson, "editorPosY", 0.0f);
+                if (nodeJson.contains("position") && nodeJson["position"].is_object())
                 {
-                    const json& params = nodeJson["parameters"];
-                    node.actionParam1 = JsonHelper::GetFloat(params, "param1", 0.0f);
-                    node.actionParam2 = JsonHelper::GetFloat(params, "param2", 0.0f);
+                    node.editorPosX = JsonHelper::GetFloat(nodeJson["position"], "x", node.editorPosX);
+                    node.editorPosY = JsonHelper::GetFloat(nodeJson["position"], "y", node.editorPosY);
+                }
+
+                std::string typeStr = JsonHelper::GetString(nodeJson, "type", "");
+                std::string base = typeStr;
+                if (base.rfind("BT_", 0) == 0 && base.size() > 3)
+                    base = base.substr(3);
+
+                auto itType = btTypeMap.find(base);
+                if (itType != btTypeMap.end())
+                {
+                    node.type = itType->second;
                 }
                 else
                 {
-                    // v1 format (flat)
+                    auto itCond = btCondMap.find(base);
+                    if (itCond != btCondMap.end())
+                    {
+                        node.type = BTNodeType::Condition;
+                        node.conditionType = itCond->second;
+                        node.conditionTypeString = base;
+                    }
+                    else
+                    {
+                        auto itAct = btActionMap.find(base);
+                        if (itAct != btActionMap.end())
+                        {
+                            node.type = BTNodeType::Action;
+                            node.actionType = itAct->second;
+                        }
+                        else if (base.find("Selector") != std::string::npos)
+                        {
+                            node.type = BTNodeType::Selector;
+                        }
+                        else if (base.find("Sequence") != std::string::npos)
+                        {
+                            node.type = BTNodeType::Sequence;
+                        }
+                        else if (base.find("Inverter") != std::string::npos)
+                        {
+                            node.type = BTNodeType::Inverter;
+                        }
+                        else if (base.find("Repeater") != std::string::npos)
+                        {
+                            node.type = BTNodeType::Repeater;
+                        }
+                        else if (base.find("SubGraph") != std::string::npos)
+                        {
+                            node.type = BTNodeType::SubGraph;
+                        }
+                        else if (base.find("Is") != std::string::npos || base.find("Has") != std::string::npos || base.find("Can") != std::string::npos || base.find("Heard") != std::string::npos)
+                        {
+                            node.type = BTNodeType::Condition;
+                            node.conditionTypeString = base;
+                        }
+                        else
+                        {
+                            node.type = BTNodeType::Action;
+                        }
+                    }
+                }
+
+                if (JsonHelper::IsArray(nodeJson, "children"))
+                {
+                    JsonHelper::ForEachInArray(nodeJson, "children", [&node](const json& childId, size_t j)
+                    {
+                        node.childIds.push_back(childId.get<uint32_t>());
+                    });
+                }
+
+                if (node.type == BTNodeType::Condition)
+                {
+                    std::string condStr = JsonHelper::GetString(nodeJson, "conditionType", node.conditionTypeString);
+                    auto itCond = btCondMap.find(condStr);
+                    if (itCond != btCondMap.end())
+                    {
+                        node.conditionType = itCond->second;
+                    }
+                    if (!condStr.empty())
+                    {
+                        node.conditionTypeString = condStr;
+                    }
+
+                    node.conditionParam = JsonHelper::GetFloat(nodeJson, "param", 0.0f);
+                    if (nodeJson.contains("parameters") && nodeJson["parameters"].is_object())
+                    {
+                        const json& params = nodeJson["parameters"];
+                        node.conditionParam = JsonHelper::GetFloat(params, "param", node.conditionParam);
+                        for (auto it = params.begin(); it != params.end(); ++it)
+                        {
+                            if (it.value().is_string())
+                                node.stringParams[it.key()] = it.value().get<std::string>();
+                            else if (it.value().is_number_integer())
+                                node.intParams[it.key()] = it.value().get<int>();
+                            else if (it.value().is_number_float())
+                                node.floatParams[it.key()] = it.value().get<float>();
+                        }
+                    }
+                }
+
+                if (node.type == BTNodeType::Action)
+                {
+                    std::string actStr = JsonHelper::GetString(nodeJson, "actionType", "");
+                    auto itAct = btActionMap.find(actStr);
+                    if (itAct != btActionMap.end())
+                    {
+                        node.actionType = itAct->second;
+                    }
+
                     node.actionParam1 = JsonHelper::GetFloat(nodeJson, "param1", 0.0f);
                     node.actionParam2 = JsonHelper::GetFloat(nodeJson, "param2", 0.0f);
-                }
-            }
-
-            // Phase 39: Parse SubGraph node
-            if (node.type == BTNodeType::SubGraph || typeStr == "SubGraph")
-            {
-                node.type = BTNodeType::SubGraph;
-                node.subgraphPath = JsonHelper::GetString(nodeJson, "subgraphPath", "");
-
-                // Parse input bindings (childVar -> parentVar)
-                if (nodeJson.contains("subgraphInputs") && nodeJson["subgraphInputs"].is_object())
-                {
-                    const json& inputs = nodeJson["subgraphInputs"];
-                    for (auto it = inputs.begin(); it != inputs.end(); ++it)
+                    if (nodeJson.contains("parameters") && nodeJson["parameters"].is_object())
                     {
-                        node.subgraphInputs[it.key()] = it.value().get<std::string>();
+                        const json& params = nodeJson["parameters"];
+                        node.actionParam1 = JsonHelper::GetFloat(params, "param1", node.actionParam1);
+                        node.actionParam2 = JsonHelper::GetFloat(params, "param2", node.actionParam2);
                     }
                 }
 
-                // Parse output bindings (childVar -> parentVar)
-                if (nodeJson.contains("subgraphOutputs") && nodeJson["subgraphOutputs"].is_object())
+                if (node.type == BTNodeType::SubGraph || typeStr == "SubGraph" || base == "SubGraph")
                 {
-                    const json& outputs = nodeJson["subgraphOutputs"];
-                    for (auto it = outputs.begin(); it != outputs.end(); ++it)
+                    node.type = BTNodeType::SubGraph;
+                    node.subgraphPath = JsonHelper::GetString(nodeJson, "subgraphPath", "");
+                    if (nodeJson.contains("subgraphInputs") && nodeJson["subgraphInputs"].is_object())
                     {
-                        node.subgraphOutputs[it.key()] = it.value().get<std::string>();
+                        const json& inputs = nodeJson["subgraphInputs"];
+                        for (auto it = inputs.begin(); it != inputs.end(); ++it)
+                            node.subgraphInputs[it.key()] = it.value().get<std::string>();
+                    }
+                    if (nodeJson.contains("subgraphOutputs") && nodeJson["subgraphOutputs"].is_object())
+                    {
+                        const json& outputs = nodeJson["subgraphOutputs"];
+                        for (auto it = outputs.begin(); it != outputs.end(); ++it)
+                            node.subgraphOutputs[it.key()] = it.value().get<std::string>();
                     }
                 }
 
-                std::cout << "[BehaviorTreeManager]   SubGraph loaded: " << node.subgraphPath 
-                          << " with " << node.subgraphInputs.size() << " inputs, "
-                          << node.subgraphOutputs.size() << " outputs" << std::endl;
+                if (node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater)
+                {
+                    node.decoratorChildId = JsonHelper::GetInt(nodeJson, "decoratorChildId", 0);
+                }
+                if (node.type == BTNodeType::Repeater)
+                {
+                    node.repeatCount = JsonHelper::GetInt(nodeJson, "repeatCount", 0);
+                }
+
+                tree.nodes.push_back(node);
+                std::cout << "[BehaviorTreeManager]   Node " << node.id << ": " << node.name
+                          << " (" << typeStr << ") children: " << node.childIds.size()
+                          << " pos=(" << node.editorPosX << "," << node.editorPosY << ")" << std::endl;
+            });
+            std::cout << "[BehaviorTreeManager] Parsed " << tree.nodes.size() << " nodes successfully" << std::endl;
+        }
+
+        // Reconstruct child relations from the authoritative data.links exported by the editor
+        // NOTE: For v2 assets we already used GraphMigrator::LoadWithMigration() and copied
+        // the GraphDocument node children into BTNode.childIds above. Re-running an independent
+        // adjacency reconstruction can produce a different interpretation (pin heuristics,
+        // positional tie-breakers) and lead to rendering differences between editor and runtime.
+        // Therefore: skip the link-based reconstruction for v2 assets and trust the GraphDocument
+        // children produced by the editor. For legacy v1 assets, perform reconstruction from
+        // the raw "links" array as before.
+        if (!isV2)
+        {
+            try
+            {
+            // Build lookup index
+            std::unordered_map<uint32_t, size_t> idIndex;
+            for (size_t i = 0; i < tree.nodes.size(); ++i) idIndex[tree.nodes[i].id] = i;
+
+            std::unordered_map<uint32_t, std::vector<uint32_t>> forwardAdj;
+
+            // Prefer direct data.links from the v2 JSON (canonical format)
+            if (isV2 && j.contains("data") && j["data"].is_object() && j["data"].contains("links") && j["data"]["links"].is_array())
+            {
+                const json& linksArr = j["data"]["links"];
+                std::cout << "[BehaviorTreeManager] Building adjacency from data.links (" << linksArr.size() << " entries)" << std::endl;
+
+                auto isComposite = [](const BTNode* n){ return n && (n->type == BTNodeType::Selector || n->type == BTNodeType::Sequence || n->type == BTNodeType::Root); };
+
+                // If GraphDocument produced link structures, prefer those (they preserve pin names and resolution rules)
+                if (!docLinks.empty())
+                {
+                    std::cout << "[BehaviorTreeManager] Using GraphDocument-parsed links (docLinks.size=" << docLinks.size() << ")" << std::endl;
+                    for (const auto& link : docLinks)
+                    {
+                        uint32_t fromNode = link.fromPin.value;
+                        uint32_t toNode = link.toPin.value;
+                        if (fromNode == 0 || toNode == 0) continue;
+
+                        // Diagnostic: preserve link mapping information for runtime diagnosis
+                        SYSTEM_LOG << "[BehaviorTreeManager] docLink id=" << link.id.value
+                                   << " from=" << fromNode << "(pin='" << link.fromPinName << "')"
+                                   << " to=" << toNode << "(pin='" << link.toPinName << "')" << std::endl;
+
+                        BTNode* fromBn = tree.GetNode(fromNode);
+                        BTNode* toBn = tree.GetNode(toNode);
+
+                        std::string fromPinId = link.fromPinName;
+                        std::string toPinId = link.toPinName;
+
+                        bool applied = false;
+
+                        if (isComposite(fromBn) && !isComposite(toBn))
+                        {
+                            forwardAdj[fromNode].push_back(toNode);
+                            applied = true;
+                        }
+                        else if (!isComposite(fromBn) && isComposite(toBn))
+                        {
+                            forwardAdj[toNode].push_back(fromNode);
+                            applied = true;
+                        }
+
+                        if (!applied)
+                        {
+                            if (!fromPinId.empty() && !toPinId.empty())
+                            {
+                                if ((fromPinId == "output" && toPinId == "input") || (fromPinId == "out" && toPinId == "in"))
+                                {
+                                    forwardAdj[fromNode].push_back(toNode);
+                                    applied = true;
+                                }
+                                else if ((toPinId == "output" && fromPinId == "input") || (toPinId == "out" && fromPinId == "in"))
+                                {
+                                    forwardAdj[toNode].push_back(fromNode);
+                                    applied = true;
+                                }
+                            }
+                        }
+
+                        if (!applied)
+                        {
+                            float fx = (fromBn) ? fromBn->editorPosX : 0.0f;
+                            float tx = (toBn) ? toBn->editorPosX : 0.0f;
+                            if (fx <= tx)
+                                forwardAdj[fromNode].push_back(toNode);
+                            else
+                                forwardAdj[toNode].push_back(fromNode);
+                        }
+                    }
+                }
+                else
+                {
+                    // Fallback: interpret raw JSON links when docLinks not available
+                    for (const auto& linkJson : linksArr)
+                    {
+                        if (!linkJson.contains("fromPin") || !linkJson.contains("toPin")) continue;
+                        const json& fromPin = linkJson["fromPin"];
+                        const json& toPin = linkJson["toPin"];
+                        if (!fromPin.is_object() || !toPin.is_object()) continue;
+
+                        uint32_t fromNode = JsonHelper::GetUInt(fromPin, "nodeId", 0);
+                        uint32_t toNode = JsonHelper::GetUInt(toPin, "nodeId", 0);
+                        if (fromNode == 0 || toNode == 0) continue;
+
+                        BTNode* fromBn = tree.GetNode(fromNode);
+                        BTNode* toBn = tree.GetNode(toNode);
+
+                        std::string fromPinId = JsonHelper::GetString(fromPin, "pinId", "");
+                        std::string toPinId = JsonHelper::GetString(toPin, "pinId", "");
+
+                        bool applied = false;
+
+                        if (isComposite(fromBn) && !isComposite(toBn))
+                        {
+                            forwardAdj[fromNode].push_back(toNode);
+                            applied = true;
+                        }
+                        else if (!isComposite(fromBn) && isComposite(toBn))
+                        {
+                            forwardAdj[toNode].push_back(fromNode);
+                            applied = true;
+                        }
+
+                        if (!applied)
+                        {
+                            if (!fromPinId.empty() && !toPinId.empty())
+                            {
+                                if ((fromPinId == "output" && toPinId == "input") || (fromPinId == "out" && toPinId == "in"))
+                                {
+                                    forwardAdj[fromNode].push_back(toNode);
+                                    applied = true;
+                                }
+                                else if ((toPinId == "output" && fromPinId == "input") || (toPinId == "out" && fromPinId == "in"))
+                                {
+                                    forwardAdj[toNode].push_back(fromNode);
+                                    applied = true;
+                                }
+                            }
+                        }
+
+                        if (!applied)
+                        {
+                            float fx = (fromBn) ? fromBn->editorPosX : 0.0f;
+                            float tx = (toBn) ? toBn->editorPosX : 0.0f;
+                            if (fx <= tx)
+                                forwardAdj[fromNode].push_back(toNode);
+                            else
+                                forwardAdj[toNode].push_back(fromNode);
+                        }
+                    }
+                }
             }
 
-            // Parse decorator child
-            if (node.type == BTNodeType::Inverter || node.type == BTNodeType::Repeater)
+            // Apply adjacency to tree.nodes
+            for (auto& n : tree.nodes) n.childIds.clear();
+            for (const auto& kv : forwardAdj)
             {
-                node.decoratorChildId = JsonHelper::GetInt(nodeJson, "decoratorChildId", 0);
+                auto it = idIndex.find(kv.first);
+                if (it == idIndex.end()) continue;
+                auto& childVec = tree.nodes[it->second].childIds;
+                for (uint32_t cid : kv.second)
+                {
+                    if (tree.GetNode(cid) == nullptr) continue; // skip unresolved
+                    if (std::find(childVec.begin(), childVec.end(), cid) == childVec.end()) childVec.push_back(cid);
+                }
             }
-            
-            if (node.type == BTNodeType::Repeater)
+
+            // Diagnostic summary of adjacency
+            std::cout << "[BehaviorTreeManager] Adjacency summary (parent -> [children])" << std::endl;
+            for (const auto& kv : forwardAdj)
             {
-                node.repeatCount = JsonHelper::GetInt(nodeJson, "repeatCount", 0);
+                std::cout << "  " << kv.first << " -> [";
+                for (size_t i = 0; i < kv.second.size(); ++i) { if (i) std::cout << ","; std::cout << kv.second[i]; }
+                std::cout << "]" << std::endl;
             }
-            
-            tree.nodes.push_back(node);
-            
-            std::cout << "[BehaviorTreeManager]   Node " << node.id << ": " << node.name 
-                      << " (" << typeStr << ") children: " << node.childIds.size() << std::endl;
-        });
-        
-        std::cout << "[BehaviorTreeManager] Parsed " << tree.nodes.size() << " nodes successfully" << std::endl;
-        
+
+            // Sort children by editor Y position
+            for (auto& parent : tree.nodes)
+            {
+                if (parent.childIds.size() <= 1) continue;
+                std::sort(parent.childIds.begin(), parent.childIds.end(), [&](uint32_t a, uint32_t b)
+                {
+                    const BTNode* na = tree.GetNode(a); const BTNode* nb = tree.GetNode(b);
+                    if (!na || !nb) return a < b;
+                    return na->editorPosY < nb->editorPosY;
+                });
+            }
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "[BehaviorTreeManager] Warning: failed to reconstruct children from links: " << e.what() << std::endl;
+        }
+        }
+
+            // Final dump
+            std::cout << "[BehaviorTreeManager] Final reconstructed BT graph:" << std::endl;
+            for (const auto& n : tree.nodes)
+            {
+                std::cout << "  Node " << n.id << ": " << n.name << " (type=" << static_cast<int>(n.type) << ")";
+                if (n.decoratorChildId != 0) std::cout << " decoratorChildId=" << n.decoratorChildId;
+                std::cout << " children=[";
+                for (size_t i = 0; i < n.childIds.size(); ++i) { if (i) std::cout << ","; std::cout << n.childIds[i]; }
+                std::cout << "]" << std::endl;
+            }
+
         // 5. Validate tree structure
         std::cout << "[BehaviorTreeManager] Step 5: Validating tree structure..." << std::endl;
         std::string validationError;
@@ -447,10 +795,90 @@ bool BehaviorTreeManager::ValidateTree(const BehaviorTreeAsset& tree, std::strin
 
 // --- Behavior Tree Execution ---
 
+// Optional: debugger interaction now routed through BehaviorTreeDebugAPI.h
+
 BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& blackboard, const BehaviorTreeAsset& tree)
 {
+    BTStatus finalStatus = BTStatus::Failure;
+
+    // Recursion / cycle protection: use a thread-local call stack to detect repeated visits
+    // This prevents infinite recursion / stack overflow when a tree contains cycles at runtime.
+    static thread_local std::vector<uint32_t> s_execCallStack;
+    struct CallStackGuard
+    {
+        std::vector<uint32_t>& stack;
+        uint32_t id;
+        bool wasCycle;
+        CallStackGuard(std::vector<uint32_t>& s, uint32_t i) : stack(s), id(i), wasCycle(false)
+        {
+            if (std::find(stack.begin(), stack.end(), id) != stack.end())
+            {
+                wasCycle = true;
+            }
+            else
+            {
+                stack.push_back(id);
+            }
+        }
+        ~CallStackGuard()
+        {
+            if (!wasCycle)
+            {
+                if (!stack.empty() && stack.back() == id)
+                    stack.pop_back();
+                else
+                {
+                    // Fallback: remove first occurrence if back() doesn't match (defensive)
+                    auto it = std::find(stack.begin(), stack.end(), id);
+                    if (it != stack.end()) stack.erase(it);
+                }
+            }
+        }
+    } guard(s_execCallStack, node.id);
+
+    if (guard.wasCycle)
+    {
+        // Detected cycle during traversal - bail out to avoid stack overflow
+        std::cerr << "[ExecuteBTNode] Cycle detected at node ID " << node.id << " - aborting branch" << std::endl;
+        return BTStatus::Failure;
+    }
+
+    // Update per-entity runtime current node so debugger can highlight traversal in realtime
+    try
+    {
+        if (World::Get().HasComponent<BehaviorTreeRuntime_data>(entity))
+        {
+            BehaviorTreeRuntime_data& rt = World::Get().GetComponent<BehaviorTreeRuntime_data>(entity);
+            rt.AICurrentNodeIndex = node.id;
+        }
+    }
+    catch (...) { /* ignore failures to avoid breaking BT execution */ }
+
     switch (node.type)
     {
+        case BTNodeType::Root:
+        {
+            // Root node: delegate to children (treat as a selector over children to find active branch)
+            if (node.childIds.empty()) { finalStatus = BTStatus::Failure; break; }
+            for (uint32_t childId : node.childIds)
+            {
+                const BTNode* child = tree.GetNode(childId);
+                if (!child) continue;
+
+                BTStatus status = ExecuteBTNode(*child, entity, blackboard, tree);
+                if (status == BTStatus::Success)
+                {
+                    finalStatus = BTStatus::Success;
+                    break;
+                }
+                if (status == BTStatus::Running)
+                {
+                    finalStatus = BTStatus::Running;
+                    break;
+                }
+            }
+            break;
+        }
         case BTNodeType::Selector:
         {
             // OR node: succeeds if any child succeeds
@@ -458,16 +886,23 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
             {
                 const BTNode* child = tree.GetNode(childId);
                 if (!child) continue;
-                
+
                 BTStatus status = ExecuteBTNode(*child, entity, blackboard, tree);
                 if (status == BTStatus::Success)
-                    return BTStatus::Success;
+                {
+                    finalStatus = BTStatus::Success;
+                    break;
+                }
                 if (status == BTStatus::Running)
-                    return BTStatus::Running;
+                {
+                    finalStatus = BTStatus::Running;
+                    break;
+                }
             }
-            return BTStatus::Failure;
+            if (finalStatus == BTStatus::Failure) finalStatus = BTStatus::Failure;
+            break;
         }
-        
+
         case BTNodeType::Sequence:
         {
             // AND node: succeeds if all children succeed
@@ -475,16 +910,24 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
             {
                 const BTNode* child = tree.GetNode(childId);
                 if (!child) continue;
-                
+
                 BTStatus status = ExecuteBTNode(*child, entity, blackboard, tree);
                 if (status == BTStatus::Failure)
-                    return BTStatus::Failure;
+                {
+                    finalStatus = BTStatus::Failure;
+                    break;
+                }
                 if (status == BTStatus::Running)
-                    return BTStatus::Running;
+                {
+                    finalStatus = BTStatus::Running;
+                    break;
+                }
             }
-            return BTStatus::Success;
+            if (finalStatus != BTStatus::Failure && finalStatus != BTStatus::Running)
+                finalStatus = BTStatus::Success;
+            break;
         }
-        
+
         case BTNodeType::Condition:
         {
             // Check if this is a string-based condition (like CheckBlackboardValue)
@@ -494,9 +937,9 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
                 std::string key = node.GetParameterString("key");
                 std::string op = node.GetParameterString("operator");
                 int expectedValue = node.GetParameterInt("value");
-                
+
                 int actualValue = 0;
-                
+
                 // Get value from blackboard
                 if (key == "AIMode")
                 {
@@ -505,61 +948,79 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
                 else
                 {
                     // Future: support other blackboard integer fields
-                    return BTStatus::Failure;  // Key not found
+                    finalStatus = BTStatus::Failure;  // Key not found
+                    break;
                 }
-                
+
                 // Perform comparison
                 if (op == "Equals" || op == "equals" || op == "==")
-                    return (actualValue == expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                    finalStatus = (actualValue == expectedValue) ? BTStatus::Success : BTStatus::Failure;
                 else if (op == "NotEquals" || op == "notequals" || op == "!=")
-                    return (actualValue != expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                    finalStatus = (actualValue != expectedValue) ? BTStatus::Success : BTStatus::Failure;
                 else if (op == "GreaterThan" || op == "greaterthan" || op == ">")
-                    return (actualValue > expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                    finalStatus = (actualValue > expectedValue) ? BTStatus::Success : BTStatus::Failure;
                 else if (op == "LessThan" || op == "lessthan" || op == "<")
-                    return (actualValue < expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                    finalStatus = (actualValue < expectedValue) ? BTStatus::Success : BTStatus::Failure;
                 else if (op == "GreaterOrEqual" || op == "greaterorequal" || op == ">=")
-                    return (actualValue >= expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                    finalStatus = (actualValue >= expectedValue) ? BTStatus::Success : BTStatus::Failure;
                 else if (op == "LessOrEqual" || op == "lessorequal" || op == "<=")
-                    return (actualValue <= expectedValue) ? BTStatus::Success : BTStatus::Failure;
-                
-                return BTStatus::Failure;
+                    finalStatus = (actualValue <= expectedValue) ? BTStatus::Success : BTStatus::Failure;
+                else
+                    finalStatus = BTStatus::Failure;
             }
             else
             {
                 // Execute enum-based condition (legacy)
-                return ExecuteBTCondition(node.conditionType, node.conditionParam, entity, blackboard);
+                finalStatus = ExecuteBTCondition(node.conditionType, node.conditionParam, entity, blackboard);
             }
+            break;
         }
-        
+
         case BTNodeType::Action:
         {
-            return ExecuteBTAction(node.actionType, node.actionParam1, node.actionParam2, entity, blackboard);
+            finalStatus = ExecuteBTAction(node.actionType, node.actionParam1, node.actionParam2, entity, blackboard);
+            break;
         }
-        
+
         case BTNodeType::Inverter:
         {
             const BTNode* child = tree.GetNode(node.decoratorChildId);
-            if (!child) return BTStatus::Failure;
-            
+            if (!child) { finalStatus = BTStatus::Failure; break; }
+
             BTStatus status = ExecuteBTNode(*child, entity, blackboard, tree);
             if (status == BTStatus::Success)
-                return BTStatus::Failure;
-            if (status == BTStatus::Failure)
-                return BTStatus::Success;
-            return status;
+                finalStatus = BTStatus::Failure;
+            else if (status == BTStatus::Failure)
+                finalStatus = BTStatus::Success;
+            else
+                finalStatus = status;
+            break;
         }
-        
+
         case BTNodeType::Repeater:
         {
             // Simplified repeater: just execute once per tick
             const BTNode* child = tree.GetNode(node.decoratorChildId);
-            if (!child) return BTStatus::Failure;
-            
-            return ExecuteBTNode(*child, entity, blackboard, tree);
+            if (!child) { finalStatus = BTStatus::Failure; break; }
+
+            finalStatus = ExecuteBTNode(*child, entity, blackboard, tree);
+            break;
         }
+
+        default:
+            finalStatus = BTStatus::Failure;
+            break;
     }
-    
-    return BTStatus::Failure;
+
+    // Enhanced runtime debugging: record node execution in debugger execution log (via small API)
+    try
+    {
+        if (BTDebug_IsVisible())
+            BTDebug_AddExecutionEntry(entity, node.id, node.name.c_str(), static_cast<uint8_t>(finalStatus));
+    }
+    catch (...) { /* don't let debug logging break runtime */ }
+
+    return finalStatus;
 }
 
 BTStatus ExecuteBTCondition(BTConditionType condType, float param, EntityID entity, const AIBlackboard_data& blackboard)

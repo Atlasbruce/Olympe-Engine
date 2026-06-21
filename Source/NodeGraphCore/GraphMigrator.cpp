@@ -74,7 +74,9 @@ int GraphMigrator::DetectSchemaVersion(const json& j)
     }
     
     // Check for v2 format markers
-    if (j.contains("graphKind") && j.contains("data"))
+    // Prefer explicit graphKind, but also accept files that include a 'data' section with nodes
+    if ((j.contains("graphKind") && j.contains("data")) ||
+        (j.contains("data") && j["data"].is_object() && j["data"].contains("nodes") && j["data"]["nodes"].is_array()))
     {
         return 2;
     }

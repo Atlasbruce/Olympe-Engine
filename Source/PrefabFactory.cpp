@@ -1428,18 +1428,38 @@ bool PrefabFactory::InstantiateBehaviorTreeRuntime(EntityID entity, const Compon
 
         uint32_t treeId = BehaviorTreeManager::Get().GetTreeIdFromPath(treePath);
         btRuntime.AITreeAssetId = treeId;
-        
-		if (identity != nullptr)
+
+        if (identity != nullptr)
             std::cerr << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << identity->name << std::endl;
         else
-			std::cerr << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << entity << std::endl;
-        
-        // Verify the tree is loaded
-        const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(treeId);
-        if (!tree)
+            std::cerr << "[PrefabFactory] Mapped BehaviorTree: " << treePath << " -> ID " << treeId << " for entity " << entity << std::endl;
+
+        // If the tree is not already loaded by path, attempt to load it now
+        if (!BehaviorTreeManager::Get().IsTreeLoadedByPath(treePath))
         {
-            std::cerr << "[PrefabFactory] WARNING: BehaviorTree not loaded: " << treePath 
-                      << " (ID=" << treeId << ") - this should not happen if dependencies were loaded correctly" << std::endl;
+            static uint32_t nextTempTreeId = 1000;
+            uint32_t attemptId = nextTempTreeId++;
+            std::cerr << "[PrefabFactory] BehaviorTree path not loaded yet. Attempting to load: " << treePath << " into ID=" << attemptId << std::endl;
+            if (BehaviorTreeManager::Get().LoadTreeFromFile(treePath, attemptId))
+            {
+                treeId = attemptId;
+                btRuntime.AITreeAssetId = treeId;
+                std::cerr << "[PrefabFactory] Successfully loaded BehaviorTree: " << treePath << " -> ID " << treeId << std::endl;
+            }
+            else
+            {
+                std::cerr << "[PrefabFactory] WARNING: BehaviorTree not loaded: " << treePath 
+                          << " (ID=" << attemptId << ") - this should not happen if dependencies were loaded correctly" << std::endl;
+            }
+        }
+        else
+        {
+            // Optional: double-check the tree exists for the computed ID
+            const BehaviorTreeAsset* tree = BehaviorTreeManager::Get().GetTree(treeId);
+            if (!tree)
+            {
+                std::cerr << "[PrefabFactory] WARNING: Path registered but tree not found for ID=" << treeId << " (path=" << treePath << ")" << std::endl;
+            }
         }
     }
     

@@ -31,6 +31,7 @@
       "value": 100
     }
   ],
+  "blueprintType": "VisualScript",
   "dataConnections": [
     {
       "fromNode": 14,
@@ -550,8 +551,8 @@
         }
       },
       "position": {
-        "x": 132,
-        "y": 123
+        "x": 84,
+        "y": 124
       },
       "type": "EntryPoint"
     },

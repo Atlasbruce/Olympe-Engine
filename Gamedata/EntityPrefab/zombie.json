@@ -89,7 +89,7 @@
       {
         "type": "BehaviorTreeRuntime_data",
         "properties": {
-          "AITreePath": "Blueprints/AI/zombie_ai.json",
+          "AITreePath": "Gamedata/BehaviorTree/zombie.bt.json",
           "active": true
         }
       },

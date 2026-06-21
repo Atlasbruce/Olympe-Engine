@@ -553,6 +553,7 @@
     <ClInclude Include="Source\BlueprintEditor\Framework\DocumentVersionManager.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabEditorV2.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabStrategyRegistration.h" />
+    <ClInclude Include="Source\AI\BehaviorTreeDebugAPI.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

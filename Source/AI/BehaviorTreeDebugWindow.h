@@ -152,6 +152,10 @@ namespace Olympe
         std::deque<ExecutionLogEntry> m_executionLog;
         const size_t MAX_LOG_ENTRIES = 100;
 
+        // Recent execution history (entity, nodeId) for overlay on graph
+        std::deque<std::pair<EntityID, uint32_t>> m_execHistory;
+        const size_t MAX_EXEC_HISTORY = 32;
+
         // UI state
         bool m_isVisible = false;
         bool m_isInitialized = false;

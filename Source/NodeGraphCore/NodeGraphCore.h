@@ -82,6 +82,9 @@ struct NodeData {
     std::map<std::string, std::string> parameters;
     std::vector<NodeId> children;
     NodeId decoratorChild;
+    // Optional ImNodes UID stored for editor convenience (transient/editor-only)
+    // Serialized only when present to preserve per-session ImNodes mapping.
+    uint32_t imnodesUid = 0;
 };
 
 // ============================================================================
@@ -103,6 +106,12 @@ struct LinkData {
     LinkId id;
     PinId fromPin;
     PinId toPin;
+    // Preserve pin semantic names exported by the editor (e.g., "output", "input")
+    std::string fromPinName;
+    std::string toPinName;
+    // Optional ImNodes attribute UIDs for the source/destination pin (editor-only)
+    uint32_t fromAttrUid = 0;
+    uint32_t toAttrUid = 0;
 };
 
 // ============================================================================

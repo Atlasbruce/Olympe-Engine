@@ -49,8 +49,8 @@ static bool IsValidBehaviorTreePath(const std::string& treePath)
     if (treePath[0] == '/' || treePath[0] == '\\')
         return false;
     
-    // Check for path prefix - should start with "Blueprints/"
-    if (treePath.find("Blueprints/") != 0)
+    // Check for allowed path prefixes - accept Blueprints/ or Gamedata/ (case-insensitive for GameData)
+    if (!(treePath.find("Blueprints/") == 0 || treePath.find("Gamedata/") == 0 || treePath.find("GameData/") == 0))
         return false;
     
     // Basic character whitelist for paths (alphanumeric, /, _, -, .)

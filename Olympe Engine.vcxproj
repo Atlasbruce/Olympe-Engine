@@ -295,6 +295,7 @@
     <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTNodePalette.h" />
     <ClInclude Include="Source\AI\AIGraphPlugin_BT\BTNodeRegistry.h" />
     <ClInclude Include="Source\AI\BehaviorTree.h" />
+    <ClInclude Include="Source\AI\BehaviorTreeDebugAPI.h" />
     <ClInclude Include="Source\AI\BehaviorTreeDebugWindow.h" />
     <ClInclude Include="Source\AI\BehaviorTreeDependencyScanner.h" />
     <ClInclude Include="Source\AI\BTEditorCommand.h" />

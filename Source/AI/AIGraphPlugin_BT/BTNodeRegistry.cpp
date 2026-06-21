@@ -152,7 +152,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
     RegisterNodeType({
         "BT_CheckBlackboardValue",
         "Check Blackboard Value",
-        "Compares blackboard value against expected value",
+        "Compares a blackboard value against an expected value",
         BTNodeCategory::Condition,
         ConvertColorFormat(ColorScheme::FlowControl_Primary),
         "?",         // Question mark
@@ -165,7 +165,7 @@ void BTNodeRegistry::InitializeBuiltInTypes() {
     RegisterNodeType({
         "BT_HasTarget",
         "Has Target",
-        "Checks if entity has a target",
+        "Checks whether the entity has a target",
         BTNodeCategory::Condition,
         ConvertColorFormat(ColorScheme::FlowControl_Primary),
         "T",         // Target symbol

@@ -1,0 +1,35 @@
+{
+  "annotations": [],
+  "blackboard": [],
+  "blueprintType": "BehaviorTree",
+  "data": {
+    "links": [],
+    "nodes": [
+      {
+        "children": [],
+        "id": 1,
+        "name": "BT_Root_1",
+        "parameters": {},
+        "position": {
+          "x": 119,
+          "y": 209
+        },
+        "type": "BT_Root"
+      }
+    ],
+    "rootNodeId": 0
+  },
+  "editorState": {
+    "layoutDirection": "TopToBottom",
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "selectedNodes": [],
+    "zoom": 1
+  },
+  "graphKind": "BehaviorTree",
+  "metadata": {},
+  "schemaVersion": 2,
+  "type": "Untitled-BehaviorTree-1"
+}

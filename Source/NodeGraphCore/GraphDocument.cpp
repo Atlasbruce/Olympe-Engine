@@ -8,6 +8,8 @@
 #include "GraphDocument.h"
 #include "../system/system_utils.h"
 #include <algorithm>
+#include <unordered_map>
+#include <cstdint>
 
 using json = nlohmann::json;
 
@@ -61,15 +63,35 @@ bool GraphDocument::DeleteNode(NodeId id)
         m_nodes.erase(it);
         m_isDirty = true;
 
-        // Remove links that reference this node. ImNodes uses a simple
-        // pin id scheme where pinId = nodeId * 2 (+0 input, +1 output).
-        // To be robust, remove any link whose fromPin or toPin maps to
-        // the deleted node id.
+        // Remove links that reference this node.
+        // Historically link.fromPin.value and link.toPin.value could be stored
+        // either as a canonical node id or as legacy ImNodes-encoded pin ids
+        // (nodeUid*2 + attr). Use the same resolution heuristics as ToJson()
+        // to determine which node a stored value refers to.
+        auto resolveStoredPinToNodeId = [this](uint32_t stored)->uint32_t {
+            // If it's already a valid node id, return it
+            for (const auto& n : m_nodes) if (n.id.value == stored) return stored;
+            // Try common raw pin encodings used historically by ImNodes/legacy
+            if (stored > 1)
+            {
+                uint32_t cand = stored / 2u;
+                for (const auto& n : m_nodes) if (n.id.value == cand) return cand;
+
+                cand = stored / 100u;
+                for (const auto& n : m_nodes) if (n.id.value == cand) return cand;
+
+                cand = stored / 10000u;
+                for (const auto& n : m_nodes) if (n.id.value == cand) return cand;
+            }
+            // Not resolvable -> return UINT32_MAX as sentinel
+            return UINT32_MAX;
+        };
+
         m_links.erase(
             std::remove_if(m_links.begin(), m_links.end(),
-                [id](const LinkData& link) {
-                    uint32_t fromNode = static_cast<uint32_t>(link.fromPin.value) / 2u;
-                    uint32_t toNode = static_cast<uint32_t>(link.toPin.value) / 2u;
+                [id, &resolveStoredPinToNodeId](const LinkData& link) {
+                    uint32_t fromNode = resolveStoredPinToNodeId(static_cast<uint32_t>(link.fromPin.value));
+                    uint32_t toNode = resolveStoredPinToNodeId(static_cast<uint32_t>(link.toPin.value));
                     return (fromNode == id.value) || (toNode == id.value);
                 }),
             m_links.end()
@@ -399,6 +421,12 @@ json GraphDocument::ToJson() const
             childrenJson.push_back(static_cast<int>(childId.value));
         }
         nodeJson["children"] = childrenJson;
+
+        // Optional editor-only ImNodes UID
+        if (node.imnodesUid != 0)
+        {
+            nodeJson["imnodesUid"] = static_cast<int>(node.imnodesUid);
+        }
         
         // Parameters
         json paramsJson = json::object();
@@ -424,17 +452,62 @@ json GraphDocument::ToJson() const
     {
         json linkJson = json::object();
         linkJson["id"] = static_cast<int>(link.id.value);
-        
+
+        // Helper: try to resolve stored pin value to an actual node id present in document.
+        auto resolveStoredPinToNodeId = [&](uint32_t stored)->uint32_t {
+            // If it's already a valid node id, return it
+            for (const auto& n : m_nodes) if (n.id.value == stored) return stored;
+            // Try common raw pin encodings used by ImNodes/legacy: division heuristics
+            if (stored > 1)
+            {
+                uint32_t cand = stored / 2u;
+                for (const auto& n : m_nodes) if (n.id.value == cand) return cand;
+
+                cand = stored / 100u;
+                for (const auto& n : m_nodes) if (n.id.value == cand) return cand;
+
+                cand = stored / 10000u;
+                for (const auto& n : m_nodes) if (n.id.value == cand) return cand;
+            }
+            // Not resolvable -> return stored as-is (fallback)
+            return stored;
+        };
+
         json fromPinJson = json::object();
-        fromPinJson["nodeId"] = static_cast<int>(link.fromPin.value);
-        fromPinJson["pinId"] = "output";
+        uint32_t resolvedFrom = resolveStoredPinToNodeId(static_cast<uint32_t>(link.fromPin.value));
+        fromPinJson["nodeId"] = static_cast<int>(resolvedFrom);
+        if (!link.fromPinName.empty()) fromPinJson["pinId"] = link.fromPinName;
+        else fromPinJson["pinId"] = "output";
+        // Editor-only: record ImNodes attribute UID if available
+        if (link.fromAttrUid != 0) fromPinJson["attrUid"] = static_cast<int>(link.fromAttrUid);
         linkJson["fromPin"] = fromPinJson;
-        
+
         json toPinJson = json::object();
-        toPinJson["nodeId"] = static_cast<int>(link.toPin.value);
-        toPinJson["pinId"] = "input";
+        uint32_t resolvedTo = resolveStoredPinToNodeId(static_cast<uint32_t>(link.toPin.value));
+        toPinJson["nodeId"] = static_cast<int>(resolvedTo);
+        if (!link.toPinName.empty()) toPinJson["pinId"] = link.toPinName;
+        // Editor-only: record ImNodes attribute UID if available
+        if (link.toAttrUid != 0) toPinJson["attrUid"] = static_cast<int>(link.toAttrUid);
+        else toPinJson["pinId"] = "input";
         linkJson["toPin"] = toPinJson;
-        
+
+        // If resolution produced ids that do not map to any node, warn for later inspection
+        bool fromValid = false, toValid = false;
+        for (const auto& n : m_nodes)
+        {
+            if (n.id.value == resolvedFrom) fromValid = true;
+            if (n.id.value == resolvedTo) toValid = true;
+        }
+        if (!fromValid || !toValid)
+        {
+            // Invalid endpoints after resolution: skip serializing this link to avoid
+            // persisting references to non-existent nodes. Log for diagnostics.
+            SYSTEM_LOG << "[GraphDocument::ToJson] REMOVING invalid link id=" << link.id.value
+                       << " resolvedFrom=" << resolvedFrom << " resolvedTo=" << resolvedTo
+                       << " (not present in nodes)." << std::endl;
+            continue; // do not serialize this link
+        }
+
         linksJson.push_back(linkJson);
     }
     dataJson["links"] = linksJson;
@@ -606,6 +679,9 @@ GraphDocument GraphDocument::FromJson(const json& j)
                 // Decorator child
                 node.decoratorChild.value = JsonHelper::GetUInt(nodeJson, "decoratorChildId", 0);
 
+                // Optional ImNodes UID (editor-only)
+                node.imnodesUid = static_cast<uint32_t>(JsonHelper::GetUInt(nodeJson, "imnodesUid", 0));
+
                 doc.m_nodes.push_back(node);
 
                 // Update next node ID
@@ -616,7 +692,7 @@ GraphDocument GraphDocument::FromJson(const json& j)
             }
         }
 
-        // Parse links
+        // Parse links - current .bt.json format uses fromPin.nodeId / toPin.nodeId
         if (linksSource != nullptr && linksSource->is_array())
         {
             const json& linksArray = *linksSource;
@@ -627,16 +703,89 @@ GraphDocument GraphDocument::FromJson(const json& j)
                 LinkData link;
                 link.id.value = JsonHelper::GetUInt(linkJson, "id", 0);
 
+                auto resolvePinToNode = [&](const json& pinObj)->uint32_t {
+                    if (!pinObj.is_object()) return 0u;
+
+                    // Helper to test existence against parsed nodes
+                    auto existsNode = [&](uint32_t candidate)->bool {
+                        for (const auto& n : doc.m_nodes) if (n.id.value == candidate) return true;
+                        return false;
+                    };
+
+                    // Preferred: explicit nodeId field provided by the editor export
+                    if (pinObj.contains("nodeId") && pinObj["nodeId"].is_number())
+                    {
+                        uint32_t v = JsonHelper::GetUInt(pinObj, "nodeId", 0);
+                        if (existsNode(v)) return v;
+                        // If stored value appears to be an ImNodes attribute id (nodeId*2 or *2+1), try to decode
+                        if (v > 1)
+                        {
+                            uint32_t cand = v / 2u;
+                            if (existsNode(cand)) return cand;
+                        }
+                        // Try other legacy encodings
+                        if (v > 100)
+                        {
+                            uint32_t cand = v / 100u;
+                            if (existsNode(cand)) return cand;
+                        }
+                        // Fallback: return raw value (will be handled later)
+                        return v;
+                    }
+
+                    // Older/alternate encodings: numeric 'pin' field encodes a raw pin id or attribute id
+                    if (pinObj.contains("pin") && pinObj["pin"].is_number())
+                    {
+                        uint32_t raw = JsonHelper::GetUInt(pinObj, "pin", 0);
+                        if (raw == 0) return 0u;
+                        // If raw directly matches a node id, accept
+                        if (existsNode(raw)) return raw;
+                        // If raw is an ImNodes attribute id (node*2 / node*2+1)
+                        if (raw > 1)
+                        {
+                            uint32_t cand = raw / 2u;
+                            if (existsNode(cand)) return cand;
+                        }
+                        // Legacy heuristics
+                        uint32_t cand = raw / 100u;
+                        if (existsNode(cand)) return cand;
+                        cand = raw / 10000u;
+                        if (existsNode(cand)) return cand;
+                        return raw;
+                    }
+
+                    // Fallback: numeric pinId
+                    if (pinObj.contains("pinId") && pinObj["pinId"].is_number())
+                    {
+                        uint32_t v = JsonHelper::GetUInt(pinObj, "pinId", 0);
+                        if (existsNode(v)) return v;
+                        if (v > 1)
+                        {
+                            uint32_t cand = v / 2u;
+                            if (existsNode(cand)) return cand;
+                        }
+                        return v;
+                    }
+
+                    // If pinId is a string ("output"/"input"), the nodeId must accompany it to resolve
+                    return 0u;
+                };
+
                 if (linkJson.contains("fromPin") && linkJson["fromPin"].is_object())
                 {
-                    const json& fromPin = linkJson["fromPin"];
-                    link.fromPin.value = JsonHelper::GetUInt(fromPin, "nodeId", 0);
+                    link.fromPin.value = resolvePinToNode(linkJson["fromPin"]);
+                    // preserve semantic pin name when available
+                    link.fromPinName = JsonHelper::GetString(linkJson["fromPin"], "pinId", "");
+                    // Optional editor-only ImNodes attr uid
+                    link.fromAttrUid = static_cast<uint32_t>(JsonHelper::GetUInt(linkJson["fromPin"], "attrUid", 0));
                 }
 
                 if (linkJson.contains("toPin") && linkJson["toPin"].is_object())
                 {
-                    const json& toPin = linkJson["toPin"];
-                    link.toPin.value = JsonHelper::GetUInt(toPin, "nodeId", 0);
+                    link.toPin.value = resolvePinToNode(linkJson["toPin"]);
+                    link.toPinName = JsonHelper::GetString(linkJson["toPin"], "pinId", "");
+                    // Optional editor-only ImNodes attr uid
+                    link.toAttrUid = static_cast<uint32_t>(JsonHelper::GetUInt(linkJson["toPin"], "attrUid", 0));
                 }
 
                 doc.m_links.push_back(link);
@@ -646,6 +795,10 @@ GraphDocument GraphDocument::FromJson(const json& j)
                 {
                     doc.m_nextLinkId = link.id.value + 1;
                 }
+                // Diagnostic: log resolved link mapping
+                SYSTEM_LOG << "[GraphDocument::FromJson] Link id=" << link.id.value
+                           << " fromNode=" << link.fromPin.value
+                           << " toNode=" << link.toPin.value << std::endl;
             }
         }
 
@@ -668,7 +821,112 @@ GraphDocument GraphDocument::FromJson(const json& j)
     {
         doc.m_blackboard.FromJson(j["blackboard"]);
     }
+
+    // Reconstruct node children from links to ensure a canonical hierarchy
+    // This mirrors editor reconstruction rules so runtime/debugger share the same topology
+    if (!doc.m_links.empty() && !doc.m_nodes.empty())
+    {
+        std::unordered_map<uint32_t, std::vector<uint32_t>> forwardAdj;
+        auto isCompositeType = [](const NodeData& n)->bool {
+            return (n.type.find("Selector") != std::string::npos) ||
+                   (n.type.find("Sequence") != std::string::npos) ||
+                   (n.type.find("Root") != std::string::npos);
+        };
+
+        // Build adjacency using link pin semantics preserved earlier
+        for (const auto& link : doc.m_links)
+        {
+            uint32_t fromNode = static_cast<uint32_t>(link.fromPin.value);
+            uint32_t toNode = static_cast<uint32_t>(link.toPin.value);
+            if (fromNode == 0 || toNode == 0) continue;
+
+            NodeId fromN; fromN.value = fromNode;
+            NodeId toN; toN.value = toNode;
+            const NodeData* fromNd = doc.GetNode(fromN);
+            const NodeData* toNd = doc.GetNode(toN);
+
+            // resolve composite vs child relationship
+            bool applied = false;
+            if (fromNd && toNd)
+            {
+                if (isCompositeType(*fromNd) && !isCompositeType(*toNd))
+                {
+                    forwardAdj[fromNode].push_back(toNode);
+                    applied = true;
+                }
+                else if (!isCompositeType(*fromNd) && isCompositeType(*toNd))
+                {
+                    forwardAdj[toNode].push_back(fromNode);
+                    applied = true;
+                }
+            }
+
+            if (!applied)
+            {
+                std::string fromPinId = link.fromPinName;
+                std::string toPinId = link.toPinName;
+                if (!fromPinId.empty() && !toPinId.empty())
+                {
+                    if ((fromPinId == "output" && toPinId == "input") || (fromPinId == "out" && toPinId == "in"))
+                    {
+                        forwardAdj[fromNode].push_back(toNode);
+                        applied = true;
+                    }
+                    else if ((toPinId == "output" && fromPinId == "input") || (toPinId == "out" && fromPinId == "in"))
+                    {
+                        forwardAdj[toNode].push_back(fromNode);
+                        applied = true;
+                    }
+                }
+            }
+
+            if (!applied)
+            {
+                // spatial fallback: left node is parent
+                float fx = 0.0f, tx = 0.0f;
+                if (fromNd) { fx = fromNd->position.x; }
+                if (toNd) { tx = toNd->position.x; }
+                if (fx <= tx) forwardAdj[fromNode].push_back(toNode);
+                else forwardAdj[toNode].push_back(fromNode);
+            }
+        }
+
+        // Clear any existing children saved from file and apply reconstructed adjacency
+        for (auto& n : doc.m_nodes) n.children.clear();
+        for (const auto& kv : forwardAdj)
+        {
+            // find node index in doc.m_nodes by id
+            for (auto& n : doc.m_nodes)
+            {
+                if (n.id.value == kv.first)
+                {
+                    for (uint32_t cid : kv.second)
+                    {
+                        NodeId childId; childId.value = cid;
+                        n.children.push_back(childId);
+                    }
+                    break;
+                }
+            }
+        }
+    }
     
+    // Diagnostic: dump nodes and their children to help runtime/editor parity checks
+    if (!doc.m_nodes.empty())
+    {
+        SYSTEM_LOG << "[GraphDocument::FromJson] Node children dump:" << std::endl;
+        for (const auto& n : doc.m_nodes)
+        {
+            SYSTEM_LOG << "  Node " << n.id.value << ": '" << n.name << "' children=[";
+            for (size_t i = 0; i < n.children.size(); ++i)
+            {
+                if (i) SYSTEM_LOG << ",";
+                SYSTEM_LOG << n.children[i].value;
+            }
+            SYSTEM_LOG << "]" << std::endl;
+        }
+    }
+
     doc.m_isDirty = false;
     return doc;
 }

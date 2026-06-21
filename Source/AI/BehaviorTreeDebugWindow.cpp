@@ -4,6 +4,7 @@
  */
 
 #include "BehaviorTreeDebugWindow.h"
+#include "BehaviorTreeDebugAPI.h"
 #include "../World.h"
 #include "../GameEngine.h"
 #include "../ECS_Components.h"
@@ -18,8 +19,13 @@
 #include <cstring>
 #include <cmath>
 #include <ctime>
+#include <deque>
+#include <unordered_map>
 #include <unordered_set>
 #include <set>
+
+// Global debugger instance (declared/defined in OlympeEngine.cpp)
+extern Olympe::BehaviorTreeDebugWindow* g_btDebugWindow;
 
 namespace Olympe
 {
@@ -33,7 +39,8 @@ namespace Olympe
 
     BehaviorTreeDebugWindow::~BehaviorTreeDebugWindow()
     {
-        Shutdown();
+        // Ensure clean shutdown when destructor is called
+        try { Shutdown(); } catch (...) { /* swallow exceptions in dtor */ }
     }
 
     void BehaviorTreeDebugWindow::Initialize()
@@ -41,14 +48,8 @@ namespace Olympe
         if (m_isInitialized)
             return;
 
-        if (!m_imnodesInitialized)
-        {
-            ImNodes::CreateContext();
-            ImNodes::GetStyle().GridSpacing = 32.0f;
-            ImNodes::GetStyle().NodeCornerRounding = 8.0f;
-            ImNodes::GetStyle().NodePadding = ImVec2(8, 8);
-            m_imnodesInitialized = true;
-        }
+        // NodeGraphPanel now owns ImNodes editor contexts (EditorContextCreate/Free).
+        // Avoid creating a global ImNodes context here to prevent conflicts.
 
         m_isInitialized = true;
 
@@ -71,17 +72,14 @@ namespace Olympe
         // 2. Shutdown NodeGraph BEFORE destroying window (needs ImGui/ImNodes contexts alive)
         ShutdownNodeGraphDebugMode();
 
-        // 3. Destroy ImNodes context BEFORE destroying ImGui context
-        if (m_imnodesInitialized)
-        {
-            ImNodes::DestroyContext();
-            m_imnodesInitialized = false;
-        }
+        // ImNodes editor contexts are owned/managed by NodeGraphPanel
 
-        // 4. Destroy window and ImGui context LAST
+        // 3. Destroy window and ImGui context LAST
         DestroySeparateWindow();
 
         m_isInitialized = false;
+
+        std::cout << "[BTDebugger] Shutdown complete" << std::endl;
     }
 
     void BehaviorTreeDebugWindow::ToggleVisibility()
@@ -810,6 +808,34 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::AddExecutionEntry(EntityID entity, uint32_t nodeId, const std::string& nodeName, BTStatus status)
     {
+        static std::unordered_map<EntityID, std::deque<uint32_t>> s_executionHistory;
+        static std::deque<EntityID> s_historyEntityOrder;
+        constexpr size_t MAX_HISTORY_ENTITIES = 256;
+        constexpr size_t MAX_HISTORY_PER_ENTITY = 64;
+
+        auto historyIt = s_executionHistory.find(entity);
+        if (historyIt == s_executionHistory.end())
+        {
+            s_executionHistory.emplace(entity, std::deque<uint32_t>{});
+            s_historyEntityOrder.push_back(entity);
+
+            while (s_historyEntityOrder.size() > MAX_HISTORY_ENTITIES)
+            {
+                EntityID oldestEntity = s_historyEntityOrder.front();
+                s_historyEntityOrder.pop_front();
+                s_executionHistory.erase(oldestEntity);
+            }
+
+            historyIt = s_executionHistory.find(entity);
+        }
+
+        std::deque<uint32_t>& entityHistory = historyIt->second;
+        entityHistory.push_back(nodeId);
+        while (entityHistory.size() > MAX_HISTORY_PER_ENTITY)
+        {
+            entityHistory.pop_front();
+        }
+
         ExecutionLogEntry entry;
         entry.timeAgo = 0.0f;
         entry.entity = entity;
@@ -823,26 +849,29 @@ namespace Olympe
         {
             m_executionLog.pop_front();
         }
+        // Also record lightweight execution history for overlay (recent nodes)
+        m_execHistory.emplace_back(entity, nodeId);
+        while (m_execHistory.size() > MAX_EXEC_HISTORY)
+        {
+            m_execHistory.pop_front();
+        }
     }
 
-    // =========================================================================
-    // Phase 50.1.4: Temporary stub methods (BehaviorTreeDebugWindow_NodeGraph.cpp pending fix)
-    // These are empty stubs to keep the project compiling until NodeGraphPanel is restored.
-    // =========================================================================
+    // NodeGraph debug methods implemented in BehaviorTreeDebugWindow_NodeGraph.cpp
+}
 
-    void BehaviorTreeDebugWindow::InitNodeGraphDebugMode()
+extern "C" {
+    void BTDebug_AddExecutionEntry(EntityID entity, uint32_t nodeId, const char* nodeName, uint8_t status)
     {
-        // Stub: Real implementation should be in BehaviorTreeDebugWindow_NodeGraph.cpp
+        if (g_btDebugWindow && nodeName)
+        {
+            // Use local types defined in included headers (EntityID, BTStatus)
+            g_btDebugWindow->AddExecutionEntry(entity, nodeId, std::string(nodeName), static_cast<BTStatus>(status));
+        }
     }
 
-    void BehaviorTreeDebugWindow::ShutdownNodeGraphDebugMode()
+    bool BTDebug_IsVisible()
     {
-        // Stub: Real implementation should be in BehaviorTreeDebugWindow_NodeGraph.cpp
+        return (g_btDebugWindow && g_btDebugWindow->IsVisible());
     }
-
-    void BehaviorTreeDebugWindow::RenderNodeGraphDebugPanel()
-    {
-        // Stub: Real implementation should be in BehaviorTreeDebugWindow_NodeGraph.cpp
-    }
-
 }

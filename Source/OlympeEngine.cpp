@@ -117,16 +117,15 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     // Create Blueprint Editor GUI
     blueprintEditorGUI = new Olympe::BlueprintEditorGUI();
     blueprintEditorGUI->Initialize();
+    SYSTEM_LOG << "Runtime Blueprint Panel initialized (toggle with F2; opens full Blueprint Editor from panel)" << endl;
 
     // Create Behavior Tree Debug Window (now ImGui context exists)
     g_btDebugWindow = new Olympe::BehaviorTreeDebugWindow();
     g_btDebugWindow->Initialize();
+    SYSTEM_LOG << "BehaviorTree Debugger initialized (toggle with F10)" << endl;
 
     // Create Animation Editor Window
-    animationEditorWindow = new Olympe::AnimationEditorWindow();
-
-    SYSTEM_LOG << "Runtime Blueprint Panel initialized (toggle with F2; opens full Blueprint Editor from panel)" << endl;
-    SYSTEM_LOG << "BehaviorTree Debugger initialized (toggle with F10)" << endl;
+    animationEditorWindow = new Olympe::AnimationEditorWindow();    
     SYSTEM_LOG << "Animation Editor initialized (toggle with F9)" << endl;
 
     return SDL_APP_CONTINUE;  /* carry on with the program! */
