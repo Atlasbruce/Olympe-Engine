@@ -36,6 +36,8 @@ Notes:
 #include "third_party/imgui/imgui.h"
 #include "third_party/imgui/backends/imgui_impl_sdl3.h"
 #include "third_party/imgui/backends/imgui_impl_sdlrenderer3.h"
+// ImNodes used by debug tools
+#include "third_party/imnodes/imnodes.h"
 
 // Avoid Win32 macro collisions: PostMessage is a Win32 macro expanding to PostMessageW/A
 #ifdef PostMessage
@@ -485,8 +487,23 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result)
     // Cleanup Behavior Tree Debug Window
     if (g_btDebugWindow)
     {
-        // g_btDebugWindow->Shutdown(); // delete 
-        delete g_btDebugWindow;
+        // Ensure clean shutdown while ImGui/ImNodes contexts still valid
+        try
+        {
+            g_btDebugWindow->Shutdown();
+        }
+        catch (...) { /* swallow */ }
+
+        // Diagnostic: print current ImGui / ImNodes contexts
+        try
+        {
+            void* imguiCtx = ImGui::GetCurrentContext();
+            ImNodesContext* imnodesCtx = ImNodes::GetCurrentContext();
+            SYSTEM_LOG << "[Shutdown] ImGuiContext=" << imguiCtx << " ImNodesContext=" << imnodesCtx << std::endl;
+        }
+        catch (...) { }
+
+        try { delete g_btDebugWindow; } catch (...) { /* swallow */ }
         g_btDebugWindow = nullptr;
     }
     

@@ -90,6 +90,15 @@ namespace Olympe
         }
 
         // Restore imnodes context for this panel
+        // Ensure global ImNodes context pointer is set to a valid editor context
+        // since ImNodes internal asserts rely on GImNodes being non-null.
+        if (ImNodes::GetCurrentContext() == nullptr)
+        {
+            // Defensive: create a temporary global context to satisfy internal checks
+            // Note: EditorContextCreate already initialized m_imnodesContext earlier.
+            std::cout << "[NodeGraphPanel] ImNodes global context is null - creating fallback" << std::endl;
+            ImNodes::CreateContext();
+        }
         ImNodes::EditorContextSet(m_imnodesContext);
 
         // Get active graph

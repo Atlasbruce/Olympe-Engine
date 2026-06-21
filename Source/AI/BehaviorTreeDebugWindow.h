@@ -46,6 +46,7 @@ namespace Olympe
         EntityID entity = 0;            ///< Entity that executed
         uint32_t nodeId = 0;            ///< Node that was executed
         std::string nodeName;           ///< Node name
+        std::string rawJson;            ///< Original JSON payload (if any) for detailed rendering
         BTStatus status = BTStatus::Running;  ///< Execution result
     };
 
@@ -121,6 +122,10 @@ namespace Olympe
          * @param status Execution result
          */
         void AddExecutionEntry(EntityID entity, uint32_t nodeId, const std::string& nodeName, BTStatus status);
+        // External helpers for embedded panels
+        std::vector<ExecutionLogEntry> GetExecutionLogSnapshot(size_t maxEntries = 100) const;
+        size_t GetPendingCount() const;
+        void FlushPendingExtern();
 
     private:
         // Main panel rendering
@@ -160,6 +165,7 @@ namespace Olympe
         bool m_isVisible = false;
         bool m_isInitialized = false;
         float m_autoRefreshInterval = 0.5f;
+        bool m_showHistoryWindow = false;
 
         // Filtering
         char m_filterText[256] = "";
@@ -191,6 +197,8 @@ namespace Olympe
 
         // Separate ImGui context for this window
         ImGuiContext* m_separateImGuiContext;
+        // ImNodes context for node graph rendering in the separate window
+        void* m_imnodesContext = nullptr;
 
         // Async autosave – persists node positions without blocking the UI.
         EditorAutosaveManager m_autosave;

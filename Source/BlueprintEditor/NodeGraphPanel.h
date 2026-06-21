@@ -189,6 +189,9 @@ namespace Olympe
         // Put the panel into read-only visualization mode (no edits, pan allowed)
         void SetReadOnly(bool ro) { m_ReadOnly = ro; }
 
+        // Expose the internal ImNodes editor context for advanced callers
+        ImNodesEditorContext* GetImNodesEditorContext() const { return m_imnodesContext; }
+
         // -----------------------------------------------------------------------
         // Legacy Save/SaveAs Methods (Phase 44.4 Restoration)
         // -----------------------------------------------------------------------

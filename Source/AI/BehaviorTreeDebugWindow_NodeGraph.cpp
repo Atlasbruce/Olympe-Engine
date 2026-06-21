@@ -147,6 +147,16 @@ namespace Olympe
 				ImDrawList* dl = ImGui::GetWindowDrawList();
 				if (dl)
 				{
+					// Ensure we have a valid ImNodes editor context for the panel before
+					// calling ImNodes APIs. If missing, skip overlay to avoid asserts.
+					ImNodesEditorContext* editorCtx = m_nodeGraphPanel.GetImNodesEditorContext();
+					if (!editorCtx)
+					{
+						std::cout << "[BTDebugger] Node overlay skipped: ImNodes editor context missing" << std::endl;
+						return;
+					}
+					// Set the editor context so ImNodes internal calls use the correct editor
+					ImNodes::EditorContextSet(editorCtx);
 					// Build a map nodeId -> screen center
 					std::unordered_map<uint32_t, ImVec2> nodeCenter;
 					for (const auto& nd : doc->GetNodes())

@@ -9,6 +9,10 @@
 #include "../../third_party/imgui/imgui.h"
 #include "../../system/system_utils.h"
 #include <cstring>
+// Use debugger snapshot helpers
+#include "../BehaviorTreeDebugWindow.h"
+#include <vector>
+#include <string>
 
 namespace Olympe {
 namespace AI {
@@ -176,7 +180,44 @@ void RuntimeDebugPanel::RenderExecutionGraph()
 void RuntimeDebugPanel::RenderExecutionLog()
 {
     ImGui::Text("Execution Log");
-    // TODO: Show execution log entries
+    ImGui::Separator();
+    // If the global debugger exists, show its snapshot and controls
+    extern Olympe::BehaviorTreeDebugWindow* g_btDebugWindow;
+    if (g_btDebugWindow)
+    {
+        // Pending / entries (use default snapshot size)
+        auto fullSnapshot = g_btDebugWindow->GetExecutionLogSnapshot();
+        ImGui::Text("Entries: %zu", fullSnapshot.size());
+        ImGui::SameLine();
+        ImGui::Text("Pending: %zu", g_btDebugWindow->GetPendingCount());
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Flush pending"))
+        {
+            g_btDebugWindow->FlushPendingExtern();
+        }
+
+        // Show recent entries compact (limit 64)
+        auto entries = g_btDebugWindow->GetExecutionLogSnapshot(64);
+        ImGui::BeginChild("EmbeddedExecLog", ImVec2(0, 200), true);
+        for (auto it = entries.rbegin(); it != entries.rend(); ++it)
+        {
+            const auto& e = *it;
+            ImGui::Text("Node %u (%s)", e.nodeId, e.nodeName.c_str());
+            if (!e.rawJson.empty())
+            {
+                ImGui::SameLine();
+                ImGui::PushID((int)(e.entity & 0xFFFFFFFF));
+                if (ImGui::SmallButton("Details")) ImGui::OpenPopup("ExecDetails");
+                if (ImGui::BeginPopup("ExecDetails"))
+                {
+                    ImGui::TextWrapped("%s", e.rawJson.c_str());
+                    ImGui::EndPopup();
+                }
+                ImGui::PopID();
+            }
+        }
+        ImGui::EndChild();
+    }
 }
 
 void RuntimeDebugPanel::RenderBlackboardValues()

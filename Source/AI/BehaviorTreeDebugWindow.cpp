@@ -1,4 +1,4 @@
-/**
+    /**
  * @file BehaviorTreeDebugWindow.cpp
  * @brief Implementation of behavior tree runtime debugger
  */
@@ -29,6 +29,13 @@ extern Olympe::BehaviorTreeDebugWindow* g_btDebugWindow;
 
 namespace Olympe
 {
+
+    // Pending execution entries buffer kept globally so runtime can emit
+    // execution events even when the debug window is not yet created/visible.
+    // Entries are flushed to the debug window when it becomes available.
+    static std::deque<ExecutionLogEntry> s_pendingExecutionBuffer;
+    static const size_t MAX_PENDING_EXEC_BUFFER = 4096;
+
     BehaviorTreeDebugWindow::BehaviorTreeDebugWindow()
         : m_separateWindow(nullptr)
         , m_separateRenderer(nullptr)
@@ -37,16 +44,57 @@ namespace Olympe
     {
     }
 
+    std::vector<ExecutionLogEntry> BehaviorTreeDebugWindow::GetExecutionLogSnapshot(size_t maxEntries) const
+    {
+        std::vector<ExecutionLogEntry> out;
+        out.reserve(std::min(maxEntries, m_executionLog.size()));
+        // return most recent entries up to maxEntries (chronological: oldest->newest)
+        size_t start = (m_executionLog.size() > maxEntries) ? (m_executionLog.size() - maxEntries) : 0;
+        for (size_t i = start; i < m_executionLog.size(); ++i) out.push_back(m_executionLog[i]);
+        return out;
+    }
+
+    size_t BehaviorTreeDebugWindow::GetPendingCount() const
+    {
+        return s_pendingExecutionBuffer.size();
+    }
+
+    void BehaviorTreeDebugWindow::FlushPendingExtern()
+    {
+        while (!s_pendingExecutionBuffer.empty())
+        {
+            const auto e = s_pendingExecutionBuffer.front();
+            s_pendingExecutionBuffer.pop_front();
+            AddExecutionEntry(e.entity, e.nodeId, e.nodeName, e.status);
+        }
+    }
+
+
+
     BehaviorTreeDebugWindow::~BehaviorTreeDebugWindow()
     {
         // Ensure clean shutdown when destructor is called
         try { Shutdown(); } catch (...) { /* swallow exceptions in dtor */ }
+        // Ensure we also destroy any leftover ImNodes global context we created as fallback
+        if (m_imnodesContext)
+        {
+            try { ImNodes::DestroyContext(static_cast<ImNodesContext*>(m_imnodesContext)); } catch (...) {}
+            m_imnodesContext = nullptr;
+        }
     }
 
     void BehaviorTreeDebugWindow::Initialize()
     {
         if (m_isInitialized)
             return;
+
+        // Ensure an ImNodes context exists before initializing NodeGraphPanel
+        // NodeGraphPanel may call ImNodes APIs during Initialize(), so create
+        // the context here to avoid assertions when the panel later renders.
+        if (!m_imnodesContext)
+        {
+            m_imnodesContext = ImNodes::CreateContext();
+        }
 
         // NodeGraphPanel now owns ImNodes editor contexts (EditorContextCreate/Free).
         // Avoid creating a global ImNodes context here to prevent conflicts.
@@ -61,11 +109,29 @@ namespace Olympe
         // Initialize NodeGraph debug panel (Blueprint Editor pipeline, Runtime mode)
         InitNodeGraphDebugMode();
 
+        // Flush any pending execution entries recorded before the window existed
+        if (!s_pendingExecutionBuffer.empty())
+        {
+            std::cout << "[BTDebugger] Flushing " << s_pendingExecutionBuffer.size() << " pending execution entries" << std::endl;
+            for (const auto& e : s_pendingExecutionBuffer)
+            {
+                AddExecutionEntry(e.entity, e.nodeId, e.nodeName, e.status);
+                if (!e.rawJson.empty() && !m_executionLog.empty())
+                {
+                    m_executionLog.back().rawJson = e.rawJson;
+                }
+            }
+            s_pendingExecutionBuffer.clear();
+        }
+
         std::cout << "[BTDebugger] Initialized (window will be created on first F10)" << std::endl;
     }
 
     void BehaviorTreeDebugWindow::Shutdown()
     {
+        // Make Shutdown idempotent: if not initialized, nothing to do
+        if (!m_isInitialized)
+            return;
         // 1. Flush autosave first
         m_autosave.Flush();
 
@@ -96,6 +162,24 @@ namespace Olympe
             if (!m_windowCreated)
             {
                 CreateSeparateWindow();
+            }
+
+            // If there are pending entries, flush them now that the window is visible
+            if (!s_pendingExecutionBuffer.empty())
+            {
+                size_t moved = 0;
+                std::cout << "[BTDebugger] Window opened - auto-flushing " << s_pendingExecutionBuffer.size() << " pending entries" << std::endl;
+                while (!s_pendingExecutionBuffer.empty())
+                {
+                    const auto e = s_pendingExecutionBuffer.front();
+                    s_pendingExecutionBuffer.pop_front();
+                    AddExecutionEntry(e.entity, e.nodeId, e.nodeName, e.status);
+                    // preserve rawJson if present
+                    if (!e.rawJson.empty() && !m_executionLog.empty())
+                        m_executionLog.back().rawJson = e.rawJson;
+                    ++moved;
+                }
+                std::cout << "[BTDebugger] Auto-flushed " << moved << " entries" << std::endl;
             }
 
             std::cout << "[BTDebugger] F10: Debugger window opened (separate window)" << std::endl;
@@ -137,6 +221,13 @@ namespace Olympe
         m_separateImGuiContext = ImGui::CreateContext();
         ImGui::SetCurrentContext(m_separateImGuiContext);
 
+        // Create a dedicated ImNodes context for the separate window's node graph
+        if (!m_imnodesContext)
+        {
+            m_imnodesContext = ImNodes::CreateContext();
+            // ImNodes::CreateContext returns an ImNodesContext*; store as void* to avoid header inclusion issues
+        }
+
         ImGuiIO& io = ImGui::GetIO();
         (void)io;
         ImGui::StyleColorsDark();
@@ -175,6 +266,14 @@ namespace Olympe
         // Restore context BEFORE destroying SDL resources
         if (previousContext != nullptr && previousContext != m_separateImGuiContext)
             ImGui::SetCurrentContext(previousContext);
+
+        // Destroy ImNodes context created for this separate window
+        if (m_imnodesContext)
+        {
+            // ImNodes::DestroyContext expects ImNodesContext*
+            ImNodes::DestroyContext(static_cast<ImNodesContext*>(m_imnodesContext));
+            m_imnodesContext = nullptr;
+        }
 
         // Destroy SDL resources LAST
         if (m_separateRenderer != nullptr)
@@ -327,9 +426,24 @@ namespace Olympe
 
         ImGui::SameLine();
 
+        // Draggable resize grip placed between node graph and inspector for clearer UX
+        ImGui::PushID("InspectorResizeGrip");
+        ImGui::InvisibleButton("##InspectorGrip", ImVec2(12.0f, windowHeight));
+        if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+        {
+            float delta = ImGui::GetIO().MouseDelta.x;
+            m_inspectorWidth -= delta; // dragging left increases center, so subtract
+            if (m_inspectorWidth < 200.0f) m_inspectorWidth = 200.0f;
+            if (m_inspectorWidth > 900.0f) m_inspectorWidth = 900.0f;
+        }
+        // visual separator
+        ImGui::SameLine();
+
+        // Make the inspector panel resizable horizontally by using a vertical splitter
         ImGui::BeginChild("InspectorPanel", ImVec2(m_inspectorWidth, windowHeight), true);
         RenderInspectorPanel();
         ImGui::EndChild();
+        ImGui::PopID();
 
         ImGui::End();
     }
@@ -770,37 +884,122 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::RenderExecutionLog()
     {
+        // Row 1: primary actions + counters
         if (ImGui::Button("Clear Log"))
         {
             m_executionLog.clear();
         }
+        ImGui::SameLine();
+        ImGui::Text("Entries: %zu", m_executionLog.size());
+        ImGui::SameLine();
+        ImGui::Text("Pending: %zu", s_pendingExecutionBuffer.size());
+        ImGui::SameLine();
+        ImGui::Text("Selected Entity: %llu", static_cast<unsigned long long>(m_selectedEntity));
+
+        // Row 2: secondary actions
+        if (ImGui::SmallButton("Show all entities")) m_selectedEntity = 0;
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Flush pending"))
+        {
+            // Move pending entries into the visible execution log
+            size_t moved = 0;
+            while (!s_pendingExecutionBuffer.empty())
+            {
+                const auto e = s_pendingExecutionBuffer.front();
+                s_pendingExecutionBuffer.pop_front();
+                AddExecutionEntry(e.entity, e.nodeId, e.nodeName, e.status);
+                ++moved;
+            }
+            std::cout << "[BTDebugger] Flushed " << moved << " pending entries" << std::endl;
+        }
+        ImGui::SameLine();
+        if (ImGui::SmallButton(m_showHistoryWindow ? "Compact View" : "Full History"))
+        {
+            m_showHistoryWindow = !m_showHistoryWindow;
+        }
 
         ImGui::Separator();
 
+        // Two modes: compact log (current) and full-history viewer
         ImGui::BeginChild("ExecutionLogScroll", ImVec2(0, 0), false);
 
-        for (auto it = m_executionLog.rbegin(); it != m_executionLog.rend(); ++it)
+        if (!m_showHistoryWindow)
         {
-            const auto& entry = *it;
-
-            if (entry.entity != m_selectedEntity)
-                continue;
-
-            ImVec4 color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
-            const char* icon = "▶";
-            if (entry.status == BTStatus::Success)
+            // Compact reverse-chronological view (most recent first)
+            size_t displayIdx = 0;
+            for (auto it = m_executionLog.rbegin(); it != m_executionLog.rend(); ++it)
             {
-                color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
-                icon = "✓";
+                const auto& entry = *it;
+
+                if (m_selectedEntity != 0 && entry.entity != m_selectedEntity)
+                    continue;
+
+                ImVec4 color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+                const char* icon = "▶";
+                if (entry.status == BTStatus::Success) { color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f); icon = "✓"; }
+                else if (entry.status == BTStatus::Failure) { color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); icon = "✗"; }
+
+                ImGui::TextColored(color, "[%.2fs ago] %s Node %u (%s)", entry.timeAgo, icon, entry.nodeId, entry.nodeName.c_str());
+                if (entry.entity != 0) { ImGui::SameLine(); ImGui::Text("Entity: %llu", static_cast<unsigned long long>(entry.entity)); }
+
+                if (!entry.rawJson.empty())
+                {
+                    // Use unique ID per displayed entry to avoid ImGui ID conflicts
+                    std::string hdr = std::string("Details##") + std::to_string(displayIdx++);
+                    if (ImGui::CollapsingHeader(hdr.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+                    {
+                        try
+                        {
+                            auto j = nlohmann::json::parse(entry.rawJson);
+                            if (j.contains("msg") && j["msg"].is_string()) ImGui::TextWrapped("Msg: %s", j["msg"].get<std::string>().c_str());
+                            if (j.contains("entityName") && j["entityName"].is_string()) ImGui::Text("EntityName: %s", j["entityName"].get<std::string>().c_str());
+                            if (j.contains("details") && j["details"].is_object())
+                            {
+                                ImGui::Separator(); ImGui::Text("Details:");
+                                for (auto it = j["details"].begin(); it != j["details"].end(); ++it)
+                                {
+                                    const std::string key = it.key(); const auto& val = it.value();
+                                    if (val.is_string()) ImGui::Text("  %s: %s", key.c_str(), val.get<std::string>().c_str());
+                                    else if (val.is_number()) ImGui::Text("  %s: %g", key.c_str(), val.get<double>());
+                                    else if (val.is_boolean()) ImGui::Text("  %s: %s", key.c_str(), val.get<bool>() ? "true" : "false");
+                                    else ImGui::TextWrapped("  %s: %s", key.c_str(), val.dump().c_str());
+                                }
+                            }
+                        }
+                        catch (...) { ImGui::Text("(invalid JSON payload)"); }
+                    }
+                }
             }
-            else if (entry.status == BTStatus::Failure)
+        }
+        else
+        {
+            // Full history viewer: group by entity and show chronological order
+            // Provide a simple tree where each entity expands into its full recorded history.
+            // Build a temporary map of entity -> vector of indices
+            std::unordered_map<EntityID, std::vector<size_t>> idxMap;
+            idxMap.reserve(m_executionLog.size());
+            for (size_t i = 0; i < m_executionLog.size(); ++i)
             {
-                color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-                icon = "✗";
+                const auto& e = m_executionLog[i];
+                if (m_selectedEntity != 0 && e.entity != m_selectedEntity) continue;
+                idxMap[e.entity].push_back(i);
             }
 
-            ImGui::TextColored(color, "[%.2fs ago] %s Node %u (%s)",
-                entry.timeAgo, icon, entry.nodeId, entry.nodeName.c_str());
+            for (auto itMap = idxMap.begin(); itMap != idxMap.end(); ++itMap)
+            {
+                EntityID ent = itMap->first;
+                char label[64]; sprintf_s(label, sizeof(label), "Entity %llu", static_cast<unsigned long long>(ent));
+                if (ImGui::TreeNode(label))
+                {
+                    // chronological from oldest to newest
+                    for (size_t idx : itMap->second)
+                    {
+                        const auto& entry = m_executionLog[idx];
+                        ImGui::Text("Node %u (%s)  [%s]", entry.nodeId, entry.nodeName.c_str(), (entry.status==BTStatus::Success)?"Success":(entry.status==BTStatus::Failure)?"Failure":"Running");
+                    }
+                    ImGui::TreePop();
+                }
+            }
         }
 
         ImGui::EndChild();
@@ -841,6 +1040,7 @@ namespace Olympe
         entry.entity = entity;
         entry.nodeId = nodeId;
         entry.nodeName = nodeName;
+        entry.rawJson.clear();
         entry.status = status;
 
         m_executionLog.push_back(entry);
@@ -857,16 +1057,146 @@ namespace Olympe
         }
     }
 
+    // Helper to add to pending buffer when window isn't available
+    static void AddToPendingBuffer(EntityID entity, uint32_t nodeId, const std::string& nodeName, BTStatus status)
+    {
+        ExecutionLogEntry entry;
+        entry.timeAgo = 0.0f;
+        entry.entity = entity;
+        entry.nodeId = nodeId;
+        entry.nodeName = nodeName;
+        entry.status = status;
+
+        s_pendingExecutionBuffer.push_back(entry);
+        while (s_pendingExecutionBuffer.size() > MAX_PENDING_EXEC_BUFFER)
+            s_pendingExecutionBuffer.pop_front();
+    }
+
     // NodeGraph debug methods implemented in BehaviorTreeDebugWindow_NodeGraph.cpp
 }
 
 extern "C" {
     void BTDebug_AddExecutionEntry(EntityID entity, uint32_t nodeId, const char* nodeName, uint8_t status)
     {
-        if (g_btDebugWindow && nodeName)
+        // Always accept entries. If the debug window is visible forward to it;
+        // otherwise push into the module-level pending buffer so entries are
+        // preserved while the UI is not available. This avoids calling into
+        // window methods when the UI exists but is not ready (which can crash).
+        if (!nodeName) return;
+
+        // Prepare entry
+        Olympe::ExecutionLogEntry e;
+        e.timeAgo = 0.0f;
+        e.entity = entity;
+        e.nodeId = nodeId;
+        e.nodeName = std::string(nodeName);
+        e.status = static_cast<BTStatus>(status);
+
+        if (g_btDebugWindow && g_btDebugWindow->IsVisible())
         {
-            // Use local types defined in included headers (EntityID, BTStatus)
-            g_btDebugWindow->AddExecutionEntry(entity, nodeId, std::string(nodeName), static_cast<BTStatus>(status));
+            // Safe to forward directly to the visible window
+            try { g_btDebugWindow->AddExecutionEntry(e.entity, e.nodeId, e.nodeName, e.status); }
+            catch (...) { /* swallow to avoid crashing runtime */ }
+        }
+        else
+        {
+            // Buffer for later flush when the window initializes or becomes visible
+            Olympe::s_pendingExecutionBuffer.push_back(e);
+            while (Olympe::s_pendingExecutionBuffer.size() > Olympe::MAX_PENDING_EXEC_BUFFER)
+                Olympe::s_pendingExecutionBuffer.pop_front();
+        }
+    }
+
+    void BTDebug_AddExecutionJson(const char* jsonLine)
+    {
+        static int s_debugPrints = 0;
+        if (!jsonLine) return;
+        // Lightweight arrival trace (helps diagnose calls that fail during parse)
+        if (s_debugPrints < 5)
+        {
+            std::cout << "[BTDebug] Received JSON payload (raw): " << jsonLine << std::endl;
+            ++s_debugPrints;
+        }
+
+        try
+        {
+            // Parse minimal fields to convert into internal ExecutionLogEntry
+            auto j = nlohmann::json::parse(jsonLine);
+            Olympe::ExecutionLogEntry e;
+            e.timeAgo = 0.0f;
+            // Parse numeric fields robustly: accept unsigned integers, signed numbers, or strings
+            if (j.contains("entity"))
+            {
+                if (j["entity"].is_number()) e.entity = static_cast<EntityID>(static_cast<long long>(j["entity"].get<double>()));
+                else if (j["entity"].is_string()) e.entity = static_cast<EntityID>(std::stoull(j["entity"].get<std::string>()));
+                else e.entity = 0;
+            }
+            else e.entity = 0;
+
+            if (j.contains("nodeId"))
+            {
+                if (j["nodeId"].is_number()) e.nodeId = static_cast<uint32_t>(static_cast<int>(j["nodeId"].get<double>()));
+                else if (j["nodeId"].is_string()) e.nodeId = static_cast<uint32_t>(std::stoul(j["nodeId"].get<std::string>()));
+                else e.nodeId = 0;
+            }
+            else e.nodeId = 0;
+
+            e.nodeName = j.value("nodeName", std::string(""));
+            e.rawJson = jsonLine;
+            std::string statusStr = j.value("status", std::string("Running"));
+            if (statusStr == "Success") e.status = BTStatus::Success;
+            else if (statusStr == "Failure") e.status = BTStatus::Failure;
+            else e.status = BTStatus::Running;
+
+            // optional lightweight diagnostic output for first few calls
+            if (s_debugPrints < 20)
+            {
+                std::cout << "[BTDebug] JSON entry: entity=" << e.entity << " nodeId=" << e.nodeId
+                          << " nodeName=" << e.nodeName << " status=" << (int)e.status << std::endl;
+                ++s_debugPrints;
+            }
+
+            // If window present and visible forward immediately, otherwise buffer
+            if (g_btDebugWindow && g_btDebugWindow->IsVisible())
+            {
+                try { g_btDebugWindow->AddExecutionEntry(e.entity, e.nodeId, e.nodeName, e.status); }
+                catch (...) { /* swallow exceptions to avoid crashing runtime */ }
+            }
+            else
+            {
+                // Preserve parsed fields and keep original JSON for richer UI details later
+                Olympe::s_pendingExecutionBuffer.push_back(e);
+                while (Olympe::s_pendingExecutionBuffer.size() > Olympe::MAX_PENDING_EXEC_BUFFER)
+                    Olympe::s_pendingExecutionBuffer.pop_front();
+            }
+        }
+        catch (...)
+        {
+            // If parsing failed, still preserve the raw JSON so the UI can display
+            // it when/if the debugger becomes available. Avoid dropping events.
+            try
+            {
+                Olympe::ExecutionLogEntry e;
+                e.timeAgo = 0.0f;
+                e.entity = 0;
+                e.nodeId = 0;
+                e.nodeName = std::string("(unparsed)");
+                e.rawJson = jsonLine;
+                e.status = BTStatus::Running;
+
+                if (g_btDebugWindow && g_btDebugWindow->IsVisible())
+                {
+                    try { g_btDebugWindow->AddExecutionEntry(e.entity, e.nodeId, e.nodeName, e.status); }
+                    catch (...) { /* swallow */ }
+                }
+                else
+                {
+                    Olympe::s_pendingExecutionBuffer.push_back(e);
+                    while (Olympe::s_pendingExecutionBuffer.size() > Olympe::MAX_PENDING_EXEC_BUFFER)
+                        Olympe::s_pendingExecutionBuffer.pop_front();
+                }
+            }
+            catch (...) { /* swallow double-failures */ }
         }
     }
 

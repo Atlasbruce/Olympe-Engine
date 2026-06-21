@@ -28,6 +28,7 @@ Behavior Tree implementation: JSON loading and built-in node execution.
 #include <functional>
 #include <set>
 #include <fstream>
+#include <ctime>
 
 using json = nlohmann::json;
 
@@ -1012,11 +1013,49 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
             break;
     }
 
-    // Enhanced runtime debugging: record node execution in debugger execution log (via small API)
+    // Enhanced runtime debugging: emit rich JSON execution entry (via small API)
     try
     {
-        if (BTDebug_IsVisible())
-            BTDebug_AddExecutionEntry(entity, node.id, node.name.c_str(), static_cast<uint8_t>(finalStatus));
+        json j;
+        // Use doubles for JSON numeric fields to avoid MSVC overload ambiguity
+        j["ts"] = static_cast<double>(static_cast<unsigned long long>(std::time(nullptr)) * 1000ULL);
+        j["treeId"] = static_cast<double>(tree.id);
+        j["entity"] = static_cast<double>(entity);
+        j["nodeId"] = static_cast<double>(node.id);
+        j["nodeName"] = node.name;
+        j["status"] = (finalStatus == BTStatus::Success) ? "Success"
+                    : (finalStatus == BTStatus::Failure) ? "Failure"
+                    : "Running";
+
+        if (World::Get().HasComponent<Identity_data>(entity))
+        {
+            const Identity_data& identity = World::Get().GetComponent<Identity_data>(entity);
+            j["entityName"] = identity.name;
+        }
+
+        if (node.type == BTNodeType::Condition)
+        {
+            json details;
+            if (!node.conditionTypeString.empty())
+                details["conditionType"] = node.conditionTypeString;
+            else
+                details["conditionType"] = static_cast<int>(node.conditionType);
+            details["conditionParam"] = node.conditionParam;
+            details["hasTarget"] = blackboard.hasTarget;
+            details["distanceToTarget"] = blackboard.distanceToTarget;
+
+            if (blackboard.targetEntity != INVALID_ENTITY_ID &&
+                World::Get().HasComponent<Identity_data>(blackboard.targetEntity))
+            {
+                const Identity_data& targetIdentity = World::Get().GetComponent<Identity_data>(blackboard.targetEntity);
+                details["targetName"] = targetIdentity.name;
+            }
+
+            j["details"] = details;
+        }
+
+        const std::string line = j.dump();
+        BTDebug_AddExecutionJson(line.c_str());
     }
     catch (...) { /* don't let debug logging break runtime */ }
 
