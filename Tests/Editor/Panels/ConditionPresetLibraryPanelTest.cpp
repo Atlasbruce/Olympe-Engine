@@ -24,7 +24,7 @@
  * C++14 compliant — no std::optional, structured bindings, std::filesystem.
  */
 
-#include "BlueprintEditor/ConditionPreset.h"
+#include "Editor/ConditionPreset/ConditionPreset.h"
 #include "Editor/Panels/ConditionPresetLibraryPanel.h"
 
 #include <iostream>
@@ -72,12 +72,10 @@ static ConditionPreset MakePreset(const std::string& name,
                                    float              constVal)
 {
     ConditionPreset p;
-    p.name = name;
-    p.condition.leftMode     = "Variable";
-    p.condition.leftVariable = leftVar;
-    p.condition.operatorStr  = op;
-    p.condition.rightMode    = "Const";
-    p.condition.rightConstValue = TaskValue(constVal);
+    p.name  = name;
+    p.left  = Operand::CreateVariable(leftVar);
+    p.op    = ConditionPreset::OpFromString(op);
+    p.right = Operand::CreateConst(static_cast<double>(constVal));
     return p;
 }
 
@@ -113,9 +111,9 @@ static void Test_Panel_RenderListWithPresets()
     int prevFail = s_failCount;
 
     ConditionPresetRegistry reg;
-    reg.AddPreset(MakePreset("Condition #1", "mHealth", "<=", 2.f));
-    reg.AddPreset(MakePreset("Condition #2", "mSpeed",  ">",  100.f));
-    reg.AddPreset(MakePreset("Condition #3", "AI_Mode", "==", 3.f));
+    reg.CreatePreset(MakePreset("Condition #1", "mHealth", "<=", 2.f));
+    reg.CreatePreset(MakePreset("Condition #2", "mSpeed",  ">",  100.f));
+    reg.CreatePreset(MakePreset("Condition #3", "AI_Mode", "==", 3.f));
 
     ConditionPresetLibraryPanel panel(reg);
 
@@ -153,8 +151,8 @@ static void Test_Panel_OnAddPresetClicked()
     TEST_ASSERT(callbackFired,             "OnPresetCreated callback should fire");
     TEST_ASSERT(!callbackID.empty(),       "Callback ID should be non-empty");
     TEST_ASSERT(callbackID == newID,       "Callback ID should match returned ID");
-    TEST_ASSERT(reg.HasPreset(newID),      "Registry should contain new preset");
-    TEST_ASSERT(reg.GetCount() == 1u,      "Registry should have 1 preset");
+    TEST_ASSERT(reg.GetPreset(newID) != nullptr,      "Registry should contain new preset");
+    TEST_ASSERT(reg.GetPresetCount() == 1u,      "Registry should have 1 preset");
     TEST_ASSERT(panel.GetSelectedPresetID() == newID, "New preset should be selected");
 
     ReportTest(name, s_failCount == prevFail);
@@ -170,7 +168,7 @@ static void Test_Panel_OnDuplicatePresetClicked()
     int prevFail = s_failCount;
 
     ConditionPresetRegistry reg;
-    const std::string origID = reg.AddPreset(MakePreset("MyPreset", "health", "<", 50.f));
+    const std::string origID = reg.CreatePreset(MakePreset("MyPreset", "health", "<", 50.f));
 
     ConditionPresetLibraryPanel panel(reg);
 
@@ -182,14 +180,14 @@ static void Test_Panel_OnDuplicatePresetClicked()
     TEST_ASSERT(callbackFired,               "OnPresetCreated callback should fire on duplicate");
     TEST_ASSERT(!dupID.empty(),              "Duplicate ID should be non-empty");
     TEST_ASSERT(dupID != origID,             "Duplicate ID must differ from original");
-    TEST_ASSERT(reg.HasPreset(dupID),        "Registry should contain the duplicate");
-    TEST_ASSERT(reg.GetCount() == 2u,        "Registry should have 2 presets after duplicate");
+    TEST_ASSERT(reg.GetPreset(dupID) != nullptr,        "Registry should contain the duplicate");
+    TEST_ASSERT(reg.GetPresetCount() == 2u,        "Registry should have 2 presets after duplicate");
 
     const ConditionPreset* copy = reg.GetPreset(dupID);
     TEST_ASSERT(copy != nullptr,             "GetPreset(dupID) should not return nullptr");
     TEST_ASSERT(copy->name.find("Copy of") != std::string::npos,
                 "Duplicate name should contain 'Copy of'");
-    TEST_ASSERT(copy->condition.leftVariable == "health",
+    TEST_ASSERT(copy->left.stringValue == "health",
                 "Duplicate condition data should match original");
 
     ReportTest(name, s_failCount == prevFail);
@@ -205,7 +203,7 @@ static void Test_Panel_OnDeletePresetClicked()
     int prevFail = s_failCount;
 
     ConditionPresetRegistry reg;
-    const std::string id = reg.AddPreset(MakePreset("ToDelete", "mHP", "<=", 10.f));
+    const std::string id = reg.CreatePreset(MakePreset("ToDelete", "mHP", "<=", 10.f));
 
     ConditionPresetLibraryPanel panel(reg);
 
@@ -218,7 +216,7 @@ static void Test_Panel_OnDeletePresetClicked()
                 "Confirmation should be visible after click");
     TEST_ASSERT(panel.GetPresetToDelete() == id,
                 "PresetToDelete should match the clicked ID");
-    TEST_ASSERT(reg.HasPreset(id),
+    TEST_ASSERT(reg.GetPreset(id) != nullptr,
                 "Preset should NOT be deleted yet (only confirmation shown)");
 
     ReportTest(name, s_failCount == prevFail);
@@ -234,7 +232,7 @@ static void Test_Panel_OnDeleteConfirmed()
     int prevFail = s_failCount;
 
     ConditionPresetRegistry reg;
-    const std::string id = reg.AddPreset(MakePreset("Delete Me", "mHP", "<=", 10.f));
+    const std::string id = reg.CreatePreset(MakePreset("Delete Me", "mHP", "<=", 10.f));
 
     ConditionPresetLibraryPanel panel(reg);
     panel.OnDeletePresetClicked(id);
@@ -245,9 +243,9 @@ static void Test_Panel_OnDeleteConfirmed()
 
     TEST_ASSERT(!panel.IsDeleteConfirmationVisible(),
                 "Confirmation should be hidden after confirm");
-    TEST_ASSERT(!reg.HasPreset(id),
+    TEST_ASSERT(reg.GetPreset(id) == nullptr,
                 "Preset should be removed from registry after confirm");
-    TEST_ASSERT(reg.GetCount() == 0u,
+    TEST_ASSERT(reg.GetPresetCount() == 0u,
                 "Registry should be empty after deletion");
 
     ReportTest(name, s_failCount == prevFail);
@@ -263,9 +261,9 @@ static void Test_Panel_SearchFilter()
     int prevFail = s_failCount;
 
     ConditionPresetRegistry reg;
-    reg.AddPreset(MakePreset("Health Check",   "mHealth", "<=", 2.f));
-    reg.AddPreset(MakePreset("Speed Limit",    "mSpeed",  ">=", 100.f));
-    reg.AddPreset(MakePreset("AI Mode Check",  "AI_Mode", "==", 3.f));
+    reg.CreatePreset(MakePreset("Health Check",   "mHealth", "<=", 2.f));
+    reg.CreatePreset(MakePreset("Speed Limit",    "mSpeed",  ">=", 100.f));
+    reg.CreatePreset(MakePreset("AI Mode Check",  "AI_Mode", "==", 3.f));
 
     ConditionPresetLibraryPanel panel(reg);
 
@@ -308,8 +306,8 @@ static void Test_Panel_SelectedItemHighlight()
     int prevFail = s_failCount;
 
     ConditionPresetRegistry reg;
-    const std::string id1 = reg.AddPreset(MakePreset("C1", "v1", "==", 1.f));
-    const std::string id2 = reg.AddPreset(MakePreset("C2", "v2", ">", 5.f));
+    const std::string id1 = reg.CreatePreset(MakePreset("C1", "v1", "==", 1.f));
+    const std::string id2 = reg.CreatePreset(MakePreset("C2", "v2", ">", 5.f));
 
     ConditionPresetLibraryPanel panel(reg);
 
@@ -338,8 +336,8 @@ static void Test_Panel_ReferenceAnalysisShown()
     int prevFail = s_failCount;
 
     ConditionPresetRegistry reg;
-    const std::string p1 = reg.AddPreset(MakePreset("C1", "h", "<=", 2.f));
-    const std::string p2 = reg.AddPreset(MakePreset("C2", "s", ">=", 100.f));
+    const std::string p1 = reg.CreatePreset(MakePreset("C1", "h", "<=", 2.f));
+    const std::string p2 = reg.CreatePreset(MakePreset("C2", "s", ">=", 100.f));
 
     ConditionPresetLibraryPanel panel(reg);
 
@@ -382,7 +380,7 @@ static void Test_Panel_CallbackTriggered()
     int prevFail = s_failCount;
 
     ConditionPresetRegistry reg;
-    const std::string id = reg.AddPreset(MakePreset("TriggerTest", "x", "==", 0.f));
+    const std::string id = reg.CreatePreset(MakePreset("TriggerTest", "x", "==", 0.f));
 
     ConditionPresetLibraryPanel panel(reg);
 
@@ -400,7 +398,7 @@ static void Test_Panel_CallbackTriggered()
     panel.OnDeleteConfirmed(id);
     TEST_ASSERT(deletedFired,       "OnPresetDeleted callback should fire after confirm");
     TEST_ASSERT(deletedID == id,    "Deleted ID should match");
-    TEST_ASSERT(!reg.HasPreset(id), "Preset should be gone from registry");
+    TEST_ASSERT(reg.GetPreset(id) == nullptr, "Preset should be gone from registry");
 
     ReportTest(name, s_failCount == prevFail);
 }
