@@ -892,6 +892,19 @@ GraphDocument GraphDocument::FromJson(const json& j)
         }
 
         // Clear any existing children saved from file and apply reconstructed adjacency
+        // Normalize and sort adjacency targets by editor Y (top-first) to match visual priority
+        for (auto& kv : forwardAdj)
+        {
+            std::sort(kv.second.begin(), kv.second.end(), [&](uint32_t a, uint32_t b){
+                const NodeData* na = doc.GetNode(NodeId{a});
+                const NodeData* nb = doc.GetNode(NodeId{b});
+                if (!na || !nb) return a < b;
+                if (na->position.y != nb->position.y) return na->position.y < nb->position.y;
+                return na->position.x < nb->position.x;
+            });
+        }
+
+        // Clear any existing children saved from file and apply reconstructed adjacency
         for (auto& n : doc.m_nodes) n.children.clear();
         for (const auto& kv : forwardAdj)
         {

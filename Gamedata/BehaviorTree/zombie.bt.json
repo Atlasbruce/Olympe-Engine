@@ -193,17 +193,6 @@
       },
       {
         "fromPin": {
-          "nodeId": 22,
-          "pinId": "output"
-        },
-        "id": 52,
-        "toPin": {
-          "nodeId": 11,
-          "pinId": "input"
-        }
-      },
-      {
-        "fromPin": {
           "nodeId": 4,
           "pinId": "output"
         },
@@ -278,8 +267,8 @@
         "name": "Root",
         "parameters": {},
         "position": {
-          "x": 178,
-          "y": 403
+          "x": 183,
+          "y": 401
         },
         "type": "BT_Root"
       },

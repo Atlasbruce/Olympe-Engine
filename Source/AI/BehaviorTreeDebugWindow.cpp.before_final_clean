@@ -2025,7 +2025,9 @@ namespace Olympe
 
         ImGui::BeginChild("ExecutionLogScroll", ImVec2(0, 0), false);
 
-        for (auto it = m_executionLog.rbegin(); it != m_executionLog.rend(); ++it)
+        // Render execution log in chronological order (oldest -> newest) so the
+        // displayed call stack reads naturally from root -> current.
+        for (auto it = m_executionLog.begin(); it != m_executionLog.end(); ++it)
         {
             const auto& entry = *it;
 

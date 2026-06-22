@@ -125,7 +125,7 @@ namespace Olympe
         // External helpers for embedded panels
         std::vector<ExecutionLogEntry> GetExecutionLogSnapshot(size_t maxEntries = 100) const;
         size_t GetPendingCount() const;
-        void FlushPendingExtern();
+        size_t FlushPendingExtern();
 
     private:
         // Main panel rendering

@@ -168,38 +168,35 @@ namespace Olympe
 					}
 
 					// Draw history as gradient dots and connecting lines
+					// Iterate in chronological order (oldest -> newest) so the drawn
+					// path flows in execution direction (root -> current node).
 					int idx = 0;
-					for (auto it = m_execHistory.rbegin(); it != m_execHistory.rend(); ++it)
+					ImVec2 prevPoint = ImVec2(0,0);
+					bool havePrev = false;
+					for (auto it = m_execHistory.begin(); it != m_execHistory.end(); ++it)
 					{
 						uint32_t nid = it->second;
 						auto ncIt = nodeCenter.find(nid);
 						if (ncIt == nodeCenter.end()) continue;
 						ImVec2 p = ncIt->second;
 
-						float t = 1.0f - (static_cast<float>(idx) / static_cast<float>(MAX_EXEC_HISTORY));
+						float t = static_cast<float>(idx + 1) / static_cast<float>(MAX_EXEC_HISTORY);
+						t = std::min(1.0f, std::max(0.05f, t));
 						int alpha = static_cast<int>(t * 200.0f) + 55;
 						ImU32 col = IM_COL32(255, 100, 30, alpha);
 
-						// Draw small circle
-						dl->AddCircleFilled(p, 6.0f * t + 2.0f, col);
+						// Draw small circle (growing for newer points)
+						dl->AddCircleFilled(p, 2.0f + 6.0f * t, col);
 
-						// Connect to previous point
-						if (idx > 0)
+						// Connect to previous point (draw line from prev -> current)
+						if (havePrev)
 						{
-							// previous point is the last drawn point's center
-							// find prev
-							auto pit = std::next(it);
-							if (pit != m_execHistory.rend())
-							{
-								auto pncIt = nodeCenter.find(pit->second);
-								if (pncIt != nodeCenter.end())
-								{
-									dl->AddLine(p, pncIt->second, IM_COL32(255,150,60, alpha/2), 2.0f * t);
-								}
-							}
+							dl->AddLine(prevPoint, p, IM_COL32(255,150,60, alpha/2), 1.5f + 2.0f * t);
 						}
 
-						idx++;
+						prevPoint = p;
+						havePrev = true;
+						++idx;
 					}
 				}
 			}

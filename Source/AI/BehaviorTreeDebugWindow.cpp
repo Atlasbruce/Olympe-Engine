@@ -23,6 +23,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <set>
+#include <mutex>
 
 // Global debugger instance (declared/defined in OlympeEngine.cpp)
 extern Olympe::BehaviorTreeDebugWindow* g_btDebugWindow;
@@ -34,6 +35,8 @@ namespace Olympe
     // execution events even when the debug window is not yet created/visible.
     // Entries are flushed to the debug window when it becomes available.
     static std::deque<ExecutionLogEntry> s_pendingExecutionBuffer;
+    // Protect pending buffer access from runtime threads
+    static std::mutex s_pendingBufferMutex;
     static const size_t MAX_PENDING_EXEC_BUFFER = 4096;
 
     BehaviorTreeDebugWindow::BehaviorTreeDebugWindow()
@@ -56,17 +59,34 @@ namespace Olympe
 
     size_t BehaviorTreeDebugWindow::GetPendingCount() const
     {
+        std::lock_guard<std::mutex> lk(s_pendingBufferMutex);
         return s_pendingExecutionBuffer.size();
     }
 
-    void BehaviorTreeDebugWindow::FlushPendingExtern()
+    size_t BehaviorTreeDebugWindow::FlushPendingExtern()
     {
-        while (!s_pendingExecutionBuffer.empty())
+        // Move pending entries into the visible execution log and return count
+        size_t moved = 0;
+        size_t before = s_pendingExecutionBuffer.size();
+        std::cout << "[BTDebugger] FlushPendingExtern called - pending before=" << before << std::endl;
+
         {
-            const auto e = s_pendingExecutionBuffer.front();
-            s_pendingExecutionBuffer.pop_front();
-            AddExecutionEntry(e.entity, e.nodeId, e.nodeName, e.status);
+            std::lock_guard<std::mutex> lk(s_pendingBufferMutex);
+            while (!s_pendingExecutionBuffer.empty())
+            {
+                const auto e = s_pendingExecutionBuffer.front();
+                s_pendingExecutionBuffer.pop_front();
+                AddExecutionEntry(e.entity, e.nodeId, e.nodeName, e.status);
+                // preserve rawJson if present
+                if (!e.rawJson.empty() && !m_executionLog.empty())
+                    m_executionLog.back().rawJson = e.rawJson;
+                ++moved;
+            }
         }
+
+        std::cout << "[BTDebugger] FlushPendingExtern moved=" << moved
+                  << " pending_after=" << s_pendingExecutionBuffer.size() << std::endl;
+        return moved;
     }
 
 
@@ -696,13 +716,16 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::RenderInspectorPanel()
     {
+        // If no entity is selected, still show the Inspector panel so
+        // the Execution Log can be viewed in "all entities" mode.
         if (m_selectedEntity == 0)
         {
-            ImGui::Text("No entity selected");
-            return;
+            ImGui::Text("Inspector (no entity selected - Execution Log shows all entities)");
         }
-
-        ImGui::Text("Inspector");
+        else
+        {
+            ImGui::Text("Inspector");
+        }
         ImGui::Separator();
 
         if (ImGui::CollapsingHeader("Runtime Info", ImGuiTreeNodeFlags_DefaultOpen))
@@ -902,14 +925,7 @@ namespace Olympe
         if (ImGui::SmallButton("Flush pending"))
         {
             // Move pending entries into the visible execution log
-            size_t moved = 0;
-            while (!s_pendingExecutionBuffer.empty())
-            {
-                const auto e = s_pendingExecutionBuffer.front();
-                s_pendingExecutionBuffer.pop_front();
-                AddExecutionEntry(e.entity, e.nodeId, e.nodeName, e.status);
-                ++moved;
-            }
+            size_t moved = FlushPendingExtern();
             std::cout << "[BTDebugger] Flushed " << moved << " pending entries" << std::endl;
         }
         ImGui::SameLine();
@@ -1049,6 +1065,15 @@ namespace Olympe
         {
             m_executionLog.pop_front();
         }
+        // Diagnostic: log that an entry was added (limited prints)
+        static int s_addExecPrints = 0;
+        if (s_addExecPrints < 64)
+        {
+            std::cout << "[BTDebugger] AddExecutionEntry: entity=" << entry.entity
+                      << " nodeId=" << entry.nodeId << " name='" << entry.nodeName
+                      << "' log_size=" << m_executionLog.size() << std::endl;
+            ++s_addExecPrints;
+        }
         // Also record lightweight execution history for overlay (recent nodes)
         m_execHistory.emplace_back(entity, nodeId);
         while (m_execHistory.size() > MAX_EXEC_HISTORY)
@@ -1067,9 +1092,20 @@ namespace Olympe
         entry.nodeName = nodeName;
         entry.status = status;
 
-        s_pendingExecutionBuffer.push_back(entry);
-        while (s_pendingExecutionBuffer.size() > MAX_PENDING_EXEC_BUFFER)
-            s_pendingExecutionBuffer.pop_front();
+        static int s_addDebugPrints = 0;
+        {
+            std::lock_guard<std::mutex> lk(s_pendingBufferMutex);
+            s_pendingExecutionBuffer.push_back(entry);
+            while (s_pendingExecutionBuffer.size() > MAX_PENDING_EXEC_BUFFER)
+                s_pendingExecutionBuffer.pop_front();
+
+            if (s_addDebugPrints < 8)
+            {
+                std::cout << "[BTDebugger] AddToPendingBuffer: pushed nodeId=" << entry.nodeId
+                          << " name='" << entry.nodeName << "' pending_after=" << s_pendingExecutionBuffer.size() << std::endl;
+                ++s_addDebugPrints;
+            }
+        }
     }
 
     // NodeGraph debug methods implemented in BehaviorTreeDebugWindow_NodeGraph.cpp
@@ -1101,9 +1137,17 @@ extern "C" {
         else
         {
             // Buffer for later flush when the window initializes or becomes visible
+            std::lock_guard<std::mutex> lk(Olympe::s_pendingBufferMutex);
             Olympe::s_pendingExecutionBuffer.push_back(e);
             while (Olympe::s_pendingExecutionBuffer.size() > Olympe::MAX_PENDING_EXEC_BUFFER)
                 Olympe::s_pendingExecutionBuffer.pop_front();
+            static int s_entryDebug = 0;
+            if (s_entryDebug < 8)
+            {
+                std::cout << "[BTDebug] BTDebug_AddExecutionEntry buffered: entity=" << e.entity
+                          << " nodeId=" << e.nodeId << " name='" << e.nodeName << "' pending=" << Olympe::s_pendingExecutionBuffer.size() << std::endl;
+                ++s_entryDebug;
+            }
         }
     }
 
@@ -1165,9 +1209,19 @@ extern "C" {
             else
             {
                 // Preserve parsed fields and keep original JSON for richer UI details later
-                Olympe::s_pendingExecutionBuffer.push_back(e);
-                while (Olympe::s_pendingExecutionBuffer.size() > Olympe::MAX_PENDING_EXEC_BUFFER)
-                    Olympe::s_pendingExecutionBuffer.pop_front();
+                {
+                    std::lock_guard<std::mutex> lk(Olympe::s_pendingBufferMutex);
+                    Olympe::s_pendingExecutionBuffer.push_back(e);
+                    while (Olympe::s_pendingExecutionBuffer.size() > Olympe::MAX_PENDING_EXEC_BUFFER)
+                        Olympe::s_pendingExecutionBuffer.pop_front();
+                    static int s_jsonBufDebug = 0;
+                    if (s_jsonBufDebug < 8)
+                    {
+                        std::cout << "[BTDebug] BTDebug_AddExecutionJson buffered: entity=" << e.entity
+                                  << " nodeId=" << e.nodeId << " name='" << e.nodeName << "' pending=" << Olympe::s_pendingExecutionBuffer.size() << std::endl;
+                        ++s_jsonBufDebug;
+                    }
+                }
             }
         }
         catch (...)
@@ -1181,9 +1235,74 @@ extern "C" {
                 e.entity = 0;
                 e.nodeId = 0;
                 e.nodeName = std::string("(unparsed)");
-                e.rawJson = jsonLine;
+                // copy raw C-string to std::string for safe parsing
+                std::string raw(jsonLine ? jsonLine : "");
+                e.rawJson = raw;
                 e.status = BTStatus::Running;
 
+                // Try a best-effort extraction of numeric fields from the raw JSON
+                // to avoid losing identity when the JSON parse fails (malformed or
+                // scientific notation issues). This helps the UI filter/display.
+                auto extract_field = [&](const std::string& key) -> std::string {
+                    std::string pat = "\"" + key + "\"";
+                    size_t p = raw.find(pat);
+                    if (p == std::string::npos) return std::string();
+                    size_t colon = raw.find(':', p);
+                    if (colon == std::string::npos) return std::string();
+                    size_t i = colon + 1;
+                    // skip whitespace
+                    while (i < raw.size() && isspace((unsigned char)raw[i])) ++i;
+                    if (i >= raw.size()) return std::string();
+                    if (raw[i] == '"')
+                    {
+                        size_t j = raw.find('"', i + 1);
+                        if (j == std::string::npos) return std::string();
+                        return raw.substr(i + 1, j - (i + 1));
+                    }
+                    // not quoted, read until comma or brace
+                    size_t j = i;
+                    while (j < raw.size() && raw[j] != ',' && raw[j] != '}' && !isspace((unsigned char)raw[j])) ++j;
+                    return raw.substr(i, j - i);
+                };
+
+                try
+                {
+                    std::string entstr = extract_field("entity");
+                    if (!entstr.empty())
+                    {
+                        // Accept scientific or integer formats
+                        if (entstr.find_first_of("eE.") != std::string::npos)
+                        {
+                            double dv = std::stod(entstr);
+                            e.entity = static_cast<EntityID>(static_cast<unsigned long long>(dv));
+                        }
+                        else
+                        {
+                            // strip quotes if present
+                            e.entity = static_cast<EntityID>(std::stoull(entstr));
+                        }
+                    }
+
+                    std::string nidstr = extract_field("nodeId");
+                    if (!nidstr.empty())
+                    {
+                        if (nidstr.find_first_of("eE.") != std::string::npos)
+                        {
+                            double dv = std::stod(nidstr);
+                            e.nodeId = static_cast<uint32_t>(static_cast<int>(dv));
+                        }
+                        else
+                        {
+                            e.nodeId = static_cast<uint32_t>(std::stoul(nidstr));
+                        }
+                    }
+
+                    std::string nm = extract_field("nodeName");
+                    if (!nm.empty()) e.nodeName = nm;
+                }
+                catch (...) { /* best-effort; ignore parse failures here */ }
+
+                // Forward or buffer the recovered entry
                 if (g_btDebugWindow && g_btDebugWindow->IsVisible())
                 {
                     try { g_btDebugWindow->AddExecutionEntry(e.entity, e.nodeId, e.nodeName, e.status); }
@@ -1191,6 +1310,7 @@ extern "C" {
                 }
                 else
                 {
+                    std::lock_guard<std::mutex> lk(Olympe::s_pendingBufferMutex);
                     Olympe::s_pendingExecutionBuffer.push_back(e);
                     while (Olympe::s_pendingExecutionBuffer.size() > Olympe::MAX_PENDING_EXEC_BUFFER)
                         Olympe::s_pendingExecutionBuffer.pop_front();

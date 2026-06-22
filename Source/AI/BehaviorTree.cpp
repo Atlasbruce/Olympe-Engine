@@ -198,6 +198,67 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     }
                 }
 
+                // Additional: prefer explicit link ordering from docLinks when available.
+                // Some GraphDocument constructions may not preserve editor link priority; use
+                // the docLinks vector to rebuild child ordering per-source sorted by target Y
+                if (!docLinks.empty())
+                {
+                    std::unordered_map<uint32_t, std::vector<uint32_t>> groupedBySource;
+                    // Build mapping of outgoing links per source node.
+                    // Be defensive: some exported LinkData may encode nodeId in fromPin.value
+                    // or occasionally be reversed (toPin holds source). Use tmpIndex to
+                    // validate which side corresponds to a known node id and adapt.
+                    for (const auto& link : docLinks)
+                    {
+                        uint32_t a = link.fromPin.value;
+                        uint32_t b = link.toPin.value;
+                        if (a == 0 && b == 0) continue;
+
+                        // Prefer the side that matches a known node id in the parsed tree
+                        if (tmpIndex.find(a) != tmpIndex.end())
+                        {
+                            // a is source, b is target
+                            if (b != 0)
+                                groupedBySource[a].push_back(b);
+                        }
+                        else if (tmpIndex.find(b) != tmpIndex.end())
+                        {
+                            // reversed orientation: b is source, a is target
+                            if (a != 0)
+                                groupedBySource[b].push_back(a);
+                        }
+                        else
+                        {
+                            // Neither side matches a known node id - skip
+                            continue;
+                        }
+                    }
+
+                    // Sort targets per source by editor Y (top-first) and rebuild child lists
+                    for (const auto& kv : groupedBySource)
+                    {
+                        uint32_t src = kv.first;
+                        auto vec = kv.second; // copy
+                        std::sort(vec.begin(), vec.end(), [&](uint32_t a, uint32_t b){
+                            const BTNode* na = tree.GetNode(a);
+                            const BTNode* nb = tree.GetNode(b);
+                            if (!na || !nb) return a < b;
+                            if (na->editorPosY != nb->editorPosY) return na->editorPosY < nb->editorPosY;
+                            return na->editorPosX < nb->editorPosX;
+                        });
+                        auto it = tmpIndex.find(src);
+                        if (it == tmpIndex.end()) continue;
+                        auto& targetNode = tree.nodes[it->second];
+                        // Replace childIds with ordered list (avoid duplicates)
+                        targetNode.childIds.clear();
+                        for (uint32_t tid : vec)
+                        {
+                            if (std::find(targetNode.childIds.begin(), targetNode.childIds.end(), tid) == targetNode.childIds.end())
+                                targetNode.childIds.push_back(tid);
+                        }
+                    }
+                }
+
                 std::cout << "[BehaviorTreeManager] Parsed V2 BehaviorTree asset: nodes=" << tree.nodes.size() << std::endl;
             }
             catch (const std::exception& e)
@@ -637,6 +698,31 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                 std::cout << "]" << std::endl;
             }
 
+            // Ensure deterministic child ordering: sort every composite's childIds by editor Y
+            for (auto& parent : tree.nodes)
+            {
+                if (parent.childIds.size() <= 1) continue;
+                std::sort(parent.childIds.begin(), parent.childIds.end(), [&](uint32_t a, uint32_t b)
+                {
+                    const BTNode* na = tree.GetNode(a); const BTNode* nb = tree.GetNode(b);
+                    if (!na || !nb) return a < b;
+                    // Ascending: smaller Y = visually higher = higher priority
+                    if (na->editorPosY != nb->editorPosY) return na->editorPosY < nb->editorPosY;
+                    return na->editorPosX < nb->editorPosX;
+                });
+            }
+
+            // Final normalization: persist editor-derived ordering directly into childIds so
+            // all code paths that read node.childIds observe the same visual priority order.
+            for (auto& parent : tree.nodes)
+            {
+                std::vector<uint32_t> normalized = tree.GetChildrenSortedByY(parent.id);
+                if (!normalized.empty())
+                {
+                    parent.childIds = normalized;
+                }
+            }
+
         // 5. Validate tree structure
         std::cout << "[BehaviorTreeManager] Step 5: Validating tree structure..." << std::endl;
         std::string validationError;
@@ -861,7 +947,27 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
         {
             // Root node: delegate to children (treat as a selector over children to find active branch)
             if (node.childIds.empty()) { finalStatus = BTStatus::Failure; break; }
-            for (uint32_t childId : node.childIds)
+            // Use editor-derived ordering (sorted by editor Y) as authoritative so runtime
+            // matches visual link priorities. Fallback to stored childIds only if
+            // the sorted list is empty.
+            std::vector<uint32_t> children = tree.GetChildrenSortedByY(node.id);
+            if (children.empty()) children = node.childIds;
+
+            // Diagnostic: print computed child ordering for composites to help
+            // verify runtime ordering matches editor. Restrict verbose output
+            // to when SYSTEM_LOG is enabled (development builds).
+            try {
+                std::ostringstream oss;
+                oss << "[ExecuteBTNode] Node " << node.id << " ('" << node.name << "') computed children order: ";
+                for (uint32_t cid : children)
+                {
+                    const BTNode* cn = tree.GetNode(cid);
+                    if (cn) oss << cid << "(" << cn->name << ",y=" << cn->editorPosY << ") ";
+                    else oss << cid << "(null) ";
+                }
+                SYSTEM_LOG << oss.str() << std::endl;
+            } catch(...) {}
+            for (uint32_t childId : children)
             {
                 const BTNode* child = tree.GetNode(childId);
                 if (!child) continue;
@@ -883,7 +989,21 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
         case BTNodeType::Selector:
         {
             // OR node: succeeds if any child succeeds
-            for (uint32_t childId : node.childIds)
+            // Use editor-derived ordering (sorted by editor Y) as authoritative
+            std::vector<uint32_t> children = tree.GetChildrenSortedByY(node.id);
+            if (children.empty()) children = node.childIds;
+            try {
+                std::ostringstream oss;
+                oss << "[ExecuteBTNode] Selector " << node.id << " ('" << node.name << "') children order: ";
+                for (uint32_t cid : children)
+                {
+                    const BTNode* cn = tree.GetNode(cid);
+                    if (cn) oss << cid << "(" << cn->name << ",y=" << cn->editorPosY << ") ";
+                    else oss << cid << "(null) ";
+                }
+                SYSTEM_LOG << oss.str() << std::endl;
+            } catch(...) {}
+            for (uint32_t childId : children)
             {
                 const BTNode* child = tree.GetNode(childId);
                 if (!child) continue;
@@ -907,7 +1027,21 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
         case BTNodeType::Sequence:
         {
             // AND node: succeeds if all children succeed
-            for (uint32_t childId : node.childIds)
+            // Use editor-derived ordering (sorted by editor Y) as authoritative
+            std::vector<uint32_t> children = tree.GetChildrenSortedByY(node.id);
+            if (children.empty()) children = node.childIds;
+            try {
+                std::ostringstream oss;
+                oss << "[ExecuteBTNode] Sequence " << node.id << " ('" << node.name << "') children order: ";
+                for (uint32_t cid : children)
+                {
+                    const BTNode* cn = tree.GetNode(cid);
+                    if (cn) oss << cid << "(" << cn->name << ",y=" << cn->editorPosY << ") ";
+                    else oss << cid << "(null) ";
+                }
+                SYSTEM_LOG << oss.str() << std::endl;
+            } catch(...) {}
+            for (uint32_t childId : children)
             {
                 const BTNode* child = tree.GetNode(childId);
                 if (!child) continue;
@@ -1017,11 +1151,14 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
     try
     {
         json j;
-        // Use doubles for JSON numeric fields to avoid MSVC overload ambiguity
+        // Serialize 64-bit ids as strings to avoid precision loss when using doubles
+        // (JSON libraries may format large integers in scientific notation which
+        // causes loss of precision when parsed back as double). Preserve IDs as
+        // strings so the debugger can recover exact Entity/Tree identifiers.
         j["ts"] = static_cast<double>(static_cast<unsigned long long>(std::time(nullptr)) * 1000ULL);
-        j["treeId"] = static_cast<double>(tree.id);
-        j["entity"] = static_cast<double>(entity);
-        j["nodeId"] = static_cast<double>(node.id);
+        j["treeId"] = std::to_string(tree.id);
+        j["entity"] = std::to_string(entity);
+        j["nodeId"] = static_cast<int>(node.id);
         j["nodeName"] = node.name;
         j["status"] = (finalStatus == BTStatus::Success) ? "Success"
                     : (finalStatus == BTStatus::Failure) ? "Failure"

@@ -140,14 +140,60 @@ BehaviorTreeAsset BehaviorTreeRenderer::ExportBehaviorTreeAsset() const
         // Forward adjacency (from -> to)
         std::unordered_map<uint32_t, std::vector<uint32_t>> forwardAdj;
         std::unordered_map<uint32_t, std::vector<uint32_t>> reverseAdj;
+        // Also record link ordering per source node so we can preserve explicit
+        // link priority/index as authored in the editor (visible small numbers on links).
+        std::unordered_map<uint32_t, std::unordered_map<uint32_t, int>> linkOrder;
+        std::unordered_map<uint32_t, std::unordered_map<uint32_t, int>> reverseLinkOrder;
+        // Group links by source so we can sort siblings consistently by editor Y pos
+        std::unordered_map<uint32_t, std::vector<uint32_t>> groupedBySource;
+        std::unordered_map<uint32_t, std::vector<uint32_t>> groupedByTarget;
         for (const auto& l : links)
         {
-            // LinkData.fromPin.value / toPin.value are stored as node IDs by GraphDocument.
-            // Use them directly to build adjacency (no ImNodes raw-pin division).
             uint32_t fromNode = static_cast<uint32_t>(l.fromPin.value);
             uint32_t toNode = static_cast<uint32_t>(l.toPin.value);
-            forwardAdj[fromNode].push_back(toNode);
-            reverseAdj[toNode].push_back(fromNode);
+            groupedBySource[fromNode].push_back(toNode);
+            groupedByTarget[toNode].push_back(fromNode);
+        }
+
+        // For each source, sort its outgoing targets by the target node editor Y position
+        for (auto& kv : groupedBySource)
+        {
+            uint32_t src = kv.first;
+            auto& vec = kv.second;
+            std::sort(vec.begin(), vec.end(), [&](uint32_t a, uint32_t b){
+                const BTNode* na = asset.GetNode(a);
+                const BTNode* nb = asset.GetNode(b);
+                if (!na || !nb) return a < b;
+                if (na->editorPosY != nb->editorPosY) return na->editorPosY < nb->editorPosY;
+                return na->editorPosX < nb->editorPosX;
+            });
+            // populate forwardAdj and linkOrder from sorted vector
+            for (size_t i = 0; i < vec.size(); ++i)
+            {
+                uint32_t toNode = vec[i];
+                forwardAdj[src].push_back(toNode);
+                linkOrder[src][toNode] = static_cast<int>(i);
+            }
+        }
+
+        // For reverse adjacency (to -> from) sort parents by parent's editor Y
+        for (auto& kv : groupedByTarget)
+        {
+            uint32_t tgt = kv.first;
+            auto& vec = kv.second;
+            std::sort(vec.begin(), vec.end(), [&](uint32_t a, uint32_t b){
+                const BTNode* na = asset.GetNode(a);
+                const BTNode* nb = asset.GetNode(b);
+                if (!na || !nb) return a < b;
+                if (na->editorPosY != nb->editorPosY) return na->editorPosY < nb->editorPosY;
+                return na->editorPosX < nb->editorPosX;
+            });
+            for (size_t i = 0; i < vec.size(); ++i)
+            {
+                uint32_t fromNode = vec[i];
+                reverseAdj[tgt].push_back(fromNode);
+                reverseLinkOrder[tgt][fromNode] = static_cast<int>(i);
+            }
         }
 
         auto applyAdj = [&](const std::unordered_map<uint32_t, std::vector<uint32_t>>& adj)
@@ -172,6 +218,35 @@ BehaviorTreeAsset BehaviorTreeRenderer::ExportBehaviorTreeAsset() const
                 if (bn.childIds.size() <= 1) continue;
                 std::sort(bn.childIds.begin(), bn.childIds.end(), [&](uint32_t a, uint32_t b)
                 {
+                    // Prefer explicit link order if available (editor-assigned child indices)
+                    // Prefer explicit link order if available. Check both forward and reverse mappings
+                    auto lof = linkOrder.find(bn.id);
+                    if (lof != linkOrder.end())
+                    {
+                        auto &mapRef = lof->second;
+                        auto ita = mapRef.find(a);
+                        auto itb = mapRef.find(b);
+                        if (ita != mapRef.end() && itb != mapRef.end())
+                        {
+                            return ita->second < itb->second;
+                        }
+                        if (ita != mapRef.end()) return true;
+                        if (itb != mapRef.end()) return false;
+                    }
+                    auto rlo = reverseLinkOrder.find(bn.id);
+                    if (rlo != reverseLinkOrder.end())
+                    {
+                        auto &mapRef = rlo->second;
+                        auto ita = mapRef.find(a);
+                        auto itb = mapRef.find(b);
+                        if (ita != mapRef.end() && itb != mapRef.end())
+                        {
+                            return ita->second < itb->second;
+                        }
+                        if (ita != mapRef.end()) return true;
+                        if (itb != mapRef.end()) return false;
+                    }
+
                     const BTNode* na = asset.GetNode(a);
                     const BTNode* nb = asset.GetNode(b);
                     if (!na || !nb) return a < b;
