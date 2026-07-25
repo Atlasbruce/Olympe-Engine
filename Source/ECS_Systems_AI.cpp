@@ -23,6 +23,16 @@ AI Systems implementation: NPC AI behavior systems.
 #include <iostream>
 #include <cstdint>
 
+namespace
+{
+    float GetAISafeDeltaTime()
+    {
+        // Keep the first frame and long pauses from advancing AI timers by an
+        // unrealistic amount while preserving the regular frame delta.
+        return std::max(0.0f, std::min(GameEngine::fDt, 0.25f));
+    }
+}
+
 // Forward declaration of global debugger instance (defined in OlympeEngine.cpp)
 extern Olympe::BehaviorTreeDebugWindow* g_btDebugWindow;
 
@@ -46,7 +56,8 @@ void AIStimuliSystem::Process()
         return;
 
     const EventQueue& queue = EventQueue::Get();
-    float currentTime = GameEngine::fDt;
+    m_elapsedTime += GetAISafeDeltaTime();
+    float currentTime = m_elapsedTime;
     
     // Process Gameplay domain events for AI stimuli
     queue.ForEachDomainEvent(EventDomain::Gameplay, [&](const Message& msg) {
@@ -166,7 +177,8 @@ void AIPerceptionSystem::Process()
     if (m_entities.empty())
         return;
 
-    float currentTime = GameEngine::fDt;
+    m_elapsedTime += GetAISafeDeltaTime();
+    float currentTime = m_elapsedTime;
     
     for (EntityID entity : m_entities)
     {
@@ -180,7 +192,8 @@ void AIPerceptionSystem::Process()
             if (currentTime < senses.nextPerceptionTime)
                 continue;
             
-            senses.nextPerceptionTime = currentTime + (1.0f / senses.perceptionHz);
+            const float perceptionHz = std::max(senses.perceptionHz, 0.001f);
+            senses.nextPerceptionTime = currentTime + (1.0f / perceptionHz);
             
             // Update target tracking if we have a target
             if (blackboard.hasTarget && blackboard.targetEntity != INVALID_ENTITY_ID)
@@ -215,7 +228,7 @@ void AIPerceptionSystem::Process()
                 }
                 else
                 {
-                    blackboard.timeSinceTargetSeen += (1.0f / senses.perceptionHz);
+                    blackboard.timeSinceTargetSeen += (1.0f / perceptionHz);
                     
                     // Lose target after 5 seconds of not seeing them
                     if (blackboard.timeSinceTargetSeen > 5.0f)
@@ -462,7 +475,8 @@ void BehaviorTreeSystem::Process()
     if (m_entities.empty())
         return;
 
-    float currentTime = GameEngine::fDt;
+    m_elapsedTime += GetAISafeDeltaTime();
+    float currentTime = m_elapsedTime;
     
     for (EntityID entity : m_entities)
     {
@@ -480,7 +494,7 @@ void BehaviorTreeSystem::Process()
             if (World::Get().HasComponent<AISenses_data>(entity))
             {
                 const AISenses_data& senses = World::Get().GetComponent<AISenses_data>(entity);
-                thinkHz = senses.thinkHz;
+                thinkHz = std::max(senses.thinkHz, 0.001f);
                 
                 // Timeslicing: only update BT at specified Hz
                 if (currentTime < senses.nextThinkTime)
@@ -564,51 +578,9 @@ void BehaviorTreeSystem::Process()
                     j["nodeName"] = node->name;
                     j["status"] = (status == BTStatus::Success) ? "Success" : (status == BTStatus::Failure) ? "Failure" : "Running";
                     std::string s = j.dump();
-                    // Diagnostic: log emission from ECS tick so we can confirm runtime emission
-                    std::cout << "[ECS_AI] Emitting BT JSON: " << s << std::endl;
                     BTDebug_AddExecutionJson(s.c_str());
                 }
                 catch (...) { }
-                
-                // Debug logging (every 2 seconds to avoid spam)
-                static float lastLogTime = 0.0f;
-                if (currentTime - lastLogTime > 2.0f)
-                {
-                    if (World::Get().HasComponent<AIState_data>(entity))
-                    {
-                        const AIState_data& state = World::Get().GetComponent<AIState_data>(entity);
-                        const char* modeName = "Unknown";
-                        switch (state.currentMode)
-                        {
-                            case AIMode::Idle: modeName = "Idle"; break;
-                            case AIMode::Patrol: modeName = "Patrol"; break;
-                            case AIMode::Combat: modeName = "Combat"; break;
-                            case AIMode::Flee: modeName = "Flee"; break;
-                            case AIMode::Investigate: modeName = "Investigate"; break;
-                            case AIMode::Dead: modeName = "Dead"; break;
-                        }
-                        
-                        const char* statusName = "Unknown";
-                        switch (status)
-                        {
-                            case BTStatus::Running: statusName = "Running"; break;
-                            case BTStatus::Success: statusName = "Success"; break;
-                            case BTStatus::Failure: statusName = "Failure"; break;
-                        }
-                        
-                        SYSTEM_LOG << "BT[Entity " << entity << "]: Mode=" << modeName 
-                                   << ", Tree=" << btRuntime.AITreeAssetId
-                                   << ", Node=" << node->name 
-                                   << ", Status=" << statusName;
-                        
-                        if (blackboard.hasTarget)
-                            SYSTEM_LOG << ", Target=" << blackboard.targetEntity 
-                                       << ", Dist=" << blackboard.distanceToTarget;
-                        
-                        SYSTEM_LOG << "\n";
-                    }
-                    lastLogTime = currentTime;
-                }
                 
                 // If node completed (success or failure), restart tree next frame
                 if (status != BTStatus::Running)

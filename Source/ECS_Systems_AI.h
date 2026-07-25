@@ -23,6 +23,9 @@ class AIStimuliSystem : public ECS_System
 public:
     AIStimuliSystem();
     virtual void Process() override;
+
+private:
+    float m_elapsedTime = 0.0f;
 };
 
 // --- AIPerceptionSystem ---
@@ -35,6 +38,8 @@ public:
     virtual void Process() override;
     
 private:
+    float m_elapsedTime = 0.0f;
+
     // Helper: Check if target is visible from entity position
     bool IsTargetVisible(EntityID entity, EntityID target, float visionRadius, float visionAngle);
 };
@@ -61,6 +66,9 @@ class BehaviorTreeSystem : public ECS_System
 public:
     BehaviorTreeSystem();
     virtual void Process() override;
+
+private:
+    float m_elapsedTime = 0.0f;
 };
 
 // --- AIMotionSystem ---

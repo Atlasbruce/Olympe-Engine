@@ -67,8 +67,6 @@ namespace Olympe
     {
         // Move pending entries into the visible execution log and return count
         size_t moved = 0;
-        size_t before = s_pendingExecutionBuffer.size();
-        std::cout << "[BTDebugger] FlushPendingExtern called - pending before=" << before << std::endl;
 
         {
             std::lock_guard<std::mutex> lk(s_pendingBufferMutex);
@@ -84,8 +82,6 @@ namespace Olympe
             }
         }
 
-        std::cout << "[BTDebugger] FlushPendingExtern moved=" << moved
-                  << " pending_after=" << s_pendingExecutionBuffer.size() << std::endl;
         return moved;
     }
 
@@ -1065,15 +1061,6 @@ namespace Olympe
         {
             m_executionLog.pop_front();
         }
-        // Diagnostic: log that an entry was added (limited prints)
-        static int s_addExecPrints = 0;
-        if (s_addExecPrints < 64)
-        {
-            std::cout << "[BTDebugger] AddExecutionEntry: entity=" << entry.entity
-                      << " nodeId=" << entry.nodeId << " name='" << entry.nodeName
-                      << "' log_size=" << m_executionLog.size() << std::endl;
-            ++s_addExecPrints;
-        }
         // Also record lightweight execution history for overlay (recent nodes)
         m_execHistory.emplace_back(entity, nodeId);
         while (m_execHistory.size() > MAX_EXEC_HISTORY)
@@ -1092,19 +1079,11 @@ namespace Olympe
         entry.nodeName = nodeName;
         entry.status = status;
 
-        static int s_addDebugPrints = 0;
         {
             std::lock_guard<std::mutex> lk(s_pendingBufferMutex);
             s_pendingExecutionBuffer.push_back(entry);
             while (s_pendingExecutionBuffer.size() > MAX_PENDING_EXEC_BUFFER)
                 s_pendingExecutionBuffer.pop_front();
-
-            if (s_addDebugPrints < 8)
-            {
-                std::cout << "[BTDebugger] AddToPendingBuffer: pushed nodeId=" << entry.nodeId
-                          << " name='" << entry.nodeName << "' pending_after=" << s_pendingExecutionBuffer.size() << std::endl;
-                ++s_addDebugPrints;
-            }
         }
     }
 
@@ -1141,26 +1120,12 @@ extern "C" {
             Olympe::s_pendingExecutionBuffer.push_back(e);
             while (Olympe::s_pendingExecutionBuffer.size() > Olympe::MAX_PENDING_EXEC_BUFFER)
                 Olympe::s_pendingExecutionBuffer.pop_front();
-            static int s_entryDebug = 0;
-            if (s_entryDebug < 8)
-            {
-                std::cout << "[BTDebug] BTDebug_AddExecutionEntry buffered: entity=" << e.entity
-                          << " nodeId=" << e.nodeId << " name='" << e.nodeName << "' pending=" << Olympe::s_pendingExecutionBuffer.size() << std::endl;
-                ++s_entryDebug;
-            }
         }
     }
 
     void BTDebug_AddExecutionJson(const char* jsonLine)
     {
-        static int s_debugPrints = 0;
         if (!jsonLine) return;
-        // Lightweight arrival trace (helps diagnose calls that fail during parse)
-        if (s_debugPrints < 5)
-        {
-            std::cout << "[BTDebug] Received JSON payload (raw): " << jsonLine << std::endl;
-            ++s_debugPrints;
-        }
 
         try
         {
@@ -1192,14 +1157,6 @@ extern "C" {
             else if (statusStr == "Failure") e.status = BTStatus::Failure;
             else e.status = BTStatus::Running;
 
-            // optional lightweight diagnostic output for first few calls
-            if (s_debugPrints < 20)
-            {
-                std::cout << "[BTDebug] JSON entry: entity=" << e.entity << " nodeId=" << e.nodeId
-                          << " nodeName=" << e.nodeName << " status=" << (int)e.status << std::endl;
-                ++s_debugPrints;
-            }
-
             // If window present and visible forward immediately, otherwise buffer
             if (g_btDebugWindow && g_btDebugWindow->IsVisible())
             {
@@ -1214,13 +1171,6 @@ extern "C" {
                     Olympe::s_pendingExecutionBuffer.push_back(e);
                     while (Olympe::s_pendingExecutionBuffer.size() > Olympe::MAX_PENDING_EXEC_BUFFER)
                         Olympe::s_pendingExecutionBuffer.pop_front();
-                    static int s_jsonBufDebug = 0;
-                    if (s_jsonBufDebug < 8)
-                    {
-                        std::cout << "[BTDebug] BTDebug_AddExecutionJson buffered: entity=" << e.entity
-                                  << " nodeId=" << e.nodeId << " name='" << e.nodeName << "' pending=" << Olympe::s_pendingExecutionBuffer.size() << std::endl;
-                        ++s_jsonBufDebug;
-                    }
                 }
             }
         }

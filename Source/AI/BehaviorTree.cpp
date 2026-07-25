@@ -32,6 +32,72 @@ Behavior Tree implementation: JSON loading and built-in node execution.
 
 using json = nlohmann::json;
 
+namespace
+{
+    std::string GetBTBaseType(const std::string& typeName)
+    {
+        if (typeName.rfind("BT_", 0) == 0)
+            return typeName.substr(3);
+        return typeName;
+    }
+
+    bool TryMapBTConditionType(const std::string& typeName, BTConditionType& result)
+    {
+        const std::string base = GetBTBaseType(typeName);
+        static const std::unordered_map<std::string, BTConditionType> conditionMap = {
+            {"HasTarget", BTConditionType::TargetVisible},
+            {"TargetVisible", BTConditionType::TargetVisible},
+            {"IsTargetInRange", BTConditionType::TargetInRange},
+            {"HealthBelow", BTConditionType::HealthBelow},
+            {"HasMoveGoal", BTConditionType::HasMoveGoal},
+            {"CanAttack", BTConditionType::CanAttack},
+            {"HeardNoise", BTConditionType::HeardNoise},
+            {"IsWaitTimerExpired", BTConditionType::IsWaitTimerExpired},
+            {"HasNavigableDestination", BTConditionType::HasNavigableDestination},
+            {"HasValidPath", BTConditionType::HasValidPath},
+            {"HasReachedDestination", BTConditionType::HasReachedDestination}
+        };
+
+        const auto it = conditionMap.find(base);
+        if (it == conditionMap.end())
+            return false;
+
+        result = it->second;
+        return true;
+    }
+
+    bool TryMapBTActionType(const std::string& typeName, BTActionType& result)
+    {
+        const std::string base = GetBTBaseType(typeName);
+        static const std::unordered_map<std::string, BTActionType> actionMap = {
+            {"SetMoveGoalToLastKnownTargetPos", BTActionType::SetMoveGoalToLastKnownTargetPos},
+            {"SetMoveGoalToTarget", BTActionType::SetMoveGoalToTarget},
+            {"SetMoveGoalToPatrolPoint", BTActionType::SetMoveGoalToPatrolPoint},
+            {"MoveToGoal", BTActionType::MoveToGoal},
+            {"MoveTo", BTActionType::MoveToGoal},
+            {"MoveToTarget", BTActionType::MoveToGoal},
+            {"AttackIfClose", BTActionType::AttackIfClose},
+            {"AttackMelee", BTActionType::AttackIfClose},
+            {"AttackTarget", BTActionType::AttackIfClose},
+            {"PatrolPickNextPoint", BTActionType::PatrolPickNextPoint},
+            {"ClearTarget", BTActionType::ClearTarget},
+            {"Idle", BTActionType::Idle},
+            {"WaitRandomTime", BTActionType::WaitRandomTime},
+            {"ChooseRandomNavigablePoint", BTActionType::ChooseRandomNavigablePoint},
+            {"RequestPathfinding", BTActionType::RequestPathfinding},
+            {"FollowPath", BTActionType::FollowPath},
+            {"SendMessage", BTActionType::SendMessage}
+        };
+
+        const auto it = actionMap.find(base);
+        if (it == actionMap.end())
+            return false;
+
+        result = it->second;
+        return true;
+    }
+}
+
 // --- BehaviorTreeManager Implementation ---
 
 bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t treeId)
@@ -154,12 +220,27 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     else if (typeStr.find("OnEvent") != std::string::npos) bn.type = BTNodeType::OnEvent;
                     else if (typeStr.find("BT_") != std::string::npos && typeStr.find("BT_") == 0)
                     {
-                        if (typeStr.find("Has") != std::string::npos || typeStr.find("Is") != std::string::npos || typeStr.find("Can") != std::string::npos)
+                        BTConditionType conditionType;
+                        if (TryMapBTConditionType(typeStr, conditionType))
+                        {
                             bn.type = BTNodeType::Condition;
+                            bn.conditionType = conditionType;
+                        }
                         else
                             bn.type = BTNodeType::Action;
                     }
                     else bn.type = BTNodeType::Action;
+
+                    const std::string baseType = GetBTBaseType(typeStr);
+                    if (bn.type == BTNodeType::Condition)
+                    {
+                        bn.conditionTypeString = baseType;
+                        TryMapBTConditionType(typeStr, bn.conditionType);
+                    }
+                    else if (bn.type == BTNodeType::Action)
+                    {
+                        TryMapBTActionType(typeStr, bn.actionType);
+                    }
 
                     // Copy decorator child if present
                     if (nd.decoratorChild.value != 0)
@@ -169,6 +250,21 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                     for (const auto& kv : nd.parameters)
                     {
                         bn.stringParams[kv.first] = kv.second;
+
+                        try
+                        {
+                            if (bn.type == BTNodeType::Condition && kv.first == "param")
+                                bn.conditionParam = std::stof(kv.second);
+                            else if (bn.type == BTNodeType::Action && kv.first == "param1")
+                                bn.actionParam1 = std::stof(kv.second);
+                            else if (bn.type == BTNodeType::Action && kv.first == "param2")
+                                bn.actionParam2 = std::stof(kv.second);
+                        }
+                        catch (...)
+                        {
+                            SYSTEM_LOG << "[BehaviorTreeManager] Ignoring non-numeric BT parameter '"
+                                       << kv.first << "' on node " << bn.id << std::endl;
+                        }
                     }
 
                     tree.nodes.push_back(bn);
@@ -953,20 +1049,6 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
             std::vector<uint32_t> children = tree.GetChildrenSortedByY(node.id);
             if (children.empty()) children = node.childIds;
 
-            // Diagnostic: print computed child ordering for composites to help
-            // verify runtime ordering matches editor. Restrict verbose output
-            // to when SYSTEM_LOG is enabled (development builds).
-            try {
-                std::ostringstream oss;
-                oss << "[ExecuteBTNode] Node " << node.id << " ('" << node.name << "') computed children order: ";
-                for (uint32_t cid : children)
-                {
-                    const BTNode* cn = tree.GetNode(cid);
-                    if (cn) oss << cid << "(" << cn->name << ",y=" << cn->editorPosY << ") ";
-                    else oss << cid << "(null) ";
-                }
-                SYSTEM_LOG << oss.str() << std::endl;
-            } catch(...) {}
             for (uint32_t childId : children)
             {
                 const BTNode* child = tree.GetNode(childId);
@@ -992,17 +1074,6 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
             // Use editor-derived ordering (sorted by editor Y) as authoritative
             std::vector<uint32_t> children = tree.GetChildrenSortedByY(node.id);
             if (children.empty()) children = node.childIds;
-            try {
-                std::ostringstream oss;
-                oss << "[ExecuteBTNode] Selector " << node.id << " ('" << node.name << "') children order: ";
-                for (uint32_t cid : children)
-                {
-                    const BTNode* cn = tree.GetNode(cid);
-                    if (cn) oss << cid << "(" << cn->name << ",y=" << cn->editorPosY << ") ";
-                    else oss << cid << "(null) ";
-                }
-                SYSTEM_LOG << oss.str() << std::endl;
-            } catch(...) {}
             for (uint32_t childId : children)
             {
                 const BTNode* child = tree.GetNode(childId);
@@ -1030,17 +1101,6 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
             // Use editor-derived ordering (sorted by editor Y) as authoritative
             std::vector<uint32_t> children = tree.GetChildrenSortedByY(node.id);
             if (children.empty()) children = node.childIds;
-            try {
-                std::ostringstream oss;
-                oss << "[ExecuteBTNode] Sequence " << node.id << " ('" << node.name << "') children order: ";
-                for (uint32_t cid : children)
-                {
-                    const BTNode* cn = tree.GetNode(cid);
-                    if (cn) oss << cid << "(" << cn->name << ",y=" << cn->editorPosY << ") ";
-                    else oss << cid << "(null) ";
-                }
-                SYSTEM_LOG << oss.str() << std::endl;
-            } catch(...) {}
             for (uint32_t childId : children)
             {
                 const BTNode* child = tree.GetNode(childId);
