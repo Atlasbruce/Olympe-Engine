@@ -20,6 +20,9 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <set>
+#include <tuple>
+#include <unordered_set>
 #include <fstream>
 #include <algorithm>
 
@@ -616,6 +619,30 @@ TaskNodeDefinition TaskGraphLoader::ParseNodeV4(const json& nodeJson,
         {
             if (ch[i].is_number()) nd.ChildrenIDs.push_back(ch[i].get<int>());
         }
+        // Remove duplicated child IDs while preserving original order. Some
+        // migrated BT assets contain duplicate entries which produce visual
+        // clutter (multiple identical wires). Deduplicate here.
+        if (!nd.ChildrenIDs.empty())
+        {
+            std::vector<int> deduped;
+            std::unordered_set<int> seenIds;
+            for (size_t i = 0; i < nd.ChildrenIDs.size(); ++i)
+            {
+                int cid = nd.ChildrenIDs[i];
+                if (seenIds.find(cid) == seenIds.end())
+                {
+                    deduped.push_back(cid);
+                    seenIds.insert(cid);
+                }
+            }
+            if (deduped.size() != nd.ChildrenIDs.size())
+            {
+                SYSTEM_LOG << "[TaskGraphLoader] ParseNodeV4: removed "
+                           << (nd.ChildrenIDs.size() - deduped.size())
+                           << " duplicate children for node " << nd.NodeID << "\n";
+                nd.ChildrenIDs.swap(deduped);
+            }
+        }
     }
 
     // Compat flow fields.
@@ -1072,6 +1099,71 @@ void TaskGraphLoader::ParseExecConnectionsV4(const json& root,
         if (conn.SourceNodeID != NODE_INDEX_NONE && conn.TargetNodeID != NODE_INDEX_NONE)
         {
             tmpl->ExecConnections.push_back(conn);
+        }
+    }
+
+    // Backwards-compat: some older BehaviorTree assets use a 'links' array with
+    // { "fromPin": { "nodeId": X, "pinId": "output" }, "toPin": { "nodeId": Y, "pinId": "input" } }
+    // Parse those as exec connections as well so legacy BT files render correctly.
+    // This block intentionally runs after the normal execConnections parsing so
+    // that explicit execConnections keep priority when present.
+    {
+        const json* linksArr = nullptr;
+        if (JsonHelper::IsArray(root, "links"))
+            linksArr = &root["links"];
+        else if (JsonHelper::IsObject(root, "data") && JsonHelper::IsArray(root["data"], "links"))
+            linksArr = &root["data"]["links"];
+
+        if (linksArr != nullptr)
+        {
+            for (const json& l : *linksArr)
+            {
+                if (!l.is_object()) continue;
+                if (!l.contains("fromPin") || !l.contains("toPin")) continue;
+
+                const json& from = l["fromPin"];
+                const json& to   = l["toPin"];
+
+                ExecPinConnection conn;
+                conn.SourceNodeID = JsonHelper::GetInt(from, "nodeId",
+                                         JsonHelper::GetInt(from, "nodeID", NODE_INDEX_NONE));
+                conn.SourcePinName = JsonHelper::GetString(from, "pinId",
+                                         JsonHelper::GetString(from, "pin", ""));
+
+                conn.TargetNodeID = JsonHelper::GetInt(to, "nodeId",
+                                         JsonHelper::GetInt(to, "nodeID", NODE_INDEX_NONE));
+                conn.TargetPinName = JsonHelper::GetString(to, "pinId",
+                                         JsonHelper::GetString(to, "pin", "In"));
+
+                if (conn.SourceNodeID != NODE_INDEX_NONE && conn.TargetNodeID != NODE_INDEX_NONE)
+                {
+                    tmpl->ExecConnections.push_back(conn);
+                }
+            }
+        }
+    }
+
+    // Deduplicate ExecConnections: remove exact duplicates that may come from
+    // children arrays + links or mixed legacy formats. Keeps first occurrence.
+    {
+        std::vector<ExecPinConnection> uniqueConns;
+        std::set<std::tuple<int,std::string,int,std::string>> seen;
+        for (const auto& c : tmpl->ExecConnections)
+        {
+            auto key = std::make_tuple(static_cast<int>(c.SourceNodeID), c.SourcePinName,
+                                       static_cast<int>(c.TargetNodeID), c.TargetPinName);
+            if (seen.find(key) == seen.end())
+            {
+                seen.insert(key);
+                uniqueConns.push_back(c);
+            }
+        }
+        if (uniqueConns.size() != tmpl->ExecConnections.size())
+        {
+            SYSTEM_LOG << "[TaskGraphLoader] ParseExecConnectionsV4: removed "
+                       << (tmpl->ExecConnections.size() - uniqueConns.size())
+                       << " duplicate exec connection(s)\n";
+            tmpl->ExecConnections.swap(uniqueConns);
         }
     }
 }

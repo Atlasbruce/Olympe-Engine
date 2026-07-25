@@ -800,6 +800,36 @@ GraphDocument GraphDocument::FromJson(const json& j)
                            << " fromNode=" << link.fromPin.value
                            << " toNode=" << link.toPin.value << std::endl;
             }
+
+            // A few legacy BehaviorTree files contain the same logical link
+            // more than once under different link IDs. Keep the first record;
+            // ImNodes otherwise renders multiple wires for one relationship.
+            std::vector<LinkData> uniqueLinks;
+            for (const auto& candidate : doc.m_links)
+            {
+                bool duplicate = false;
+                for (const auto& existing : uniqueLinks)
+                {
+                    if (candidate.fromPin.value == existing.fromPin.value &&
+                        candidate.toPin.value == existing.toPin.value &&
+                        candidate.fromPinName == existing.fromPinName &&
+                        candidate.toPinName == existing.toPinName)
+                    {
+                        duplicate = true;
+                        break;
+                    }
+                }
+                if (!duplicate)
+                    uniqueLinks.push_back(candidate);
+            }
+
+            if (uniqueLinks.size() != doc.m_links.size())
+            {
+                SYSTEM_LOG << "[GraphDocument::FromJson] Removed "
+                           << (doc.m_links.size() - uniqueLinks.size())
+                           << " duplicate BehaviorTree link(s)\n";
+                doc.m_links.swap(uniqueLinks);
+            }
         }
 
         // Phase 51: Diagnostic logging - confirm nodes and links loaded

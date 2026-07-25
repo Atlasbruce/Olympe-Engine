@@ -1,0 +1,102 @@
+{
+  "annotations": [],
+  "blackboard": [],
+  "blueprintType": "BehaviorTree",
+  "data": {
+    "links": [
+      {
+        "fromPin": {
+          "nodeId": 1,
+          "pinId": "output"
+        },
+        "id": 1,
+        "toPin": {
+          "nodeId": 2,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 2,
+          "pinId": "output"
+        },
+        "id": 2,
+        "toPin": {
+          "nodeId": 3,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 2,
+          "pinId": "output"
+        },
+        "id": 3,
+        "toPin": {
+          "nodeId": 4,
+          "pinId": "input"
+        }
+      }
+    ],
+    "nodes": [
+      {
+        "children": [],
+        "id": 1,
+        "name": "BT_Root_1",
+        "parameters": {},
+        "position": {
+          "x": 191,
+          "y": 236
+        },
+        "type": "BT_Root"
+      },
+      {
+        "children": [],
+        "id": 2,
+        "name": "BT_Selector_2",
+        "parameters": {},
+        "position": {
+          "x": 450,
+          "y": 201
+        },
+        "type": "BT_Selector"
+      },
+      {
+        "children": [],
+        "id": 3,
+        "name": "BT_AttackIfClose_3",
+        "parameters": {},
+        "position": {
+          "x": 707,
+          "y": 96
+        },
+        "type": "BT_AttackIfClose"
+      },
+      {
+        "children": [],
+        "id": 4,
+        "name": "BT_AttackMelee_4",
+        "parameters": {},
+        "position": {
+          "x": 714,
+          "y": 264
+        },
+        "type": "BT_AttackMelee"
+      }
+    ],
+    "rootNodeId": 0
+  },
+  "editorState": {
+    "layoutDirection": "TopToBottom",
+    "scrollOffset": {
+      "x": 0,
+      "y": 0
+    },
+    "selectedNodes": [],
+    "zoom": 1
+  },
+  "graphKind": "BehaviorTree",
+  "metadata": {},
+  "schemaVersion": 2,
+  "type": "Untitled-BehaviorTree-1"
+}

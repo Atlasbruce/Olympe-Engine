@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -465,22 +465,26 @@
     <TargetName>OlympeBlueprintEditor_d</TargetName>
     <OutDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\Intermediate\</IntDir>
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>OlympeBlueprintEditor</TargetName>
     <OutDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\Intermediate\</IntDir>
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <TargetName>OlympeBlueprintEditor_d</TargetName>
     <OutDir>..\</OutDir>
     <IntDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\Intermediate\</IntDir>
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
     <PublicIncludeDirectories>..\Source;..\Source\AI;..\Source\BlueprintEditor;..\Source\BlueprintEditorStandalone;..\Source\Core;..\Source\ECS;..\Source\Editor;..\Source\NodeGraphCore;..\Source\TaskSystem;..\Source\NodeGraphCore\Commands;..\Source\third_party\nfd;$(PublicIncludeDirectories)</PublicIncludeDirectories>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <TargetName>OlympeBlueprintEditor</TargetName>
     <OutDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\</OutDir>
     <IntDir>$(SolutionDir)bin\BlueprintEditorStandalone\$(Configuration)_$(Platform)\Intermediate\</IntDir>
+    <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -554,3 +558,4 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+

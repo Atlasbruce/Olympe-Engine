@@ -120,6 +120,21 @@ namespace Olympe
                 NodeGraph::NodeGraphManager::Get().SetActiveGraph(
                     NodeGraphTypes::GraphId{static_cast<uint32_t>(graphId)}
                 );
+
+                // The editor context can outlive a graph tab. Restore the
+                // viewport state from the newly loaded document instead of
+                // keeping the previous graph's panning offset.
+                if (m_editorContext)
+                {
+                    ImNodes::EditorContextSet(m_editorContext);
+                    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetActiveGraph();
+                    if (graphDoc)
+                    {
+                        ImNodes::EditorContextResetPanning(ImVec2(
+                            graphDoc->editorState.scrollOffset.x,
+                            graphDoc->editorState.scrollOffset.y));
+                    }
+                }
                 SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Set active graph (NodeGraph manager): " 
                            << graphId << "\n";
             }

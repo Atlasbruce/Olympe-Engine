@@ -10,6 +10,12 @@
 #include "../system/system_utils.h"
 #include <fstream>
 
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <unistd.h>
+#endif
+
 using json = nlohmann::json;
 
 namespace Olympe {
@@ -75,8 +81,25 @@ GraphId NodeGraphManager::CreateGraph(const std::string& graphType, const std::s
 
 GraphId NodeGraphManager::LoadGraph(const std::string& filepath)
 {
+    char currentDirectory[4096] = {};
+    char absolutePath[4096] = {};
+#ifdef _WIN32
+    const bool hasCurrentDirectory = (_getcwd(currentDirectory, sizeof(currentDirectory)) != nullptr);
+    const bool hasAbsolutePath = (_fullpath(absolutePath, filepath.c_str(), sizeof(absolutePath)) != nullptr);
+#else
+    const bool hasCurrentDirectory = (getcwd(currentDirectory, sizeof(currentDirectory)) != nullptr);
+    const bool hasAbsolutePath = false;
+#endif
+
+    SYSTEM_LOG << "[NodeGraphManager] LoadGraph input path: " << filepath << std::endl;
+    if (hasCurrentDirectory)
+        SYSTEM_LOG << "[NodeGraphManager] LoadGraph current directory: " << currentDirectory << std::endl;
+    if (hasAbsolutePath)
+        SYSTEM_LOG << "[NodeGraphManager] LoadGraph resolved path: " << absolutePath << std::endl;
+
     json j;
-    if (!JsonHelper::LoadJsonFromFile(filepath, j))
+    const std::string pathToLoad = hasAbsolutePath ? std::string(absolutePath) : filepath;
+    if (!JsonHelper::LoadJsonFromFile(pathToLoad, j))
     {
         SYSTEM_LOG << "[NodeGraphManager] Failed to load graph from " << filepath << std::endl;
         return GraphId{0};
@@ -101,7 +124,7 @@ GraphId NodeGraphManager::LoadGraph(const std::string& filepath)
     m_graphOrder.push_back(newId);
     m_activeGraphId = newId;
     
-    SYSTEM_LOG << "[NodeGraphManager] Loaded graph " << newId.value << " from " << filepath << std::endl;
+    SYSTEM_LOG << "[NodeGraphManager] Loaded graph " << newId.value << " from " << pathToLoad << std::endl;
     
     return newId;
 }
