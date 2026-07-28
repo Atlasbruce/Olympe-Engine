@@ -68,6 +68,16 @@ namespace Olympe
         float lastUpdateTime = 0.0f;
     };
 
+    struct CachedOverlayPoint
+    {
+        float x = 0.0f;
+        float y = 0.0f;
+        float radius = 0.0f;
+        unsigned int color = 0;
+        float lineThickness = 0.0f;
+        bool connectFromPrevious = false;
+    };
+
     /**
      * @class BehaviorTreeDebugWindow
      * @brief Main debug window for behavior tree runtime visualization
@@ -197,6 +207,22 @@ namespace Olympe
 
         // Separate ImGui context for this window
         ImGuiContext* m_separateImGuiContext;
+
+        // Cached data for reducing per-frame debugger work
+        float m_inspectorRefreshInterval = 0.25f;
+        float m_overlayRefreshInterval = 0.15f;
+        float m_logRefreshInterval = 0.10f;
+        float m_nextEntityListRefreshTime = 0.0f;
+        float m_nextInspectorRefreshTime = 0.0f;
+        float m_nextOverlayRefreshTime = 0.0f;
+        float m_nextGraphRefreshTime = 0.0f;
+        float m_nextLogRefreshTime = 0.0f;
+        int m_cachedOverlayGraphId = -1;
+        EntityID m_cachedOverlayEntity = 0;
+        std::vector<CachedOverlayPoint> m_cachedOverlayPoints;
+        std::unordered_map<uint32_t, std::pair<float, float>> m_cachedNodeCenters;
+        bool m_overlayCacheDirty = true;
+
         // ImNodes context for node graph rendering in the separate window
         void* m_imnodesContext = nullptr;
 
@@ -209,7 +235,5 @@ namespace Olympe
         void RenderNodeGraphDebugPanel();
 
         NodeGraphPanel  m_nodeGraphPanel;
-        int             m_debugGraphId    = -1;
-        uint32_t        m_lastDebugTreeId = 0;
     };
 }

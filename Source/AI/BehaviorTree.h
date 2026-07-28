@@ -248,26 +248,46 @@ struct BehaviorTreeAsset
     // Runtime caches (built lazily, used to avoid repeated sorting/scanning)
     mutable std::unordered_map<uint32_t, std::vector<uint32_t>> m_sortedChildrenCache;
     mutable std::unordered_map<std::string, std::vector<uint32_t>> m_eventRootsByTypeCache;
+    mutable std::unordered_map<uint32_t, size_t> m_nodeIndexCache;
+    mutable bool m_nodeIndexCacheDirty = true;
+
+    void InvalidateRuntimeCaches() const
+    {
+        m_sortedChildrenCache.clear();
+        m_eventRootsByTypeCache.clear();
+        m_nodeIndexCacheDirty = true;
+    }
+
+    void RebuildNodeIndexCache() const
+    {
+        if (!m_nodeIndexCacheDirty)
+            return;
+
+        m_nodeIndexCache.clear();
+        for (size_t i = 0; i < nodes.size(); ++i)
+        {
+            m_nodeIndexCache[nodes[i].id] = i;
+        }
+        m_nodeIndexCacheDirty = false;
+    }
 
     // Helper: get node by ID
     BTNode* GetNode(uint32_t nodeId)
     {
-        for (auto& node : nodes)
-        {
-            if (node.id == nodeId)
-                return &node;
-        }
-        return nullptr;
+        RebuildNodeIndexCache();
+        auto it = m_nodeIndexCache.find(nodeId);
+        if (it == m_nodeIndexCache.end() || it->second >= nodes.size())
+            return nullptr;
+        return &nodes[it->second];
     }
     
     const BTNode* GetNode(uint32_t nodeId) const
     {
-        for (const auto& node : nodes)
-        {
-            if (node.id == nodeId)
-                return &node;
-        }
-        return nullptr;
+        RebuildNodeIndexCache();
+        auto it = m_nodeIndexCache.find(nodeId);
+        if (it == m_nodeIndexCache.end() || it->second >= nodes.size())
+            return nullptr;
+        return &nodes[it->second];
     }
 
     // Get children of a node sorted by Y-position (execution order)
@@ -482,6 +502,10 @@ private:
 // --- Behavior Tree Execution ---
 // Execute a single node of a behavior tree
 BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& blackboard, const BehaviorTreeAsset& tree);
+
+// Debug snapshot tracing hooks used by the runtime to capture the active execution path.
+void BTDebug_BeginExecutionTrace(std::vector<uint32_t>& trace);
+void BTDebug_EndExecutionTrace();
 
 // Execute built-in condition nodes
 BTStatus ExecuteBTCondition(BTConditionType condType, float param, EntityID entity, const AIBlackboard_data& blackboard);

@@ -124,22 +124,27 @@ namespace Olympe
         // Get nodes once
         const auto& nodes = doc->GetNodes();
 
-        // Ensure nodes have positions. If all positions are zero, request an auto-layout
-        bool allZero = true;
-        for (const auto& nd : nodes)
+        // Ensure nodes have positions. If this graph has never been laid out and all positions are zero,
+        // request a one-time auto-layout instead of rescanning every frame.
+        if (!m_autoLayoutApplied)
         {
-            if (nd.position.x != 0.0f || nd.position.y != 0.0f)
+            bool allZero = true;
+            for (const auto& nd : nodes)
             {
-                allZero = false;
-                break;
+                if (nd.position.x != 0.0f || nd.position.y != 0.0f)
+                {
+                    allZero = false;
+                    break;
+                }
             }
-        }
 
-        if (allZero)
-        {
-            NodeGraphTypes::AutoLayoutConfig cfg; // defaults
-            // AutoLayout may modify node positions inside the document
-            doc->AutoLayout(cfg);
+            if (allZero)
+            {
+                NodeGraphTypes::AutoLayoutConfig cfg; // defaults
+                doc->AutoLayout(cfg);
+            }
+
+            m_autoLayoutApplied = true;
         }
 
         // Push node positions into ImNodes (grid-space) so they render at saved locations.

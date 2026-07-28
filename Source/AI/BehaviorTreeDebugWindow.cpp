@@ -360,6 +360,15 @@ namespace Olympe
         static float accumulatedTime = 0.0f;
         accumulatedTime += GameEngine::fDt;
 
+        if (m_nextOverlayRefreshTime > 0.0f)
+            m_nextOverlayRefreshTime -= GameEngine::fDt;
+        if (m_nextGraphRefreshTime > 0.0f)
+            m_nextGraphRefreshTime -= GameEngine::fDt;
+        if (m_nextInspectorRefreshTime > 0.0f)
+            m_nextInspectorRefreshTime -= GameEngine::fDt;
+        if (m_nextLogRefreshTime > 0.0f)
+            m_nextLogRefreshTime -= GameEngine::fDt;
+
         if (accumulatedTime >= m_autoRefreshInterval)
         {
             RefreshEntityList();
@@ -712,6 +721,12 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::RenderInspectorPanel()
     {
+        if (m_nextInspectorRefreshTime > 0.0f)
+        {
+            ImGui::TextDisabled("Inspector refresh throttled");
+            return;
+        }
+
         // If no entity is selected, still show the Inspector panel so
         // the Execution Log can be viewed in "all entities" mode.
         if (m_selectedEntity == 0)
@@ -724,20 +739,24 @@ namespace Olympe
         }
         ImGui::Separator();
 
-        if (ImGui::CollapsingHeader("Runtime Info", ImGuiTreeNodeFlags_DefaultOpen))
+        if (ImGui::CollapsingHeader("Runtime Info", ImGuiTreeNodeFlags_None))
         {
-            RenderRuntimeInfo();
+            if (GameEngine::fDt >= 0.0f)
+                RenderRuntimeInfo();
         }
 
-        if (ImGui::CollapsingHeader("Blackboard", ImGuiTreeNodeFlags_DefaultOpen))
+        if (ImGui::CollapsingHeader("Blackboard", ImGuiTreeNodeFlags_None))
         {
-            RenderBlackboardSection();
+            if (GameEngine::fDt >= 0.0f)
+                RenderBlackboardSection();
         }
 
         if (ImGui::CollapsingHeader("Execution Log", ImGuiTreeNodeFlags_DefaultOpen))
         {
             RenderExecutionLog();
         }
+
+        m_nextInspectorRefreshTime = m_inspectorRefreshInterval;
     }
 
     void BehaviorTreeDebugWindow::RenderRuntimeInfo()
@@ -776,11 +795,11 @@ namespace Olympe
 
         ImGui::Separator();
 
-        ImGui::Text("Current Node ID: %u", btRuntime.AICurrentNodeIndex);
+        ImGui::Text("Current Node ID: %u", btRuntime.debugCurrentNodeIndex);
 
         if (tree)
         {
-            const BTNode* currentNode = tree->GetNode(btRuntime.AICurrentNodeIndex);
+            const BTNode* currentNode = tree->GetNode(btRuntime.debugCurrentNodeIndex);
             if (currentNode)
             {
                 ImGui::Text("Node Name: %s", currentNode->name.c_str());
@@ -789,7 +808,7 @@ namespace Olympe
 
         const char* statusStr = "Running";
         ImVec4 statusColor = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
-        BTStatus status = static_cast<BTStatus>(btRuntime.lastStatus);
+        BTStatus status = static_cast<BTStatus>(btRuntime.debugLastStatus);
         if (status == BTStatus::Success)
         {
             statusStr = "Success";
@@ -903,6 +922,8 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::RenderExecutionLog()
     {
+        const size_t maxVisibleEntries = m_showHistoryWindow ? 50 : 20;
+
         // Row 1: primary actions + counters
         if (ImGui::Button("Clear Log"))
         {
@@ -938,9 +959,12 @@ namespace Olympe
         if (!m_showHistoryWindow)
         {
             // Compact reverse-chronological view (most recent first)
+            size_t shown = 0;
             size_t displayIdx = 0;
             for (auto it = m_executionLog.rbegin(); it != m_executionLog.rend(); ++it)
             {
+                if (shown >= maxVisibleEntries)
+                    break;
                 const auto& entry = *it;
 
                 if (m_selectedEntity != 0 && entry.entity != m_selectedEntity)
@@ -958,7 +982,7 @@ namespace Olympe
                 {
                     // Use unique ID per displayed entry to avoid ImGui ID conflicts
                     std::string hdr = std::string("Details##") + std::to_string(displayIdx++);
-                    if (ImGui::CollapsingHeader(hdr.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+                    if (ImGui::CollapsingHeader(hdr.c_str(), ImGuiTreeNodeFlags_None))
                     {
                         try
                         {
@@ -989,7 +1013,7 @@ namespace Olympe
             // Provide a simple tree where each entity expands into its full recorded history.
             // Build a temporary map of entity -> vector of indices
             std::unordered_map<EntityID, std::vector<size_t>> idxMap;
-            idxMap.reserve(m_executionLog.size());
+            idxMap.reserve(std::min(m_executionLog.size(), static_cast<size_t>(MAX_LOG_ENTRIES)));
             for (size_t i = 0; i < m_executionLog.size(); ++i)
             {
                 const auto& e = m_executionLog[i];
@@ -1126,6 +1150,11 @@ extern "C" {
     void BTDebug_AddExecutionJson(const char* jsonLine)
     {
         if (!jsonLine) return;
+
+        // JSON debug payloads were removed from the hot path to reduce runtime cost.
+        // Keep this entry point as a no-op for backward compatibility.
+        (void)jsonLine;
+        return;
 
         try
         {

@@ -551,9 +551,15 @@ void BehaviorTreeSystem::Process()
             
             if (node)
             {
+                BTDebug_BeginExecutionTrace(btRuntime.debugNodeTrace);
                 // Execute the node
                 BTStatus status = ExecuteBTNode(*node, entity, blackboard, *tree);
+                BTDebug_EndExecutionTrace();
                 btRuntime.lastStatus = static_cast<uint8_t>(status);
+                btRuntime.debugCurrentNodeIndex = btRuntime.AICurrentNodeIndex;
+                btRuntime.debugLastStatus = btRuntime.lastStatus;
+                btRuntime.debugSnapshotTime = currentTime;
+                ++btRuntime.debugTickSerial;
 
                 // Reduce BT reevaluation pressure after terminal outcomes.
                 // Running keeps normal cadence; Success/Failure apply a small backoff.
@@ -571,31 +577,10 @@ void BehaviorTreeSystem::Process()
                     }
                 }
                 
-                // Emit debug instrumentation only when debugger is visible.
+                // Emit lightweight debug instrumentation only when debugger is visible.
                 if (g_btDebugWindow && g_btDebugWindow->IsVisible())
                 {
                     g_btDebugWindow->AddExecutionEntry(entity, node->id, node->name, status);
-
-                    // New unified JSON emission (only when debugger is visible)
-                    try
-                    {
-                        nlohmann::json j;
-                        // Emit integer fields as integers to avoid precision loss when parsing large IDs
-                        // nlohmann::json in this codebase maps numbers to double by default
-                        // Assign integer-like values via unsigned long long to avoid ambiguous overloads
-                        // Use signed long long for numeric JSON fields to remain compatible with older nlohmann::json
-                        // Store IDs/timestamps as strings to avoid issues with older nlohmann::json builds
-                        // and to preserve full integer precision for large entity IDs.
-                        j["ts"] = std::to_string(static_cast<unsigned long long>(std::time(nullptr)) * 1000ULL);
-                        j["treeId"] = std::to_string(btRuntime.AITreeAssetId);
-                        j["entity"] = std::to_string(static_cast<unsigned long long>(entity));
-                        j["nodeId"] = std::to_string(static_cast<unsigned long long>(node->id));
-                        j["nodeName"] = node->name;
-                        j["status"] = (status == BTStatus::Success) ? "Success" : (status == BTStatus::Failure) ? "Failure" : "Running";
-                        std::string s = j.dump();
-                        BTDebug_AddExecutionJson(s.c_str());
-                    }
-                    catch (...) { }
                 }
                 
                 // If node completed (success or failure), restart tree next frame

@@ -33,6 +33,19 @@ Behavior Tree implementation: JSON loading and built-in node execution.
 
 using json = nlohmann::json;
 
+static thread_local std::vector<uint32_t>* s_activeExecutionTrace = nullptr;
+
+void BTDebug_BeginExecutionTrace(std::vector<uint32_t>& trace)
+{
+    trace.clear();
+    s_activeExecutionTrace = &trace;
+}
+
+void BTDebug_EndExecutionTrace()
+{
+    s_activeExecutionTrace = nullptr;
+}
+
 namespace
 {
     std::string GetBTBaseType(const std::string& typeName)
@@ -41,7 +54,6 @@ namespace
             return typeName.substr(3);
         return typeName;
     }
-
     bool TryMapBTConditionType(const std::string& typeName, BTConditionType& result)
     {
         const std::string base = GetBTBaseType(typeName);
@@ -1034,6 +1046,9 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
         }
     } guard(s_execCallStack, node.id);
 
+    if (s_activeExecutionTrace)
+        s_activeExecutionTrace->push_back(node.id);
+
     if (guard.wasCycle)
     {
         // Detected cycle during traversal - bail out to avoid stack overflow
@@ -1224,54 +1239,6 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
         default:
             finalStatus = BTStatus::Failure;
             break;
-    }
-
-    // Enhanced runtime debugging only when the debugger is visible.
-    if (BTDebug_IsVisible())
-    {
-        try
-        {
-            json j;
-            j["ts"] = static_cast<double>(static_cast<unsigned long long>(std::time(nullptr)) * 1000ULL);
-            j["treeId"] = std::to_string(tree.id);
-            j["entity"] = std::to_string(entity);
-            j["nodeId"] = static_cast<int>(node.id);
-            j["nodeName"] = node.name;
-            j["status"] = (finalStatus == BTStatus::Success) ? "Success"
-                        : (finalStatus == BTStatus::Failure) ? "Failure"
-                        : "Running";
-
-            if (World::Get().HasComponent<Identity_data>(entity))
-            {
-                const Identity_data& identity = World::Get().GetComponent<Identity_data>(entity);
-                j["entityName"] = identity.name;
-            }
-
-            if (node.type == BTNodeType::Condition)
-            {
-                json details;
-                if (!node.conditionTypeString.empty())
-                    details["conditionType"] = node.conditionTypeString;
-                else
-                    details["conditionType"] = static_cast<int>(node.conditionType);
-                details["conditionParam"] = node.conditionParam;
-                details["hasTarget"] = blackboard.hasTarget;
-                details["distanceToTarget"] = blackboard.distanceToTarget;
-
-                if (blackboard.targetEntity != INVALID_ENTITY_ID &&
-                    World::Get().HasComponent<Identity_data>(blackboard.targetEntity))
-                {
-                    const Identity_data& targetIdentity = World::Get().GetComponent<Identity_data>(blackboard.targetEntity);
-                    details["targetName"] = targetIdentity.name;
-                }
-
-                j["details"] = details;
-            }
-
-            const std::string line = j.dump();
-            BTDebug_AddExecutionJson(line.c_str());
-        }
-        catch (...) { /* don't let debug logging break runtime */ }
     }
 
     return finalStatus;
@@ -1874,6 +1841,7 @@ void BehaviorTreeAsset::EnsureRootNodeExists()
 
     nodes.push_back(rootNode);
     rootNodeId = rootNode.id;
+    InvalidateRuntimeCaches();
 
     std::cout << "[BehaviorTreeAsset::EnsureRootNodeExists] "
               << "Created Root node with ID=" << rootNode.id << ", total nodes=" << nodes.size() << std::endl;
@@ -1986,6 +1954,7 @@ uint32_t BehaviorTreeAsset::AddNode(BTNodeType type, const std::string& name, co
     }
 
     nodes.push_back(newNode);
+    InvalidateRuntimeCaches();
 
     std::cout << "[BehaviorTreeAsset] Added node ID=" << newNode.id
               << " type=" << static_cast<int>(type) << " name='" << name << "'"
@@ -2033,6 +2002,7 @@ bool BehaviorTreeAsset::RemoveNode(uint32_t nodeId)
     }
     
     std::cout << "[BehaviorTreeAsset] Removed node ID=" << nodeId << std::endl;
+    InvalidateRuntimeCaches();
     return true;
 }
 

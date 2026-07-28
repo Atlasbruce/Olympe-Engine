@@ -284,6 +284,9 @@ namespace Olympe
         /// m_positionedNodes can be cleared.
         int m_lastActiveGraphId = -1;
 
+        /// Tracks whether the one-time auto-layout pass already ran for the active graph.
+        bool m_autoLayoutApplied = false;
+
         // -----------------------------------------------------------------------
         // Phase 8: Subgraph tab state
         // -----------------------------------------------------------------------

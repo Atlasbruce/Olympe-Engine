@@ -139,6 +139,13 @@ struct BehaviorTreeRuntime_data
     // Tree execution control
     bool isActive = true;               // Enable/disable tree execution
     bool needsRestart = false;          // Flag to restart tree from root
+
+    // Debug snapshot (runtime-owned, debugger reads only)
+    uint32_t debugCurrentNodeIndex = 0;
+    uint8_t debugLastStatus = 0;
+    std::vector<uint32_t> debugNodeTrace;
+    float debugSnapshotTime = 0.0f;
+    uint64_t debugTickSerial = 0;
     
     // Constructors
     BehaviorTreeRuntime_data()

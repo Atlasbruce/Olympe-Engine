@@ -24,6 +24,9 @@
 namespace Olympe
 {
 
+	static int s_debugGraphId = -1;
+	static uint32_t s_lastDebugTreeId = 0;
+
 	void BehaviorTreeDebugWindow::InitNodeGraphDebugMode()
 	{
 		// Initialize the NodeGraphPanel instance used for rendering the read-only graph
@@ -34,7 +37,7 @@ namespace Olympe
 		m_nodeGraphPanel.SetReadOnly(true);
 
 		// Clear any previous debug graph id
-		m_debugGraphId = -1;
+		s_debugGraphId = -1;
 
 		std::cout << "[BTDebugger] NodeGraph debug mode initialized" << std::endl;
 	}
@@ -42,11 +45,11 @@ namespace Olympe
 	void BehaviorTreeDebugWindow::ShutdownNodeGraphDebugMode()
 	{
 		// Close any loaded debug graph
-		if (m_debugGraphId != -1)
+		if (s_debugGraphId != -1)
 		{
-			NodeGraph::GraphId gidClose; gidClose.value = static_cast<uint32_t>(m_debugGraphId);
+			NodeGraph::GraphId gidClose; gidClose.value = static_cast<uint32_t>(s_debugGraphId);
 			NodeGraph::NodeGraphManager::Get().CloseGraph(gidClose);
-			m_debugGraphId = -1;
+			s_debugGraphId = -1;
 		}
 
 		m_nodeGraphPanel.Shutdown();
@@ -56,6 +59,12 @@ namespace Olympe
 
 	void BehaviorTreeDebugWindow::RenderNodeGraphDebugPanel()
 	{
+		if (m_nextGraphRefreshTime > 0.0f)
+		{
+			ImGui::Text("Graph refresh throttled");
+			return;
+		}
+
 		// If no entity selected or no tree loaded, show placeholder
 		if (m_selectedEntity == 0)
 		{
@@ -74,16 +83,16 @@ namespace Olympe
 		uint32_t treeId = btRuntime.AITreeAssetId;
 
 		// Ensure we have a graph loaded for this treeId. If different from last, reload.
-		if (treeId != m_lastDebugTreeId)
+		if (treeId != s_lastDebugTreeId)
 		{
-			m_lastDebugTreeId = treeId;
+			s_lastDebugTreeId = treeId;
 
 			// Close previous graph
-			if (m_debugGraphId != -1)
+			if (s_debugGraphId != -1)
 			{
-				NodeGraph::GraphId gidClose; gidClose.value = static_cast<uint32_t>(m_debugGraphId);
+				NodeGraph::GraphId gidClose; gidClose.value = static_cast<uint32_t>(s_debugGraphId);
 				NodeGraph::NodeGraphManager::Get().CloseGraph(gidClose);
-				m_debugGraphId = -1;
+				s_debugGraphId = -1;
 			}
 
 			std::string path = BehaviorTreeManager::Get().GetTreePathFromId(treeId);
@@ -92,7 +101,7 @@ namespace Olympe
 				auto gid = NodeGraph::NodeGraphManager::Get().LoadGraph(path);
 				if (gid.value != 0)
 				{
-					m_debugGraphId = gid.value;
+					s_debugGraphId = gid.value;
 					// Set active graph to ensure NodeGraphPanel will render it
 					NodeGraph::NodeGraphManager::Get().SetActiveGraph(gid);
 				}
@@ -104,17 +113,17 @@ namespace Olympe
 			else
 			{
 				// No path found for this tree id
-				m_debugGraphId = -1;
+			s_debugGraphId = -1;
 			}
 		}
 
 		// Render the graph if available
-		if (m_debugGraphId != -1)
+		if (s_debugGraphId != -1)
 		{
 			// Render content-only so it fits in the central child
 			m_nodeGraphPanel.m_SuppressGraphTabs = true;
 
-			NodeGraph::GraphId gid{ 0 }; gid.value = static_cast<uint32_t>(m_debugGraphId);
+			NodeGraph::GraphId gid{ 0 }; gid.value = static_cast<uint32_t>(s_debugGraphId);
 			// Only set active graph when it differs to avoid spamming logs
 			if (NodeGraph::NodeGraphManager::Get().GetActiveGraphId().value != gid.value)
 			{
@@ -138,15 +147,30 @@ namespace Olympe
 		}
 
 		// Draw execution history overlay if graph is visible
-		if (m_debugGraphId != -1 && !m_execHistory.empty())
+		if (s_debugGraphId != -1)
 		{
-			NodeGraph::GraphId gid{ 0 }; gid.value = static_cast<uint32_t>(m_debugGraphId);
+			NodeGraph::GraphId gid{ 0 }; gid.value = static_cast<uint32_t>(s_debugGraphId);
 			GraphDocument* doc = NodeGraph::NodeGraphManager::Get().GetGraph(gid);
-			if (doc)
+			if (doc && m_selectedEntity != 0)
 			{
-				ImDrawList* dl = ImGui::GetWindowDrawList();
-				if (dl)
+				auto& world = World::Get();
+				if (!world.HasComponent<BehaviorTreeRuntime_data>(m_selectedEntity))
+					return;
+
+				const auto& rt = world.GetComponent<BehaviorTreeRuntime_data>(m_selectedEntity);
+				if (rt.debugNodeTrace.empty())
+					return;
+
+				bool needOverlayRebuild =
+					m_cachedOverlayPoints.empty() ||
+					m_cachedOverlayGraphId != s_debugGraphId ||
+					m_cachedOverlayEntity != m_selectedEntity ||
+					(m_nextOverlayRefreshTime <= 0.0f);
+
+				if (needOverlayRebuild)
 				{
+					m_cachedOverlayPoints.clear();
+					m_cachedNodeCenters.clear();
 					// Ensure we have a valid ImNodes editor context for the panel before
 					// calling ImNodes APIs. If missing, skip overlay to avoid asserts.
 					ImNodesEditorContext* editorCtx = m_nodeGraphPanel.GetImNodesEditorContext();
@@ -157,46 +181,67 @@ namespace Olympe
 					}
 					// Set the editor context so ImNodes internal calls use the correct editor
 					ImNodes::EditorContextSet(editorCtx);
-					// Build a map nodeId -> screen center
-					std::unordered_map<uint32_t, ImVec2> nodeCenter;
+					// Build a cache nodeId -> screen center
 					for (const auto& nd : doc->GetNodes())
 					{
 						int uid = gid.value * 10000 + nd.id.value;
 						ImVec2 pos = ImNodes::GetNodeScreenSpacePos(uid);
 						ImVec2 dim = ImNodes::GetNodeDimensions(uid);
-						nodeCenter[nd.id.value] = ImVec2(pos.x + dim.x * 0.5f, pos.y + dim.y * 0.5f);
+						m_cachedNodeCenters[nd.id.value] = std::make_pair(pos.x + dim.x * 0.5f, pos.y + dim.y * 0.5f);
 					}
 
-					// Draw history as gradient dots and connecting lines
-					// Iterate in chronological order (oldest -> newest) so the drawn
-					// path flows in execution direction (root -> current node).
+					// Cache history as compact draw primitives.
 					int idx = 0;
-					ImVec2 prevPoint = ImVec2(0,0);
 					bool havePrev = false;
-					for (auto it = m_execHistory.begin(); it != m_execHistory.end(); ++it)
+					float prevX = 0.0f;
+					float prevY = 0.0f;
+					for (size_t i = 0; i < rt.debugNodeTrace.size(); ++i)
 					{
-						uint32_t nid = it->second;
-						auto ncIt = nodeCenter.find(nid);
-						if (ncIt == nodeCenter.end()) continue;
-						ImVec2 p = ncIt->second;
+						uint32_t nid = rt.debugNodeTrace[i];
+						auto ncIt = m_cachedNodeCenters.find(nid);
+						if (ncIt == m_cachedNodeCenters.end()) continue;
+						float px = ncIt->second.first;
+						float py = ncIt->second.second;
 
 						float t = static_cast<float>(idx + 1) / static_cast<float>(MAX_EXEC_HISTORY);
 						t = std::min(1.0f, std::max(0.05f, t));
 						int alpha = static_cast<int>(t * 200.0f) + 55;
-						ImU32 col = IM_COL32(255, 100, 30, alpha);
+						CachedOverlayPoint point;
+						point.x = px;
+						point.y = py;
+						point.radius = 2.0f + 6.0f * t;
+						point.color = IM_COL32(255, 100, 30, alpha);
+						point.lineThickness = 1.5f + 2.0f * t;
+						point.connectFromPrevious = havePrev;
+						m_cachedOverlayPoints.push_back(point);
 
-						// Draw small circle (growing for newer points)
-						dl->AddCircleFilled(p, 2.0f + 6.0f * t, col);
-
-						// Connect to previous point (draw line from prev -> current)
-						if (havePrev)
-						{
-							dl->AddLine(prevPoint, p, IM_COL32(255,150,60, alpha/2), 1.5f + 2.0f * t);
-						}
-
-						prevPoint = p;
+						prevX = px;
+						prevY = py;
 						havePrev = true;
 						++idx;
+					}
+					m_cachedOverlayGraphId = s_debugGraphId;
+					m_cachedOverlayEntity = m_selectedEntity;
+					m_overlayCacheDirty = false;
+					m_nextOverlayRefreshTime = m_overlayRefreshInterval;
+				}
+
+				ImDrawList* dl = ImGui::GetWindowDrawList();
+				if (dl)
+				{
+					// Render the cached primitives.
+					ImVec2 prevPoint = ImVec2(0,0);
+					bool havePrev = false;
+					for (const auto& point : m_cachedOverlayPoints)
+					{
+						ImVec2 p(point.x, point.y);
+						dl->AddCircleFilled(p, point.radius, point.color);
+						if (havePrev && point.connectFromPrevious)
+						{
+							dl->AddLine(prevPoint, p, IM_COL32(255,150,60, 90), point.lineThickness);
+						}
+						prevPoint = p;
+						havePrev = true;
 					}
 				}
 			}
