@@ -257,18 +257,26 @@ namespace Olympe
 					// Render the cached primitives.
 					ImVec2 prevPoint = ImVec2(0,0);
 					bool havePrev = false;
-					ImU32 highlightColor = IM_COL32(255, 210, 80, 180);
+					ImU32 highlightColor = IM_COL32(255, 220, 120, 230);
+					const ImVec2 clipMin = ImGui::GetWindowPos();
+					const ImVec2 clipMax = ImVec2(clipMin.x + ImGui::GetWindowWidth(), clipMin.y + ImGui::GetWindowHeight());
+					dl->PushClipRect(clipMin, clipMax, true);
 					for (const auto& point : m_cachedOverlayPoints)
 					{
 						ImVec2 p(point.x, point.y);
 						dl->AddCircleFilled(p, point.radius, point.color);
 						if (havePrev && point.connectFromPrevious)
 						{
-								dl->AddLine(prevPoint, p, highlightColor, point.lineThickness);
+							const float dx = p.x - prevPoint.x;
+							const float dy = p.y - prevPoint.y;
+							ImVec2 cp1(prevPoint.x + dx * 0.35f, prevPoint.y + dy * 0.05f);
+							ImVec2 cp2(p.x - dx * 0.35f, p.y - dy * 0.05f);
+							dl->AddBezierCubic(prevPoint, cp1, cp2, p, highlightColor, point.lineThickness);
 						}
 						prevPoint = p;
 						havePrev = true;
 					}
+					dl->PopClipRect();
 				}
 			}
 		}
