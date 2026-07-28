@@ -1043,9 +1043,8 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
         {
             // Root node: delegate to children (treat as a selector over children to find active branch)
             if (node.childIds.empty()) { finalStatus = BTStatus::Failure; break; }
-            // Use editor-derived ordering (sorted by editor Y) as authoritative so runtime
-            // matches visual link priorities. Fallback to stored childIds only if
-            // the sorted list is empty.
+            // Use cached editor-derived ordering so runtime matches visual link priorities
+            // without rebuilding the order every tick.
             std::vector<uint32_t> children = tree.GetChildrenSortedByY(node.id);
             if (children.empty()) children = node.childIds;
 
@@ -1071,7 +1070,7 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
         case BTNodeType::Selector:
         {
             // OR node: succeeds if any child succeeds
-            // Use editor-derived ordering (sorted by editor Y) as authoritative
+            // Use cached editor-derived ordering to avoid repeated sorting in the hot path
             std::vector<uint32_t> children = tree.GetChildrenSortedByY(node.id);
             if (children.empty()) children = node.childIds;
             for (uint32_t childId : children)
@@ -1098,7 +1097,7 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
         case BTNodeType::Sequence:
         {
             // AND node: succeeds if all children succeed
-            // Use editor-derived ordering (sorted by editor Y) as authoritative
+            // Use cached editor-derived ordering to avoid repeated sorting in the hot path
             std::vector<uint32_t> children = tree.GetChildrenSortedByY(node.id);
             if (children.empty()) children = node.childIds;
             for (uint32_t childId : children)
@@ -2278,54 +2277,36 @@ void TickEventRoots(EventQueue& eventQueue, const BehaviorTreeAsset& tree, Entit
     // Get all events from EventQueue (these are frame N-1 events, now readable in frame N)
     const std::vector<Message>& events = eventQueue.GetEvents();
 
+    auto getEventTypeString = [](EventType type) -> std::string
+    {
+        switch (type)
+        {
+            case EventType::Olympe_EventType_AI_Explosion: return "Olympe_EventType_AI_Explosion";
+            case EventType::Olympe_EventType_AI_Noise: return "Olympe_EventType_AI_Noise";
+            case EventType::Olympe_EventType_AI_DamageDealt: return "Olympe_EventType_AI_DamageDealt";
+            case EventType::Olympe_EventType_Object_Create: return "Olympe_EventType_Object_Create";
+            case EventType::Olympe_EventType_Object_Destroy: return "Olympe_EventType_Object_Destroy";
+            default: return std::string();
+        }
+    };
+
     // Iterate through all events
     for (const Message& msg : events)
     {
-        // Phase 38b: Match event type to OnEvent nodes
-        // Find OnEvent root nodes that are listening for this event type
-        for (uint32_t eventRootId : tree.m_eventRootIds)
+        const std::string msgTypeStr = getEventTypeString(msg.msg_type);
+        if (msgTypeStr.empty())
+            continue;
+
+        // Use cached roots for this event type instead of scanning every OnEvent root.
+        const std::vector<uint32_t>& eventRootIds = tree.GetEventRootIdsForType(msgTypeStr);
+        for (uint32_t eventRootId : eventRootIds)
         {
             // Get the OnEvent root node
             const BTNode* onEventRoot = tree.GetNode(eventRootId);
             if (!onEventRoot)
                 continue;
 
-            // Check if this OnEvent node is listening for this event type
-            // eventType field contains the EventType enum value as string (e.g., "Olympe_EventType_AI_Explosion")
-            if (onEventRoot->eventType.empty())
-                continue;
-
-            // Convert message type to string for comparison
-            // For now, simple enum-to-string mapping
-            std::string msgTypeStr;
-            switch (msg.msg_type)
-            {
-                case EventType::Olympe_EventType_AI_Explosion:
-                    msgTypeStr = "Olympe_EventType_AI_Explosion";
-                    break;
-                case EventType::Olympe_EventType_AI_Noise:
-                    msgTypeStr = "Olympe_EventType_AI_Noise";
-                    break;
-                case EventType::Olympe_EventType_AI_DamageDealt:
-                    msgTypeStr = "Olympe_EventType_AI_DamageDealt";
-                    break;
-                case EventType::Olympe_EventType_Object_Create:
-                    msgTypeStr = "Olympe_EventType_Object_Create";
-                    break;
-                case EventType::Olympe_EventType_Object_Destroy:
-                    msgTypeStr = "Olympe_EventType_Object_Destroy";
-                    break;
-                default:
-                    msgTypeStr = "";
-                    break;
-            }
-
-            // Phase 38b: Optional event message filtering (future enhancement)
-            // If eventMessage is set, only activate if message content matches
-            // For now, simple event type matching
-
-            // Check if this OnEvent node matches the event type
-            if (onEventRoot->eventType == msgTypeStr)
+            if (!onEventRoot->eventType.empty() && onEventRoot->eventType == msgTypeStr)
             {
                 // Execute this OnEvent root node
                 std::cout << "[TickEventRoots] Entity " << entity << ": Executing OnEvent root " << eventRootId

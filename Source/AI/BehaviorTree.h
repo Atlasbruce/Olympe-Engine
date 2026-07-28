@@ -38,6 +38,7 @@
 #include <string>
 #include <cstdint>
 #include <map>
+#include <unordered_map>
 #include <algorithm>
 #include <set>
 
@@ -229,6 +230,10 @@ struct BehaviorTreeAsset
     // Phase 38b: Event-driven execution roots (separate from main Root)
     std::vector<uint32_t> m_eventRootIds;   // IDs of OnEvent root nodes
 
+    // Runtime caches (built lazily, used to avoid repeated sorting/scanning)
+    mutable std::unordered_map<uint32_t, std::vector<uint32_t>> m_sortedChildrenCache;
+    mutable std::unordered_map<std::string, std::vector<uint32_t>> m_eventRootsByTypeCache;
+
     // Helper: get node by ID
     BTNode* GetNode(uint32_t nodeId)
     {
@@ -254,6 +259,10 @@ struct BehaviorTreeAsset
     // Returns vector of child IDs sorted by editorPosY (lowest Y = executes first = index 1)
     std::vector<uint32_t> GetChildrenSortedByY(uint32_t parentId) const
     {
+        auto cached = m_sortedChildrenCache.find(parentId);
+        if (cached != m_sortedChildrenCache.end())
+            return cached->second;
+
         const BTNode* parent = GetNode(parentId);
         if (!parent) return {};
 
@@ -281,7 +290,26 @@ struct BehaviorTreeAsset
         {
             sortedIds.push_back(pair.second);
         }
+        m_sortedChildrenCache[parentId] = sortedIds;
         return sortedIds;
+    }
+
+    const std::vector<uint32_t>& GetEventRootIdsForType(const std::string& eventType) const
+    {
+        auto cached = m_eventRootsByTypeCache.find(eventType);
+        if (cached != m_eventRootsByTypeCache.end())
+            return cached->second;
+
+        std::vector<uint32_t> matches;
+        for (uint32_t rootId : m_eventRootIds)
+        {
+            const BTNode* root = GetNode(rootId);
+            if (root && root->eventType == eventType)
+                matches.push_back(rootId);
+        }
+
+        auto inserted = m_eventRootsByTypeCache.emplace(eventType, std::move(matches));
+        return inserted.first->second;
     }
 
     // Get execution index of a child within its parent (1-based)
