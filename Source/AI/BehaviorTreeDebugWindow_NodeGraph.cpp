@@ -215,8 +215,6 @@ namespace Olympe
 						point.connectFromPrevious = havePrev;
 						m_cachedOverlayPoints.push_back(point);
 
-						prevX = px;
-						prevY = py;
 						havePrev = true;
 						++idx;
 					}
@@ -232,13 +230,14 @@ namespace Olympe
 					// Render the cached primitives.
 					ImVec2 prevPoint = ImVec2(0,0);
 					bool havePrev = false;
+						ImU32 highlightColor = IM_COL32(255, 170, 60, 120);
 					for (const auto& point : m_cachedOverlayPoints)
 					{
 						ImVec2 p(point.x, point.y);
 						dl->AddCircleFilled(p, point.radius, point.color);
 						if (havePrev && point.connectFromPrevious)
 						{
-							dl->AddLine(prevPoint, p, IM_COL32(255,150,60, 90), point.lineThickness);
+								dl->AddLine(prevPoint, p, highlightColor, point.lineThickness);
 						}
 						prevPoint = p;
 						havePrev = true;

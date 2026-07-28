@@ -721,12 +721,6 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::RenderInspectorPanel()
     {
-        if (m_nextInspectorRefreshTime > 0.0f)
-        {
-            ImGui::TextDisabled("Inspector refresh throttled");
-            return;
-        }
-
         // If no entity is selected, still show the Inspector panel so
         // the Execution Log can be viewed in "all entities" mode.
         if (m_selectedEntity == 0)
@@ -741,13 +735,13 @@ namespace Olympe
 
         if (ImGui::CollapsingHeader("Runtime Info", ImGuiTreeNodeFlags_None))
         {
-            if (GameEngine::fDt >= 0.0f)
+            if (GameEngine::fDt >= 0.0f && m_nextInspectorRefreshTime <= 0.0f)
                 RenderRuntimeInfo();
         }
 
-        if (ImGui::CollapsingHeader("Blackboard", ImGuiTreeNodeFlags_None))
+        if (ImGui::CollapsingHeader("Blackboard", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            if (GameEngine::fDt >= 0.0f)
+            if (GameEngine::fDt >= 0.0f && m_nextInspectorRefreshTime <= 0.0f)
                 RenderBlackboardSection();
         }
 
@@ -755,8 +749,6 @@ namespace Olympe
         {
             RenderExecutionLog();
         }
-
-        m_nextInspectorRefreshTime = m_inspectorRefreshInterval;
     }
 
     void BehaviorTreeDebugWindow::RenderRuntimeInfo()
@@ -853,6 +845,8 @@ namespace Olympe
 
         const auto& blackboard = world.GetComponent<AIBlackboard_data>(m_selectedEntity);
 
+        ImGui::PushID(static_cast<int>(m_selectedEntity));
+
         if (ImGui::TreeNode("Target"))
         {
             ImGui::Text("Has Target: %s", blackboard.hasTarget ? "Yes" : "No");
@@ -918,6 +912,8 @@ namespace Olympe
                 blackboard.wanderTargetWaitTime);
             ImGui::TreePop();
         }
+
+        ImGui::PopID();
     }
 
     void BehaviorTreeDebugWindow::RenderExecutionLog()
@@ -1085,6 +1081,31 @@ namespace Olympe
         {
             m_executionLog.pop_front();
         }
+
+        if (g_btDebugWindow && g_btDebugWindow->IsVisible())
+        {
+            // Make the execution history reflect the full runtime traversal when available.
+            // The runtime trace already captures recursive visits, while AddExecutionEntry
+            // stores the terminal/current node summary.
+            auto& world = World::Get();
+            if (world.HasComponent<BehaviorTreeRuntime_data>(entity))
+            {
+                const auto& rt = world.GetComponent<BehaviorTreeRuntime_data>(entity);
+                if (!rt.debugNodeTrace.empty())
+                {
+                    m_execHistory.clear();
+                    for (uint32_t tracedNodeId : rt.debugNodeTrace)
+                    {
+                        m_execHistory.emplace_back(entity, tracedNodeId);
+                        if (m_execHistory.size() > MAX_EXEC_HISTORY)
+                        {
+                            m_execHistory.pop_front();
+                        }
+                    }
+                }
+            }
+        }
+
         // Also record lightweight execution history for overlay (recent nodes)
         m_execHistory.emplace_back(entity, nodeId);
         while (m_execHistory.size() > MAX_EXEC_HISTORY)
