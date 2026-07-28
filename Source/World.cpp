@@ -908,6 +908,7 @@ void World::GenerateCollisionAndNavigationMaps(const Olympe::Tiled::TiledMap& ti
 #include "AI/BehaviorTreeDependencyScanner.h"
 #include "AI/BehaviorTree.h"
 #include <fstream>
+#include <chrono>
 
 bool World::LoadLevelDependencies(const nlohmann::json& levelJson)
 {
@@ -993,6 +994,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
 {
     // Unload current level
     UnloadCurrentLevel();
+    m_deferredLoadState.Clear();
 
     std::cout << "\n";
     std::cout << "+==========================================================+\n";
@@ -1030,7 +1032,9 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     Olympe::Tiled::TiledMap tiledMap;
     Olympe::Tiled::TiledLevelLoader loader;
     
-    if (!loader.LoadFromFile(tiledMapPath, tiledMap))
+    const auto phase2Start = std::chrono::steady_clock::now();
+    nlohmann::json levelJsonRaw;
+    if (!loader.LoadFromFile(tiledMapPath, tiledMap, &levelJsonRaw))
     {
         SYSTEM_LOG << "  X Failed to load TMJ file\n";
         return false;
@@ -1049,10 +1053,19 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     SYSTEM_LOG << "  -> Static objects: " << levelDef.categorizedObjects.staticObjects.size() << "\n";
     SYSTEM_LOG << "  -> Dynamic objects: " << levelDef.categorizedObjects.dynamicObjects.size() << "\n";
     SYSTEM_LOG << "  -> Patrol paths: " << levelDef.categorizedObjects.patrolPaths.size() << "\n\n";
+    const auto phase2End = std::chrono::steady_clock::now();
+    SYSTEM_LOG << "  -> Phase 2 duration: "
+               << std::chrono::duration_cast<std::chrono::milliseconds>(phase2End - phase2Start).count()
+               << " ms\n\n";
     
     // Generate collision and navigation maps
     SYSTEM_LOG << "[Phase 5/6] Generating Collision & Navigation Maps...\n";
+    const auto collisionStart = std::chrono::steady_clock::now();
     GenerateCollisionAndNavigationMaps(tiledMap, levelDef);
+    const auto collisionEnd = std::chrono::steady_clock::now();
+    SYSTEM_LOG << "  -> Collision/navigation duration: "
+               << std::chrono::duration_cast<std::chrono::milliseconds>(collisionEnd - collisionStart).count()
+               << " ms\n";
     
     // Synchronize grid settings with loaded level
     SyncGridWithLevel(levelDef);
@@ -1064,39 +1077,17 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     // PHASE 2.5: BEHAVIOR TREE DEPENDENCY LOADING (NEW!)
     // =======================================================================
     
-    // Note: We reload the JSON here to access the raw layer data for dependency scanning.
-    // This is intentional - the TiledMap structure is already converted to LevelDefinition,
-    // and creating a new API to extract the raw JSON would require larger refactoring.
-    // The performance impact is negligible for typical level sizes.
-    nlohmann::json levelJsonRaw;
-    std::ifstream jsonFile(tiledMapPath);
-    if (jsonFile.is_open())
+    if (!levelJsonRaw.is_null())
     {
-        try 
+        if (!LoadLevelDependencies(levelJsonRaw))
         {
-            jsonFile >> levelJsonRaw;
-            jsonFile.close();
-            
-            if (!LoadLevelDependencies(levelJsonRaw))
-            {
-                std::cerr << "[World] ERROR: Failed to load level dependencies\n";
-                return false;
-            }
+            std::cerr << "[World] ERROR: Failed to load level dependencies\n";
+            return false;
         }
-        catch (const std::exception& e)
-        {
-            std::cerr << "[World] WARNING: Failed to parse level JSON: " << e.what() << "\n";
-            // Continue anyway - not all levels may have behavior trees
-        }
-    }
-    else
-    {
-        std::cerr << "[World] WARNING: Could not open level JSON file for dependency scanning\n";
-        // Continue anyway - not all levels may have behavior trees
     }
     
     // =======================================================================
-    // PHASE 3: RESOURCE PRELOADING (Centralized)
+    // PHASE 3: RESOURCE PRELOADING (CRITICAL + DEFERRED)
     // =======================================================================
     
     SYSTEM_LOG << "+==========================================================+\n";
@@ -1108,8 +1099,9 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     
     DataManager& dataManager = DataManager::Get();
     
-    // Step 1: Tilesets
+    // Step 1: Tilesets (critical)
     SYSTEM_LOG << "  Step 1/4: Loading tilesets...\n";
+    const auto preloadStart = std::chrono::steady_clock::now();
     if (!levelDef.resources.tilesetPaths.empty())
     {
         auto tilesetResult = dataManager.PreloadTextures(
@@ -1121,7 +1113,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
         SYSTEM_LOG << "    -> Loaded " << tilesetResult.successfullyLoaded << " tilesets\n";
     }
     
-    // Step 2: Parallax layers
+    // Step 2: Parallax layers (critical for background composition)
     SYSTEM_LOG << "  Step 2/4: Loading parallax layers...\n";
     std::vector<std::string> parallaxPaths;
     if (levelDef.metadata.customData.contains("parallaxLayers") && levelDef.metadata.customData["parallaxLayers"].is_array())
@@ -1144,10 +1136,11 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
         SYSTEM_LOG << "    -> Loaded " << parallaxResult.successfullyLoaded << " parallax layers\n";
     }
     
-    // Step 3: Prefab sprites
+    // Step 3: Prefab sprites (split into critical + deferred)
     SYSTEM_LOG << "  Step 3/4: Loading prefab sprites...\n";
     std::vector<std::string> spritePaths;
     std::set<std::string> uniqueTypes;
+    spritePaths.reserve(levelDef.entities.size() * 2);
     for (const auto& entity : levelDef.entities)
     {
         if (entity)
@@ -1161,9 +1154,13 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
         const PrefabBlueprint* blueprint = factory.GetPrefabRegistry().Find(type);
         if (blueprint)
         {
-            for (const auto& sprite : blueprint->resources.spriteRefs)
+            if (!blueprint->resources.spriteRefs.empty())
             {
-                spritePaths.push_back(sprite);
+                spritePaths.push_back(blueprint->resources.spriteRefs.front());
+                for (size_t i = 1; i < blueprint->resources.spriteRefs.size(); ++i)
+                {
+                    m_deferredLoadState.spritePaths.push_back(blueprint->resources.spriteRefs[i]);
+                }
             }
         }
     }
@@ -1175,16 +1172,42 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
         resourcesFailed += spriteResult.completelyFailed;
         SYSTEM_LOG << "    -> Loaded " << spriteResult.successfullyLoaded << " sprites\n";
     }
-    
-    // Step 4: Audio
-    SYSTEM_LOG << "  Step 4/4: Loading audio files...\n";
-    if (!levelDef.resources.audioPaths.empty())
+
+    // Step 3b: Defer BT and audio loading to subsequent frames
+    m_deferredLoadState.behaviorTreePaths.clear();
+    m_deferredLoadState.audioPaths.clear();
     {
-        auto audioResult = dataManager.PreloadAudioFiles(levelDef.resources.audioPaths, true);
-        resourcesLoaded += audioResult.successfullyLoaded;
-        resourcesFailed += audioResult.completelyFailed;
-        SYSTEM_LOG << "    -> Loaded " << audioResult.successfullyLoaded << " audio files\n";
+        std::set<std::string> btPaths;
+        for (const auto& type : uniqueTypes)
+        {
+            const PrefabBlueprint* blueprint = factory.GetPrefabRegistry().Find(type);
+            if (!blueprint) continue;
+            for (const auto& comp : blueprint->components)
+            {
+                if (comp.componentType == "BehaviorTreeRuntime_data" || comp.componentType == "BehaviorTreeRuntime")
+                {
+                    const auto* treePathParam = comp.GetParameter("AITreePath");
+                    if (treePathParam && treePathParam->type == ComponentParameter::Type::String)
+                    {
+                        btPaths.insert(treePathParam->AsString());
+                    }
+                }
+            }
+        }
+        for (const auto& path : btPaths) m_deferredLoadState.behaviorTreePaths.push_back(path);
     }
+    for (const auto& path : levelDef.resources.audioPaths)
+    {
+        m_deferredLoadState.audioPaths.push_back(path);
+    }
+    m_deferredLoadState.stage = DeferredLevelLoadState::Stage::PrefabSprites;
+    m_deferredLoadState.active = (!m_deferredLoadState.spritePaths.empty() ||
+                                  !m_deferredLoadState.behaviorTreePaths.empty() ||
+                                  !m_deferredLoadState.audioPaths.empty());
+    
+    // Step 4: Audio (critical only if explicitly required now)
+    SYSTEM_LOG << "  Step 4/4: Loading audio files...\n";
+    SYSTEM_LOG << "    -> Deferred audio loading queued: " << m_deferredLoadState.audioPaths.size() << " file(s)\n";
     
     SYSTEM_LOG << "\n  -> Total resources loaded: " << resourcesLoaded;
     if (resourcesFailed > 0)
@@ -1192,6 +1215,10 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
         SYSTEM_LOG << " (" << resourcesFailed << " failed)";
     }
     SYSTEM_LOG << "\n\n";
+    const auto preloadEnd = std::chrono::steady_clock::now();
+    SYSTEM_LOG << "  -> Resource preload duration: "
+               << std::chrono::duration_cast<std::chrono::milliseconds>(preloadEnd - preloadStart).count()
+               << " ms\n\n";
     
     // =======================================================================
     // PHASE 4: VISUAL STRUCTURE CREATION
@@ -1222,6 +1249,7 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     
     // Pass 1: Static objects
     SYSTEM_LOG << "  Pass 1/3: Static objects...\n";
+    const auto instantiateStart = std::chrono::steady_clock::now();
     for (auto& entityInstancePtr : levelDef.categorizedObjects.staticObjects)
     {
         std::shared_ptr<Olympe::Editor::EntityInstance> entityInstance = std::move(entityInstancePtr);
@@ -1272,6 +1300,10 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     InstantiatePass5_Relationships(levelDef, instResult);
     
     SYSTEM_LOG << "  -> Linked " << instResult.pass5_relationships.linkedObjects << " relationships\n\n";
+    const auto instantiateEnd = std::chrono::steady_clock::now();
+    SYSTEM_LOG << "  -> Instantiation duration: "
+               << std::chrono::duration_cast<std::chrono::milliseconds>(instantiateEnd - instantiateStart).count()
+               << " ms\n\n";
     
     instResult.success = true;
     
@@ -1294,6 +1326,67 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     
     SYSTEM_LOG << "World::LoadLevelFromTiled - Level loaded successfully\n";
     return true;
+}
+
+void World::UpdateDeferredLevelLoading()
+{
+    if (!m_deferredLoadState.active)
+        return;
+
+    DataManager& dataManager = DataManager::Get();
+    PrefabFactory& factory = PrefabFactory::Get();
+
+    const size_t budget = 2;
+    size_t processed = 0;
+
+    if (m_deferredLoadState.stage == DeferredLevelLoadState::Stage::PrefabSprites)
+    {
+        while (!m_deferredLoadState.spritePaths.empty() && processed < budget)
+        {
+            std::string path = m_deferredLoadState.spritePaths.front();
+            m_deferredLoadState.spritePaths.pop_front();
+            dataManager.PreloadSprites(std::vector<std::string>{path}, ResourceCategory::GameEntity, true);
+            ++processed;
+        }
+        if (m_deferredLoadState.spritePaths.empty())
+            m_deferredLoadState.stage = DeferredLevelLoadState::Stage::BehaviorTrees;
+    }
+
+    processed = 0;
+    if (m_deferredLoadState.stage == DeferredLevelLoadState::Stage::BehaviorTrees)
+    {
+        while (!m_deferredLoadState.behaviorTreePaths.empty() && processed < budget)
+        {
+            std::string path = m_deferredLoadState.behaviorTreePaths.front();
+            m_deferredLoadState.behaviorTreePaths.pop_front();
+            if (!BehaviorTreeManager::Get().IsTreeLoadedByPath(path))
+            {
+                BehaviorTreeManager::Get().LoadTreeFromFile(path, BehaviorTreeDependencyScanner::GenerateTreeIdFromPath(path));
+            }
+            ++processed;
+        }
+        if (m_deferredLoadState.behaviorTreePaths.empty())
+            m_deferredLoadState.stage = DeferredLevelLoadState::Stage::Audio;
+    }
+
+    processed = 0;
+    if (m_deferredLoadState.stage == DeferredLevelLoadState::Stage::Audio)
+    {
+        while (!m_deferredLoadState.audioPaths.empty() && processed < budget)
+        {
+            std::string path = m_deferredLoadState.audioPaths.front();
+            m_deferredLoadState.audioPaths.pop_front();
+            dataManager.PreloadAudioFiles(std::vector<std::string>{path}, true);
+            ++processed;
+        }
+        if (m_deferredLoadState.audioPaths.empty())
+            m_deferredLoadState.stage = DeferredLevelLoadState::Stage::Complete;
+    }
+
+    if (m_deferredLoadState.stage == DeferredLevelLoadState::Stage::Complete)
+    {
+        m_deferredLoadState.active = false;
+    }
 }
 
 void World::UnloadCurrentLevel()

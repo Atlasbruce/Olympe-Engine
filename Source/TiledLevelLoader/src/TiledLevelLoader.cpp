@@ -25,6 +25,11 @@ namespace Tiled {
 
     bool TiledLevelLoader::LoadFromFile(const std::string& filepath, TiledMap& outMap)
     {
+        return LoadFromFile(filepath, outMap, nullptr);
+    }
+
+    bool TiledLevelLoader::LoadFromFile(const std::string& filepath, TiledMap& outMap, nlohmann::json* outRawJson)
+    {
         lastError_.clear();
 
         SYSTEM_LOG << "TiledLevelLoader: Loading map from " << filepath << std::endl;
@@ -70,6 +75,11 @@ namespace Tiled {
                 return false;
             }
             
+            if (outRawJson)
+            {
+                *outRawJson = j;
+            }
+
             success = ParseMap(j, outMap);
         }
         else {

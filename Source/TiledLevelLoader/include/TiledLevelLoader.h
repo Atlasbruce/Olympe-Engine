@@ -15,6 +15,7 @@
 
 #include "TiledStructures.h"
 #include "TiledJsonHelper.h"
+#include "../../third_party/nlohmann/json.hpp"
 #include <string>
 #include <memory>
 
@@ -29,6 +30,9 @@ namespace Tiled {
 
         // Load map from .tmj (JSON) or .tmx (XML) file (auto-detect by extension)
         bool LoadFromFile(const std::string& filepath, TiledMap& outMap);
+
+        // Load map and return the raw JSON content when available (.tmj/.json only)
+        bool LoadFromFile(const std::string& filepath, TiledMap& outMap, nlohmann::json* outRawJson);
 
         // Get last error message
         const std::string& GetLastError() const { return lastError_; }

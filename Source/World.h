@@ -28,6 +28,7 @@
 #include <memory>
 #include <unordered_map>
 #include <queue>
+#include <deque>
 #include <type_traits>
 
 #include "Level.h"
@@ -285,6 +286,7 @@ public:
     
     // Tiled MapEditor integration
     bool LoadLevelFromTiled(const std::string& tiledMapPath);
+    void UpdateDeferredLevelLoading();
     void UnloadCurrentLevel();
     
     // NEW: Load and prepare all behavior tree dependencies for a level
@@ -366,6 +368,34 @@ public:
         bool IsComplete() const
         {
             return success && GetTotalFailed() == 0;
+        }
+    };
+
+    struct DeferredLevelLoadState
+    {
+        enum class Stage
+        {
+            None,
+            PrefabSprites,
+            BehaviorTrees,
+            Audio,
+            Complete
+        };
+
+        Stage stage;
+        std::deque<std::string> spritePaths;
+        std::deque<std::string> behaviorTreePaths;
+        std::deque<std::string> audioPaths;
+        bool active;
+
+        DeferredLevelLoadState() : stage(Stage::None), active(false) {}
+        void Clear()
+        {
+            stage = Stage::None;
+            spritePaths.clear();
+            behaviorTreePaths.clear();
+            audioPaths.clear();
+            active = false;
         }
     };
     
@@ -764,6 +794,8 @@ private:
     int m_tileWidth;
     int m_tileHeight;
     std::vector<std::unique_ptr<Level>> m_levels;
+
+    DeferredLevelLoadState m_deferredLoadState;
     
     // Map bounds (for isometric origin calculation)
     int m_minTileX = 0;
