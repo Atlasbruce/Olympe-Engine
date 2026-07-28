@@ -28,9 +28,59 @@ CameraTransform GetActiveCameraTransform(short playerID)
     CameraTransform transform;
     transform.isActive = false;
     
-    // Iterate through all entities to find the camera for this player
     World& world = World::Get();
+    CameraSystem* camSystem = world.GetSystem<CameraSystem>();
+    EntityID cameraEntity = INVALID_ENTITY_ID;
+
+    if (camSystem != nullptr)
+    {
+        cameraEntity = camSystem->GetCameraEntityForPlayer(playerID);
+    }
+
+    // Fast path: use the cached camera entity for this player when available
+    if (cameraEntity != INVALID_ENTITY_ID && world.IsEntityValid(cameraEntity) && world.HasComponent<Camera_data>(cameraEntity))
+    {
+        Camera_data& cam = world.GetComponent<Camera_data>(cameraEntity);
+        if ((playerID >= 0 && cam.playerId == playerID && cam.isActive) || (playerID < 0 && cam.playerId == -1 && cam.isActive))
+        {
+            transform.worldPosition = cam.position + cam.controlOffset + cam.baseOffset;
+
+            if (world.HasComponent<CameraEffects_data>(cameraEntity))
+            {
+                CameraEffects_data& effects = world.GetComponent<CameraEffects_data>(cameraEntity);
+                if (effects.isShaking)
+                {
+                    transform.worldPosition += effects.shakeOffset;
+                }
+            }
+
+            transform.zoom = cam.zoom;
+            transform.rotation = cam.rotation;
+
+            if (playerID >= 0)
+            {
+                SDL_FRect playerViewport;
+                if (ViewportManager::Get().GetViewRectForPlayer(playerID, playerViewport))
+                {
+                    transform.viewport = playerViewport;
+                }
+                else
+                {
+                    transform.viewport = cam.viewportRect;
+                }
+            }
+            else
+            {
+                transform.viewport = cam.viewportRect;
+            }
+
+            transform.isActive = true;
+            transform.screenOffset = Vector(0.f, 0.f, 0.f);
+            return transform;
+        }
+    }
     
+    // Fallback: iterate through entities if cache is missing or stale
     for (const auto& pair : world.m_entitySignatures)
     {
         EntityID entity = pair.first;

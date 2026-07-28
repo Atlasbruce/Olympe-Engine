@@ -2488,6 +2488,8 @@ void UIRenderingSystem::Render()
     if (!renderer) return;
 
     const auto& players = ViewportManager::Get().GetPlayers();
+    CameraTransform fallbackCam;
+    bool hasFallbackCam = false;
     
     if (!players.empty())
     {
@@ -2496,6 +2498,12 @@ void UIRenderingSystem::Render()
         {
             CameraTransform cam = GetActiveCameraTransform(playerID);
             if (!cam.isActive) continue;
+
+            if (!hasFallbackCam)
+            {
+                fallbackCam = cam;
+                hasFallbackCam = true;
+            }
             
             // Set viewport
             SDL_Rect viewportRect = {
@@ -2507,8 +2515,6 @@ void UIRenderingSystem::Render()
             
             // Render UI layers
             RenderHUD(cam);
-            RenderInGameMenu(cam);
-            RenderDebugOverlay(cam);
         }
         
         // Reset viewport
@@ -2521,10 +2527,16 @@ void UIRenderingSystem::Render()
         CameraTransform cam = GetActiveCameraTransform(-1);
         if (cam.isActive)
         {
+            fallbackCam = cam;
+            hasFallbackCam = true;
             RenderHUD(cam);
-            RenderInGameMenu(cam);
-            RenderDebugOverlay(cam);
         }
+    }
+
+    if (hasFallbackCam)
+    {
+        RenderInGameMenu(fallbackCam);
+        RenderDebugOverlay(fallbackCam);
     }
 }
 

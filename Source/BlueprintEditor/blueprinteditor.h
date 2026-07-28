@@ -318,6 +318,7 @@ namespace Olympe
         
         // Asset management helpers
         std::shared_ptr<AssetNode> ScanDirectory(const std::string& path);
+        bool IsEditorSupportFile(const std::string& filename) const;
         void ParseAssetMetadata(const std::string& filepath, AssetMetadata& metadata);
         void ParseEntityBlueprint(const json& j, AssetMetadata& metadata);
         void ParseBehaviorTree(const json& j, AssetMetadata& metadata);

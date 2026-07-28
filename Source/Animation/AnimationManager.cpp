@@ -32,6 +32,12 @@ namespace OlympeAnimation
 
     void AnimationManager::LoadAnimationBanks(const std::string& directoryPath)
     {
+        if (m_banksLoaded)
+        {
+            SYSTEM_LOG << "AnimationManager: Animation banks already loaded, skipping\n";
+            return;
+        }
+
         SYSTEM_LOG << "AnimationManager: Loading animation banks from " << directoryPath << "\n";
 
         auto files = ScanDirectory(directoryPath);
@@ -41,10 +47,17 @@ namespace OlympeAnimation
         }
 
         SYSTEM_LOG << "AnimationManager: Loaded " << m_banks.size() << " animation banks\n";
+        m_banksLoaded = true;
     }
 
     void AnimationManager::LoadAnimationGraphs(const std::string& directoryPath)
     {
+        if (m_graphsLoaded)
+        {
+            SYSTEM_LOG << "AnimationManager: Animation graphs already loaded, skipping\n";
+            return;
+        }
+
         SYSTEM_LOG << "AnimationManager: Loading animation graphs from " << directoryPath << "\n";
 
         auto files = ScanDirectory(directoryPath);
@@ -54,6 +67,7 @@ namespace OlympeAnimation
         }
 
         SYSTEM_LOG << "AnimationManager: Loaded " << m_graphs.size() << " animation graphs\n";
+        m_graphsLoaded = true;
     }
 
     bool AnimationManager::LoadAnimationBank(const std::string& filePath)
@@ -173,6 +187,8 @@ namespace OlympeAnimation
         m_banks.clear();
         m_graphs.clear();
         m_initialized = false;
+        m_banksLoaded = false;
+        m_graphsLoaded = false;
     }
 
     std::vector<std::string> AnimationManager::ScanDirectory(const std::string& directoryPath)

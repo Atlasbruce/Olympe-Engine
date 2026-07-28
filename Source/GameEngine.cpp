@@ -63,8 +63,6 @@ void GameEngine::Initialize()
 	// Initialize Animation System
 	SYSTEM_LOG << "Initializing Animation System...\n";
 	OlympeAnimation::AnimationManager::Get().Init();
-	OlympeAnimation::AnimationManager::Get().LoadAnimationBanks("Gamedata/Animations/AnimationBanks");
-	OlympeAnimation::AnimationManager::Get().LoadAnimationGraphs("Gamedata/Animations/AnimationGraphs");
 	SYSTEM_LOG << "Animation System initialized.\n";
 	
 	// Create default camera for player 0 with keyboard controls

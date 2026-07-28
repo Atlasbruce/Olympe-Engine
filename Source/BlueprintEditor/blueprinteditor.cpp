@@ -253,6 +253,17 @@ namespace Olympe
 
         std::cout << "BlueprintEditor: Scanning assets directory: " << m_AssetRootPath << std::endl;
 
+        auto shouldSkipAssetFile = [](const std::string& filename)
+        {
+            return filename == "ComponentsParameters.json"
+                || filename == "ComponentsParameters_V1.json"
+                || filename == "ComponentsParameters_Version3.json"
+                || filename == "EntityPrefabSynonymsRegister.json"
+                || filename == "ParameterSchemas.json"
+                || filename == "EventTypes.json"
+                || filename == "condition_presets.json";
+        };
+
         try
         {
             // if (fs::exists(m_AssetRootPath) && fs::is_directory(m_AssetRootPath))
@@ -348,7 +359,7 @@ namespace Olympe
                     if (dotPos != std::string::npos)
                     {
                         std::string ext = filename.substr(dotPos);
-                        if (ext == ".json" || ext == ".ats")
+                        if ((ext == ".json" || ext == ".ats") && !IsEditorSupportFile(filename))
                         {
                             auto fileNode = std::make_shared<AssetNode>(filename, fullPath, false);
                             fileNode->type = DetectAssetType(fullPath);
@@ -371,6 +382,17 @@ namespace Olympe
             });
 
         return node;
+    }
+
+    bool BlueprintEditor::IsEditorSupportFile(const std::string& filename) const
+    {
+        return filename == "ComponentsParameters.json"
+            || filename == "ComponentsParameters_V1.json"
+            || filename == "ComponentsParameters_Version3.json"
+            || filename == "EntityPrefabSynonymsRegister.json"
+            || filename == "ParameterSchemas.json"
+            || filename == "EventTypes.json"
+            || filename == "condition_presets.json";
     }
     
     std::string BlueprintEditor::DetectAssetType(const std::string& filepath)

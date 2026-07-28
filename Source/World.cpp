@@ -115,20 +115,6 @@ void World::Initialize_ECS_Systems()
     - RenderingSystem
     */
 	
-	// -> NOUVEAU : Précharger tous les prefabs AVANT de créer les systèmes
-	SYSTEM_LOG << "\n";
-	PrefabFactory::Get().PreloadAllPrefabs("Gamedata/EntityPrefab");
-	SYSTEM_LOG << "\n";
-	
-	// Load animation banks and graphs
-	SYSTEM_LOG << "\n";
-	SYSTEM_LOG << "+===========================================================+\n";
-	SYSTEM_LOG << "| ANIMATION SYSTEM: LOADING RESOURCES                      |\n";
-	SYSTEM_LOG << "+===========================================================+\n";
-	OlympeAnimation::AnimationManager::Get().LoadAnimationBanks("Gamedata/Animations/AnimationBanks");
-	OlympeAnimation::AnimationManager::Get().LoadAnimationGraphs("Gamedata/Animations/AnimationGraphs");
-	SYSTEM_LOG << "\n";
-	
 	Add_ECS_System(std::make_unique<InputEventConsumeSystem>());
 	Add_ECS_System(std::make_unique<GameEventConsumeSystem>());
 	Add_ECS_System(std::make_unique<UIEventConsumeSystem>());
@@ -1014,10 +1000,21 @@ bool World::LoadLevelFromTiled(const std::string& tiledMapPath)
     std::cout << "+==========================================================+\n\n";
     
     // =======================================================================
-    // PHASE 1: PREFAB SYSTEM INITIALIZATION (Already Done at Startup)
+    // PHASE 1: LEVEL-DEPENDENT RESOURCE INITIALIZATION
     // =======================================================================
-    
+
     PrefabFactory& factory = PrefabFactory::Get();
+    SYSTEM_LOG << "Phase 1: Loading level-dependent runtime resources\n";
+
+    if (!factory.IsPreloaded())
+    {
+        factory.PreloadAllPrefabs("Gamedata/EntityPrefab");
+    }
+
+    OlympeAnimation::AnimationManager::Get().Init();
+    OlympeAnimation::AnimationManager::Get().LoadAnimationBanks("Gamedata/Animations/AnimationBanks");
+    OlympeAnimation::AnimationManager::Get().LoadAnimationGraphs("Gamedata/Animations/AnimationGraphs");
+
     SYSTEM_LOG << "Phase 1: -> Prefab System Ready (" << factory.GetPrefabCount() << " prefabs)\n\n";
     
     // =======================================================================

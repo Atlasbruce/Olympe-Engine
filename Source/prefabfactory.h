@@ -92,6 +92,7 @@ public:
      * @return Number of loaded prefabs
      */
     int GetPrefabCount() const { return static_cast<int>(m_prefabRegistry.GetCount()); }
+    bool IsPreloaded() const { return m_prefabsPreloaded; }
     
     /**
      * @brief Check if prefab exists

@@ -93,6 +93,8 @@ namespace OlympeAnimation
         AnimationManager& operator=(const AnimationManager&) = delete;
 
         bool m_initialized = false;
+        bool m_banksLoaded = false;
+        bool m_graphsLoaded = false;
 
         std::unordered_map<std::string, std::unique_ptr<AnimationBank>> m_banks;
         std::unordered_map<std::string, std::unique_ptr<AnimationGraph>> m_graphs;

@@ -112,14 +112,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
 
-    // Initialize Blueprint Editor Backend
-    Olympe::BlueprintEditor::Get().Initialize();
-    Olympe::BlueprintEditor::Get().InitializeRuntimeEditor();
-
-    // Create Blueprint Editor GUI
-    blueprintEditorGUI = new Olympe::BlueprintEditorGUI();
-    blueprintEditorGUI->Initialize();
-    SYSTEM_LOG << "Runtime Blueprint Panel initialized (toggle with F2; opens full Blueprint Editor from panel)" << endl;
+    // Blueprint Editor is initialized on demand from the editor UI path,
+    // not during the runtime engine bootstrap.
 
     // Create Behavior Tree Debug Window (now ImGui context exists)
     g_btDebugWindow = new Olympe::BehaviorTreeDebugWindow();
