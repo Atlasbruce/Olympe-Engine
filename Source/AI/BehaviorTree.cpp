@@ -41,6 +41,43 @@ void BTDebug_BeginExecutionTrace(std::vector<uint32_t>& trace)
     s_activeExecutionTrace = &trace;
 }
 
+void BehaviorTreeManager::QueueTreeLoad(const std::string& filepath, uint32_t treeId)
+{
+    if (filepath.empty() || IsTreeLoadedByPath(filepath) || IsTreeQueued(filepath))
+        return;
+
+    m_queuedLoads.push_back({filepath, treeId});
+    m_queuedPaths.insert(filepath);
+}
+
+bool BehaviorTreeManager::IsTreeQueued(const std::string& filepath) const
+{
+    return m_queuedPaths.find(filepath) != m_queuedPaths.end();
+}
+
+bool BehaviorTreeManager::HasQueuedLoads() const
+{
+    return !m_queuedLoads.empty();
+}
+
+int BehaviorTreeManager::ProcessQueuedLoads(size_t maxLoadsPerCall)
+{
+    int loaded = 0;
+    while (!m_queuedLoads.empty() && loaded < static_cast<int>(maxLoadsPerCall))
+    {
+        QueuedTreeLoad item = m_queuedLoads.front();
+        m_queuedLoads.pop_front();
+        m_queuedPaths.erase(item.filepath);
+
+        if (IsTreeLoadedByPath(item.filepath))
+            continue;
+
+        if (LoadTreeFromFile(item.filepath, item.treeId))
+            ++loaded;
+    }
+    return loaded;
+}
+
 void BTDebug_EndExecutionTrace()
 {
     s_activeExecutionTrace = nullptr;
@@ -899,6 +936,8 @@ void BehaviorTreeManager::Clear()
 {
     m_trees.clear();
     m_pathToIdMap.clear();
+    m_queuedLoads.clear();
+    m_queuedPaths.clear();
 }
 
 bool BehaviorTreeManager::ReloadTree(uint32_t treeId)

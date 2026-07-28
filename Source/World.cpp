@@ -1359,13 +1359,11 @@ void World::UpdateDeferredLevelLoading()
         {
             std::string path = m_deferredLoadState.behaviorTreePaths.front();
             m_deferredLoadState.behaviorTreePaths.pop_front();
-            if (!BehaviorTreeManager::Get().IsTreeLoadedByPath(path))
-            {
-                BehaviorTreeManager::Get().LoadTreeFromFile(path, BehaviorTreeDependencyScanner::GenerateTreeIdFromPath(path));
-            }
+            BehaviorTreeManager::Get().QueueTreeLoad(path, BehaviorTreeDependencyScanner::GenerateTreeIdFromPath(path));
             ++processed;
         }
-        if (m_deferredLoadState.behaviorTreePaths.empty())
+        BehaviorTreeManager::Get().ProcessQueuedLoads(budget);
+        if (m_deferredLoadState.behaviorTreePaths.empty() && !BehaviorTreeManager::Get().HasQueuedLoads())
             m_deferredLoadState.stage = DeferredLevelLoadState::Stage::Audio;
     }
 

@@ -41,6 +41,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <set>
+#include <deque>
 
 // Forward declarations
 struct AIBlackboard_data;
@@ -447,6 +448,18 @@ public:
     
     // Load a behavior tree from JSON file
     bool LoadTreeFromFile(const std::string& filepath, uint32_t treeId);
+
+    // Queue a behavior tree for deferred loading
+    void QueueTreeLoad(const std::string& filepath, uint32_t treeId);
+
+    // Process queued behavior tree loads with a budget per call
+    int ProcessQueuedLoads(size_t maxLoadsPerCall = 1);
+
+    // Check if a tree is queued for loading
+    bool IsTreeQueued(const std::string& filepath) const;
+
+    // Check whether any deferred BT loads remain
+    bool HasQueuedLoads() const;
     
     // Reload a behavior tree from JSON file (hot-reload support)
     bool ReloadTree(uint32_t treeId);
@@ -497,6 +510,15 @@ private:
     
     // NEW: Registry to map file paths to tree IDs
     std::map<std::string, uint32_t> m_pathToIdMap;
+
+    struct QueuedTreeLoad
+    {
+        std::string filepath;
+        uint32_t treeId;
+    };
+
+    std::deque<QueuedTreeLoad> m_queuedLoads;
+    std::set<std::string> m_queuedPaths;
 };
 
 // --- Behavior Tree Execution ---
