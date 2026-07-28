@@ -35,8 +35,10 @@ float Vector::sqrDist(Vector& v)
 ///////////////////////////////////////////////////////////
 Vector vBlend ( Vector& _v1, Vector& _v2, float _fc)
 {
-	float ff = _fc * (10.0f * GameEngine::fDt );
-	return  (_v1 * ff) + (_v2 * (1.0f - ff));
+	float ff = _fc * (3.0f * GameEngine::fDt );
+	if (ff < 0.0f) ff = 0.0f;
+	if (ff > 1.0f) ff = 1.0f;
+	return (_v1 * ff) + (_v2 * (1.0f - ff));
 
 	//return (_v1 * _fc) + (_v2 * (1.0f - _fc));
 

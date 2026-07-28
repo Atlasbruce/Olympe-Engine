@@ -339,39 +339,8 @@ SDL_AppResult SDL_AppIterate(void* appstate)
     SDL_SetRenderDrawColor(renderer, 120, 120, 120, SDL_ALPHA_OPAQUE);  /* white, full alpha */
     SDL_RenderClear(renderer);  /* start with a blank canvas. */
 
-    // Render world once per viewport/player so each viewport gets its own draw pass
-    const auto& rects = ViewportManager::Get().GetViewRects();
-    const auto& players = ViewportManager::Get().GetPlayers();
-
-    if (rects.empty())
-    {
-        // fallback to previous single-render behavior
-        World::Get().Render();
-    }
-    else
-    {
-        // save current viewport to restore later
-        SDL_Rect prev = { 0, 0, GameEngine::screenHeight, GameEngine::screenHeight };
-        //SDL_RenderGetViewport(renderer, &prev);
-
-        for (size_t i = 0; i < rects.size(); ++i)
-        {
-            const auto& rf = rects[i];
-            SDL_Rect r = { (int)rf.x, (int)rf.y, (int)rf.w, (int)rf.h };
-            SDL_SetRenderViewport(renderer, &r);
-            SDL_SetRenderClipRect(renderer, &r);
-
-            // Draw world for this viewport
-            World::Get().Render();
-            
-            // Reset clip rect after each viewport
-            SDL_SetRenderClipRect(renderer, nullptr);
-        }
-
-        // restore previous viewport and ensure clip rect is cleared
-        SDL_SetRenderClipRect(renderer, nullptr);
-        SDL_SetRenderViewport(renderer, &prev);
-    }
+    // Render the world once; the rendering systems handle split-screen viewports internally.
+    World::Get().Render();
 
     // Render Blueprint Editor GUI if active
     // NOTE: Requires ImGui to be initialized and integrated into main engine
