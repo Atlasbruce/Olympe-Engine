@@ -82,7 +82,13 @@ public:
         {
             throw std::runtime_error("Component not found for entity.");
         }
-        return m_data[m_entityToIndex[entity]];
+        size_t index = m_entityToIndex[entity];
+        if (index >= m_data.size())
+        {
+            throw std::runtime_error("Component index out of range for entity.");
+        }
+        T& component = m_data[index];
+        return component;
     }
 
     bool HasComponent(EntityID entity) const

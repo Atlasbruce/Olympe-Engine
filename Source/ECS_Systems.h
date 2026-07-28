@@ -44,6 +44,7 @@ public:
     ECS_System() : requiredSignature() {}
 
     // The core logic of the System
+    virtual ~ECS_System() = default;
     virtual void Process() {}
 	virtual void Render() {}
     virtual void RenderDebug() {}
