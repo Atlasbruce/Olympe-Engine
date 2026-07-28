@@ -957,6 +957,7 @@ namespace Olympe
             // Compact reverse-chronological view (most recent first)
             size_t shown = 0;
             size_t displayIdx = 0;
+            std::unordered_map<uint64_t, size_t> runningAgeByNode;
             for (auto it = m_executionLog.rbegin(); it != m_executionLog.rend(); ++it)
             {
                 if (shown >= maxVisibleEntries)
@@ -971,7 +972,16 @@ namespace Olympe
                 if (entry.status == BTStatus::Success) { color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f); icon = "✓"; }
                 else if (entry.status == BTStatus::Failure) { color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f); icon = "✗"; }
 
-                ImGui::TextColored(color, "[%.2fs ago] %s Node %u (%s)", entry.timeAgo, icon, entry.nodeId, entry.nodeName.c_str());
+                const uint64_t key = (static_cast<uint64_t>(entry.entity) << 32) | entry.nodeId;
+                float displayAge = entry.timeAgo;
+                if (entry.status == BTStatus::Running)
+                {
+                    size_t& count = runningAgeByNode[key];
+                    displayAge = entry.timeAgo + (static_cast<float>(count) * GameEngine::fDt);
+                    ++count;
+                }
+
+                ImGui::TextColored(color, "[%.2fs] %s Node %u (%s)", displayAge, icon, entry.nodeId, entry.nodeName.c_str());
                 if (entry.entity != 0) { ImGui::SameLine(); ImGui::Text("Entity: %llu", static_cast<unsigned long long>(entry.entity)); }
 
                 if (!entry.rawJson.empty())
@@ -1039,34 +1049,6 @@ namespace Olympe
 
     void BehaviorTreeDebugWindow::AddExecutionEntry(EntityID entity, uint32_t nodeId, const std::string& nodeName, BTStatus status)
     {
-        static std::unordered_map<EntityID, std::deque<uint32_t>> s_executionHistory;
-        static std::deque<EntityID> s_historyEntityOrder;
-        constexpr size_t MAX_HISTORY_ENTITIES = 256;
-        constexpr size_t MAX_HISTORY_PER_ENTITY = 64;
-
-        auto historyIt = s_executionHistory.find(entity);
-        if (historyIt == s_executionHistory.end())
-        {
-            s_executionHistory.emplace(entity, std::deque<uint32_t>{});
-            s_historyEntityOrder.push_back(entity);
-
-            while (s_historyEntityOrder.size() > MAX_HISTORY_ENTITIES)
-            {
-                EntityID oldestEntity = s_historyEntityOrder.front();
-                s_historyEntityOrder.pop_front();
-                s_executionHistory.erase(oldestEntity);
-            }
-
-            historyIt = s_executionHistory.find(entity);
-        }
-
-        std::deque<uint32_t>& entityHistory = historyIt->second;
-        entityHistory.push_back(nodeId);
-        while (entityHistory.size() > MAX_HISTORY_PER_ENTITY)
-        {
-            entityHistory.pop_front();
-        }
-
         ExecutionLogEntry entry;
         entry.timeAgo = 0.0f;
         entry.entity = entity;
@@ -1075,39 +1057,20 @@ namespace Olympe
         entry.rawJson.clear();
         entry.status = status;
 
-        m_executionLog.push_back(entry);
-
-        while (m_executionLog.size() > MAX_LOG_ENTRIES)
+        if (m_executionLog.empty() || m_executionLog.back().entity != entity || m_executionLog.back().nodeId != nodeId || m_executionLog.back().status != status)
         {
-            m_executionLog.pop_front();
-        }
-
-        if (g_btDebugWindow && g_btDebugWindow->IsVisible())
-        {
-            // Make the execution history reflect the full runtime traversal when available.
-            // The runtime trace already captures recursive visits, while AddExecutionEntry
-            // stores the terminal/current node summary.
-            auto& world = World::Get();
-            if (world.HasComponent<BehaviorTreeRuntime_data>(entity))
+            m_executionLog.push_back(entry);
+            while (m_executionLog.size() > MAX_LOG_ENTRIES)
             {
-                const auto& rt = world.GetComponent<BehaviorTreeRuntime_data>(entity);
-                if (!rt.debugNodeTrace.empty())
-                {
-                    m_execHistory.clear();
-                    for (uint32_t tracedNodeId : rt.debugNodeTrace)
-                    {
-                        m_execHistory.emplace_back(entity, tracedNodeId);
-                        if (m_execHistory.size() > MAX_EXEC_HISTORY)
-                        {
-                            m_execHistory.pop_front();
-                        }
-                    }
-                }
+                m_executionLog.pop_front();
             }
         }
+        else if (status == BTStatus::Running)
+        {
+            m_executionLog.back().timeAgo = 0.0f;
+        }
 
-        // Also record lightweight execution history for overlay (recent nodes)
-        m_execHistory.emplace_back(entity, nodeId);
+        m_execHistory.push_back({entity, nodeId});
         while (m_execHistory.size() > MAX_EXEC_HISTORY)
         {
             m_execHistory.pop_front();

@@ -219,9 +219,11 @@ namespace Olympe
         float m_nextLogRefreshTime = 0.0f;
         int m_cachedOverlayGraphId = -1;
         EntityID m_cachedOverlayEntity = 0;
+        uint32_t m_cachedOverlayTickSerial = 0;
         std::vector<CachedOverlayPoint> m_cachedOverlayPoints;
         std::unordered_map<uint32_t, std::pair<float, float>> m_cachedNodeCenters;
         bool m_overlayCacheDirty = true;
+        bool m_preserveOverlayCacheState = true;
 
         // ImNodes context for node graph rendering in the separate window
         void* m_imnodesContext = nullptr;

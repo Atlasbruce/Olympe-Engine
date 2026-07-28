@@ -165,7 +165,8 @@ namespace Olympe
 					m_cachedOverlayPoints.empty() ||
 					m_cachedOverlayGraphId != s_debugGraphId ||
 					m_cachedOverlayEntity != m_selectedEntity ||
-					(m_nextOverlayRefreshTime <= 0.0f);
+					m_overlayCacheDirty ||
+					(rt.debugTickSerial != m_cachedOverlayTickSerial);
 
 				if (needOverlayRebuild)
 				{
@@ -190,36 +191,62 @@ namespace Olympe
 						m_cachedNodeCenters[nd.id.value] = std::make_pair(pos.x + dim.x * 0.5f, pos.y + dim.y * 0.5f);
 					}
 
-					// Cache history as compact draw primitives.
+					// Build the active branch from root -> current node so only the live path is highlighted.
+					std::unordered_map<uint32_t, uint32_t> parentByNode;
+					for (const auto& nd : doc->GetNodes())
+					{
+						for (const auto& childId : nd.children)
+						{
+							parentByNode[childId.value] = nd.id.value;
+						}
+						if (nd.decoratorChild.value != 0)
+						{
+							parentByNode[nd.decoratorChild.value] = nd.id.value;
+						}
+					}
+
+					std::vector<uint32_t> activePath;
+					uint32_t currentNodeId = rt.debugCurrentNodeIndex;
+					if (currentNodeId == 0)
+						currentNodeId = rt.AICurrentNodeIndex;
+
+					std::unordered_set<uint32_t> visitedPath;
+					while (currentNodeId != 0 && visitedPath.insert(currentNodeId).second)
+					{
+						activePath.push_back(currentNodeId);
+						auto parentIt = parentByNode.find(currentNodeId);
+						if (parentIt == parentByNode.end())
+							break;
+						currentNodeId = parentIt->second;
+					}
+
+					std::reverse(activePath.begin(), activePath.end());
+
 					int idx = 0;
 					bool havePrev = false;
-					float prevX = 0.0f;
-					float prevY = 0.0f;
-					for (size_t i = 0; i < rt.debugNodeTrace.size(); ++i)
+					for (uint32_t nid : activePath)
 					{
-						uint32_t nid = rt.debugNodeTrace[i];
 						auto ncIt = m_cachedNodeCenters.find(nid);
 						if (ncIt == m_cachedNodeCenters.end()) continue;
 						float px = ncIt->second.first;
 						float py = ncIt->second.second;
-
-						float t = static_cast<float>(idx + 1) / static_cast<float>(MAX_EXEC_HISTORY);
-						t = std::min(1.0f, std::max(0.05f, t));
-						int alpha = static_cast<int>(t * 200.0f) + 55;
+						float t = activePath.empty() ? 1.0f : static_cast<float>(idx + 1) / static_cast<float>(activePath.size());
+						t = std::min(1.0f, std::max(0.2f, t));
+						int alpha = static_cast<int>(t * 210.0f) + 45;
 						CachedOverlayPoint point;
 						point.x = px;
 						point.y = py;
-						point.radius = 2.0f + 6.0f * t;
-						point.color = IM_COL32(255, 100, 30, alpha);
-						point.lineThickness = 1.5f + 2.0f * t;
+						point.radius = 3.0f + 5.0f * t;
+						point.color = IM_COL32(255, 200, 80, alpha);
+						point.lineThickness = 2.5f + 3.0f * t;
 						point.connectFromPrevious = havePrev;
 						m_cachedOverlayPoints.push_back(point);
-
 						havePrev = true;
 						++idx;
 					}
 					m_cachedOverlayGraphId = s_debugGraphId;
 					m_cachedOverlayEntity = m_selectedEntity;
+					m_cachedOverlayTickSerial = rt.debugTickSerial;
 					m_overlayCacheDirty = false;
 					m_nextOverlayRefreshTime = m_overlayRefreshInterval;
 				}
@@ -230,7 +257,7 @@ namespace Olympe
 					// Render the cached primitives.
 					ImVec2 prevPoint = ImVec2(0,0);
 					bool havePrev = false;
-						ImU32 highlightColor = IM_COL32(255, 170, 60, 120);
+					ImU32 highlightColor = IM_COL32(255, 210, 80, 180);
 					for (const auto& point : m_cachedOverlayPoints)
 					{
 						ImVec2 p(point.x, point.y);
