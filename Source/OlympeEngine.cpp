@@ -223,12 +223,20 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
             return SDL_APP_CONTINUE;
         }
         
-        // F3 toggles Tiled Level Loader menu
+        // F3 toggles Blueprint Editor
         if (event->key.key == SDLK_F3)
         {
-            GameMenu::Get().ToggleF2Menu();
-            SYSTEM_LOG << "Tiled Level Loader Menu " 
-                      << (GameMenu::Get().IsF2MenuOpen() ? "opened" : "closed") 
+            if (!blueprintEditorGUI)
+            {
+                Olympe::BlueprintEditor::Get().Initialize();
+                Olympe::BlueprintEditor::Get().InitializeRuntimeEditor();
+                blueprintEditorGUI = new Olympe::BlueprintEditorGUI();
+                blueprintEditorGUI->Initialize();
+            }
+
+            Olympe::BlueprintEditor::Get().SetActive(!Olympe::BlueprintEditor::Get().IsActive());
+            SYSTEM_LOG << "Blueprint Editor "
+                      << (Olympe::BlueprintEditor::Get().IsActive() ? "opened" : "closed")
                       << endl;
             return SDL_APP_CONTINUE;
         }
@@ -370,13 +378,15 @@ SDL_AppResult SDL_AppIterate(void* appstate)
         ImGui_ImplSDLRenderer3_NewFrame();
         ImGui::NewFrame();
 
-        blueprintEditorGUI->Render(); // BeginMainMenuBar() est maintenant sûr
-
         // Render Tiled Level Loader menu (F2)
         GameMenu::Get().RenderF2Menu();
 
-        // Render minimal runtime Blueprint panel (accessible via UI)
-        GameMenu::Get().RenderRuntimeBlueprintPanel();
+        // Render Blueprint Editor UI (F3)
+        if (Olympe::BlueprintEditor::Get().IsActive() && blueprintEditorGUI)
+        {
+            blueprintEditorGUI->Render();
+            GameMenu::Get().RenderRuntimeBlueprintPanel();
+        }
 
         ImGui::Render();
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);

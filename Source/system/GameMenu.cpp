@@ -237,11 +237,9 @@ void GameMenu::RefreshTiledMapList()
     m_tiledMapPaths.clear();
     m_selectedMapIndex = -1;
 
-    //ScanForTiledMaps("Blueprints");
-    //ScanForTiledMaps("Levels");
-    //ScanForTiledMaps("gamedata");
-    //ScanForTiledMaps("gamedata\\levels");
-    ScanForTiledMaps(".");
+    // Only scan the dedicated levels directory to avoid expensive recursive scans
+    // across the whole project tree at F2 open time.
+    ScanForTiledMaps("Gamedata/levels");
     m_hasScannedTiledMaps = true;
 
     if (!m_tiledMapPaths.empty())
