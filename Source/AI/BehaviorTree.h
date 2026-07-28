@@ -171,6 +171,21 @@ struct BTNode
     std::map<std::string, int> intParams;             ///< Integer parameters
     std::map<std::string, float> floatParams;         ///< Float parameters
 
+    // Cached hot-path data for string-based blackboard checks
+    enum class BlackboardComparison : uint8_t
+    {
+        Unknown = 0,
+        Equals,
+        NotEquals,
+        GreaterThan,
+        LessThan,
+        GreaterOrEqual,
+        LessOrEqual
+    };
+    std::string blackboardKey;
+    BlackboardComparison blackboardComparison = BlackboardComparison::Unknown;
+    int blackboardExpectedValue = 0;
+
     // Phase 38b: Event-driven execution fields
     std::string eventType;                  ///< Event type listener (e.g., "Olympe_EventType_AI_Explosion")
     std::string eventMessage;               ///< Optional event message filter (for future event filtering)

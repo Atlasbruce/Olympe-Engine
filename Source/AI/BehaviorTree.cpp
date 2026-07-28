@@ -27,6 +27,7 @@ Behavior Tree implementation: JSON loading and built-in node execution.
 #include <cmath>
 #include <functional>
 #include <set>
+#include <unordered_set>
 #include <fstream>
 #include <ctime>
 
@@ -535,6 +536,21 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
                                 node.floatParams[it.key()] = it.value().get<float>();
                         }
                     }
+
+                    if (node.conditionTypeString == "CheckBlackboardValue")
+                    {
+                        node.blackboardKey = node.GetParameterString("key");
+                        const std::string op = node.GetParameterString("operator");
+                        node.blackboardExpectedValue = node.GetParameterInt("value");
+
+                        if (op == "Equals" || op == "equals" || op == "==") node.blackboardComparison = BTNode::BlackboardComparison::Equals;
+                        else if (op == "NotEquals" || op == "notequals" || op == "!=") node.blackboardComparison = BTNode::BlackboardComparison::NotEquals;
+                        else if (op == "GreaterThan" || op == "greaterthan" || op == ">") node.blackboardComparison = BTNode::BlackboardComparison::GreaterThan;
+                        else if (op == "LessThan" || op == "lessthan" || op == "<") node.blackboardComparison = BTNode::BlackboardComparison::LessThan;
+                        else if (op == "GreaterOrEqual" || op == "greaterorequal" || op == ">=") node.blackboardComparison = BTNode::BlackboardComparison::GreaterOrEqual;
+                        else if (op == "LessOrEqual" || op == "lessorequal" || op == "<=") node.blackboardComparison = BTNode::BlackboardComparison::LessOrEqual;
+                        else node.blackboardComparison = BTNode::BlackboardComparison::Unknown;
+                    }
                 }
 
                 if (node.type == BTNodeType::Action)
@@ -987,6 +1003,7 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
     // Recursion / cycle protection: use a thread-local call stack to detect repeated visits
     // This prevents infinite recursion / stack overflow when a tree contains cycles at runtime.
     static thread_local std::vector<uint32_t> s_execCallStack;
+    static thread_local std::unordered_set<uint32_t> s_execCallSet;
     struct CallStackGuard
     {
         std::vector<uint32_t>& stack;
@@ -994,13 +1011,14 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
         bool wasCycle;
         CallStackGuard(std::vector<uint32_t>& s, uint32_t i) : stack(s), id(i), wasCycle(false)
         {
-            if (std::find(stack.begin(), stack.end(), id) != stack.end())
+            if (s_execCallSet.find(id) != s_execCallSet.end())
             {
                 wasCycle = true;
             }
             else
             {
                 stack.push_back(id);
+                s_execCallSet.insert(id);
             }
         }
         ~CallStackGuard()
@@ -1015,6 +1033,7 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
                     auto it = std::find(stack.begin(), stack.end(), id);
                     if (it != stack.end()) stack.erase(it);
                 }
+                s_execCallSet.erase(id);
             }
         }
     } guard(s_execCallStack, node.id);
@@ -1127,15 +1146,10 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
             // Check if this is a string-based condition (like CheckBlackboardValue)
             if (!node.conditionTypeString.empty() && node.conditionTypeString == "CheckBlackboardValue")
             {
-                // Execute CheckBlackboardValue condition
-                std::string key = node.GetParameterString("key");
-                std::string op = node.GetParameterString("operator");
-                int expectedValue = node.GetParameterInt("value");
-
                 int actualValue = 0;
 
                 // Get value from blackboard
-                if (key == "AIMode")
+                if (node.blackboardKey == "AIMode")
                 {
                     actualValue = blackboard.AIMode;
                 }
@@ -1147,20 +1161,30 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
                 }
 
                 // Perform comparison
-                if (op == "Equals" || op == "equals" || op == "==")
-                    finalStatus = (actualValue == expectedValue) ? BTStatus::Success : BTStatus::Failure;
-                else if (op == "NotEquals" || op == "notequals" || op == "!=")
-                    finalStatus = (actualValue != expectedValue) ? BTStatus::Success : BTStatus::Failure;
-                else if (op == "GreaterThan" || op == "greaterthan" || op == ">")
-                    finalStatus = (actualValue > expectedValue) ? BTStatus::Success : BTStatus::Failure;
-                else if (op == "LessThan" || op == "lessthan" || op == "<")
-                    finalStatus = (actualValue < expectedValue) ? BTStatus::Success : BTStatus::Failure;
-                else if (op == "GreaterOrEqual" || op == "greaterorequal" || op == ">=")
-                    finalStatus = (actualValue >= expectedValue) ? BTStatus::Success : BTStatus::Failure;
-                else if (op == "LessOrEqual" || op == "lessorequal" || op == "<=")
-                    finalStatus = (actualValue <= expectedValue) ? BTStatus::Success : BTStatus::Failure;
-                else
-                    finalStatus = BTStatus::Failure;
+                switch (node.blackboardComparison)
+                {
+                    case BTNode::BlackboardComparison::Equals:
+                        finalStatus = (actualValue == node.blackboardExpectedValue) ? BTStatus::Success : BTStatus::Failure;
+                        break;
+                    case BTNode::BlackboardComparison::NotEquals:
+                        finalStatus = (actualValue != node.blackboardExpectedValue) ? BTStatus::Success : BTStatus::Failure;
+                        break;
+                    case BTNode::BlackboardComparison::GreaterThan:
+                        finalStatus = (actualValue > node.blackboardExpectedValue) ? BTStatus::Success : BTStatus::Failure;
+                        break;
+                    case BTNode::BlackboardComparison::LessThan:
+                        finalStatus = (actualValue < node.blackboardExpectedValue) ? BTStatus::Success : BTStatus::Failure;
+                        break;
+                    case BTNode::BlackboardComparison::GreaterOrEqual:
+                        finalStatus = (actualValue >= node.blackboardExpectedValue) ? BTStatus::Success : BTStatus::Failure;
+                        break;
+                    case BTNode::BlackboardComparison::LessOrEqual:
+                        finalStatus = (actualValue <= node.blackboardExpectedValue) ? BTStatus::Success : BTStatus::Failure;
+                        break;
+                    default:
+                        finalStatus = BTStatus::Failure;
+                        break;
+                }
             }
             else
             {
@@ -1206,54 +1230,53 @@ BTStatus ExecuteBTNode(const BTNode& node, EntityID entity, AIBlackboard_data& b
             break;
     }
 
-    // Enhanced runtime debugging: emit rich JSON execution entry (via small API)
-    try
+    // Enhanced runtime debugging only when the debugger is visible.
+    if (BTDebug_IsVisible())
     {
-        json j;
-        // Serialize 64-bit ids as strings to avoid precision loss when using doubles
-        // (JSON libraries may format large integers in scientific notation which
-        // causes loss of precision when parsed back as double). Preserve IDs as
-        // strings so the debugger can recover exact Entity/Tree identifiers.
-        j["ts"] = static_cast<double>(static_cast<unsigned long long>(std::time(nullptr)) * 1000ULL);
-        j["treeId"] = std::to_string(tree.id);
-        j["entity"] = std::to_string(entity);
-        j["nodeId"] = static_cast<int>(node.id);
-        j["nodeName"] = node.name;
-        j["status"] = (finalStatus == BTStatus::Success) ? "Success"
-                    : (finalStatus == BTStatus::Failure) ? "Failure"
-                    : "Running";
-
-        if (World::Get().HasComponent<Identity_data>(entity))
+        try
         {
-            const Identity_data& identity = World::Get().GetComponent<Identity_data>(entity);
-            j["entityName"] = identity.name;
-        }
+            json j;
+            j["ts"] = static_cast<double>(static_cast<unsigned long long>(std::time(nullptr)) * 1000ULL);
+            j["treeId"] = std::to_string(tree.id);
+            j["entity"] = std::to_string(entity);
+            j["nodeId"] = static_cast<int>(node.id);
+            j["nodeName"] = node.name;
+            j["status"] = (finalStatus == BTStatus::Success) ? "Success"
+                        : (finalStatus == BTStatus::Failure) ? "Failure"
+                        : "Running";
 
-        if (node.type == BTNodeType::Condition)
-        {
-            json details;
-            if (!node.conditionTypeString.empty())
-                details["conditionType"] = node.conditionTypeString;
-            else
-                details["conditionType"] = static_cast<int>(node.conditionType);
-            details["conditionParam"] = node.conditionParam;
-            details["hasTarget"] = blackboard.hasTarget;
-            details["distanceToTarget"] = blackboard.distanceToTarget;
-
-            if (blackboard.targetEntity != INVALID_ENTITY_ID &&
-                World::Get().HasComponent<Identity_data>(blackboard.targetEntity))
+            if (World::Get().HasComponent<Identity_data>(entity))
             {
-                const Identity_data& targetIdentity = World::Get().GetComponent<Identity_data>(blackboard.targetEntity);
-                details["targetName"] = targetIdentity.name;
+                const Identity_data& identity = World::Get().GetComponent<Identity_data>(entity);
+                j["entityName"] = identity.name;
             }
 
-            j["details"] = details;
-        }
+            if (node.type == BTNodeType::Condition)
+            {
+                json details;
+                if (!node.conditionTypeString.empty())
+                    details["conditionType"] = node.conditionTypeString;
+                else
+                    details["conditionType"] = static_cast<int>(node.conditionType);
+                details["conditionParam"] = node.conditionParam;
+                details["hasTarget"] = blackboard.hasTarget;
+                details["distanceToTarget"] = blackboard.distanceToTarget;
 
-        const std::string line = j.dump();
-        BTDebug_AddExecutionJson(line.c_str());
+                if (blackboard.targetEntity != INVALID_ENTITY_ID &&
+                    World::Get().HasComponent<Identity_data>(blackboard.targetEntity))
+                {
+                    const Identity_data& targetIdentity = World::Get().GetComponent<Identity_data>(blackboard.targetEntity);
+                    details["targetName"] = targetIdentity.name;
+                }
+
+                j["details"] = details;
+            }
+
+            const std::string line = j.dump();
+            BTDebug_AddExecutionJson(line.c_str());
+        }
+        catch (...) { /* don't let debug logging break runtime */ }
     }
-    catch (...) { /* don't let debug logging break runtime */ }
 
     return finalStatus;
 }

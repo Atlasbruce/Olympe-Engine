@@ -554,6 +554,22 @@ void BehaviorTreeSystem::Process()
                 // Execute the node
                 BTStatus status = ExecuteBTNode(*node, entity, blackboard, *tree);
                 btRuntime.lastStatus = static_cast<uint8_t>(status);
+
+                // Reduce BT reevaluation pressure after terminal outcomes.
+                // Running keeps normal cadence; Success/Failure apply a small backoff.
+                if (World::Get().HasComponent<AISenses_data>(entity))
+                {
+                    AISenses_data& senses = World::Get().GetComponent<AISenses_data>(entity);
+                    const float cadence = 1.0f / std::max(senses.thinkHz, 0.001f);
+                    if (status == BTStatus::Running)
+                    {
+                        senses.nextThinkTime = currentTime + cadence;
+                    }
+                    else
+                    {
+                        senses.nextThinkTime = currentTime + std::max(0.15f, cadence);
+                    }
+                }
                 
                 // Emit debug instrumentation only when debugger is visible.
                 if (g_btDebugWindow && g_btDebugWindow->IsVisible())
