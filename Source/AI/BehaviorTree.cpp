@@ -97,6 +97,92 @@ namespace
         result = it->second;
         return true;
     }
+
+    // Runtime compatibility loader for BT v2 assets.
+    // This keeps the editor-mirroring import path isolated from the main execution logic.
+    bool LoadBehaviorTreeNodesFromV2(const json& j, BehaviorTreeAsset& tree, std::vector<Olympe::NodeGraphTypes::LinkData>& docLinks)
+    {
+        auto doc = Olympe::GraphMigrator::LoadWithMigration(j);
+
+        for (const auto& nd : doc.GetNodes())
+        {
+            BTNode bn;
+            bn.id = nd.id.value;
+            bn.name = nd.name;
+            bn.editorPosX = nd.position.x;
+            bn.editorPosY = nd.position.y;
+
+            std::string typeStr = nd.type;
+            if (typeStr.find("Selector") != std::string::npos) bn.type = BTNodeType::Selector;
+            else if (typeStr.find("Sequence") != std::string::npos) bn.type = BTNodeType::Sequence;
+            else if (typeStr.find("Root") != std::string::npos) bn.type = BTNodeType::Root;
+            else if (typeStr.find("Inverter") != std::string::npos) bn.type = BTNodeType::Inverter;
+            else if (typeStr.find("Repeater") != std::string::npos) bn.type = BTNodeType::Repeater;
+            else if (typeStr.find("OnEvent") != std::string::npos) bn.type = BTNodeType::OnEvent;
+            else if (typeStr.find("BT_") != std::string::npos && typeStr.find("BT_") == 0)
+            {
+                BTConditionType conditionType;
+                if (TryMapBTConditionType(typeStr, conditionType))
+                {
+                    bn.type = BTNodeType::Condition;
+                    bn.conditionType = conditionType;
+                }
+                else
+                    bn.type = BTNodeType::Action;
+            }
+            else bn.type = BTNodeType::Action;
+
+            const std::string baseType = GetBTBaseType(typeStr);
+            if (bn.type == BTNodeType::Condition)
+            {
+                bn.conditionTypeString = baseType;
+                TryMapBTConditionType(typeStr, bn.conditionType);
+            }
+            else if (bn.type == BTNodeType::Action)
+            {
+                TryMapBTActionType(typeStr, bn.actionType);
+            }
+
+            if (nd.decoratorChild.value != 0)
+                bn.decoratorChildId = nd.decoratorChild.value;
+
+            for (const auto& kv : nd.parameters)
+            {
+                bn.stringParams[kv.first] = kv.second;
+                try
+                {
+                    if (bn.type == BTNodeType::Condition && kv.first == "param")
+                        bn.conditionParam = std::stof(kv.second);
+                    else if (bn.type == BTNodeType::Action && kv.first == "param1")
+                        bn.actionParam1 = std::stof(kv.second);
+                    else if (bn.type == BTNodeType::Action && kv.first == "param2")
+                        bn.actionParam2 = std::stof(kv.second);
+                }
+                catch (...) { }
+            }
+
+            tree.nodes.push_back(bn);
+        }
+
+        if (doc.rootNodeId.value != 0)
+            tree.rootNodeId = doc.rootNodeId.value;
+
+        docLinks = doc.GetLinks();
+
+        std::unordered_map<uint32_t, size_t> tmpIndex;
+        for (size_t i = 0; i < tree.nodes.size(); ++i) tmpIndex[tree.nodes[i].id] = i;
+        for (const auto& ndSrc : doc.GetNodes())
+        {
+            auto itIdx = tmpIndex.find(ndSrc.id.value);
+            if (itIdx == tmpIndex.end()) continue;
+            auto& targetNode = tree.nodes[itIdx->second];
+            targetNode.childIds.clear();
+            for (const auto& cid : ndSrc.children)
+                targetNode.childIds.push_back(cid.value);
+        }
+
+        return true;
+    }
 }
 
 // --- BehaviorTreeManager Implementation ---
@@ -192,114 +278,24 @@ bool BehaviorTreeManager::LoadTreeFromFile(const std::string& filepath, uint32_t
         std::cout << "[BehaviorTreeManager] Tree name: " << tree.name << std::endl;
         std::cout << "[BehaviorTreeManager] Root node ID: " << tree.rootNodeId << std::endl;
         
-        // 4. Parse nodes - prefer using GraphDocument::FromJson for v2 assets (editor parity)
+        // 4. Parse nodes - v2 assets use the compatibility loader isolated above.
         std::cout << "[BehaviorTreeManager] Step 4: Parsing nodes..." << std::endl;
-        // docLinks holds GraphDocument links so reconstruction can run after parsing
         std::vector<Olympe::NodeGraphTypes::LinkData> docLinks;
         if (isV2)
         {
             try
             {
-                // Use the migrator/parser used by the editor/debugger to ensure identical interpretation
-                Olympe::NodeGraphTypes::GraphDocument doc = Olympe::GraphMigrator::LoadWithMigration(j);
-
-                // Convert GraphDocument nodes to BTNode entries
-                for (const auto& nd : doc.GetNodes())
-                {
-                    BTNode bn;
-                    bn.id = nd.id.value;
-                    bn.name = nd.name;
-                    bn.editorPosX = nd.position.x;
-                    bn.editorPosY = nd.position.y;
-
-                    std::string typeStr = nd.type;
-                    if (typeStr.find("Selector") != std::string::npos) bn.type = BTNodeType::Selector;
-                    else if (typeStr.find("Sequence") != std::string::npos) bn.type = BTNodeType::Sequence;
-                    else if (typeStr.find("Root") != std::string::npos) bn.type = BTNodeType::Root;
-                    else if (typeStr.find("Inverter") != std::string::npos) bn.type = BTNodeType::Inverter;
-                    else if (typeStr.find("Repeater") != std::string::npos) bn.type = BTNodeType::Repeater;
-                    else if (typeStr.find("OnEvent") != std::string::npos) bn.type = BTNodeType::OnEvent;
-                    else if (typeStr.find("BT_") != std::string::npos && typeStr.find("BT_") == 0)
-                    {
-                        BTConditionType conditionType;
-                        if (TryMapBTConditionType(typeStr, conditionType))
-                        {
-                            bn.type = BTNodeType::Condition;
-                            bn.conditionType = conditionType;
-                        }
-                        else
-                            bn.type = BTNodeType::Action;
-                    }
-                    else bn.type = BTNodeType::Action;
-
-                    const std::string baseType = GetBTBaseType(typeStr);
-                    if (bn.type == BTNodeType::Condition)
-                    {
-                        bn.conditionTypeString = baseType;
-                        TryMapBTConditionType(typeStr, bn.conditionType);
-                    }
-                    else if (bn.type == BTNodeType::Action)
-                    {
-                        TryMapBTActionType(typeStr, bn.actionType);
-                    }
-
-                    // Copy decorator child if present
-                    if (nd.decoratorChild.value != 0)
-                        bn.decoratorChildId = nd.decoratorChild.value;
-
-                    // Copy simple string parameters
-                    for (const auto& kv : nd.parameters)
-                    {
-                        bn.stringParams[kv.first] = kv.second;
-
-                        try
-                        {
-                            if (bn.type == BTNodeType::Condition && kv.first == "param")
-                                bn.conditionParam = std::stof(kv.second);
-                            else if (bn.type == BTNodeType::Action && kv.first == "param1")
-                                bn.actionParam1 = std::stof(kv.second);
-                            else if (bn.type == BTNodeType::Action && kv.first == "param2")
-                                bn.actionParam2 = std::stof(kv.second);
-                        }
-                        catch (...)
-                        {
-                            SYSTEM_LOG << "[BehaviorTreeManager] Ignoring non-numeric BT parameter '"
-                                       << kv.first << "' on node " << bn.id << std::endl;
-                        }
-                    }
-
-                    tree.nodes.push_back(bn);
-                }
-
-                // Use document root if present
-                if (doc.rootNodeId.value != 0)
-                    tree.rootNodeId = doc.rootNodeId.value;
-
-                // Copy GraphDocument links into docLinks so the reconstruction step below can use them
-                docLinks = doc.GetLinks();
-
-                // COPY: transfer GraphDocument node children (already reconstructed in GraphDocument) to BTNode.childIds
-                // Build id index for tree.nodes
-                std::unordered_map<uint32_t, size_t> tmpIndex;
-                for (size_t i = 0; i < tree.nodes.size(); ++i) tmpIndex[tree.nodes[i].id] = i;
-                // For each source node in document, copy children into corresponding BTNode
-                for (const auto& ndSrc : doc.GetNodes())
-                {
-                    auto itIdx = tmpIndex.find(ndSrc.id.value);
-                    if (itIdx == tmpIndex.end()) continue;
-                    auto& targetNode = tree.nodes[itIdx->second];
-                    targetNode.childIds.clear();
-                    for (const auto& cid : ndSrc.children)
-                    {
-                        targetNode.childIds.push_back(cid.value);
-                    }
-                }
+                LoadBehaviorTreeNodesFromV2(j, tree, docLinks);
 
                 // Additional: prefer explicit link ordering from docLinks when available.
                 // Some GraphDocument constructions may not preserve editor link priority; use
                 // the docLinks vector to rebuild child ordering per-source sorted by target Y
                 if (!docLinks.empty())
                 {
+                    std::unordered_map<uint32_t, size_t> tmpIndex;
+                    for (size_t i = 0; i < tree.nodes.size(); ++i)
+                        tmpIndex[tree.nodes[i].id] = i;
+
                     std::unordered_map<uint32_t, std::vector<uint32_t>> groupedBySource;
                     // Build mapping of outgoing links per source node.
                     // Be defensive: some exported LinkData may encode nodeId in fromPin.value
