@@ -91,8 +91,8 @@
         "name": "MoveToTarget",
         "parameters": {},
         "position": {
-          "x": 1029.74,
-          "y": 402.503
+          "x": 918.74,
+          "y": 385.503
         },
         "type": "BT_MoveToTarget"
       },
@@ -144,8 +144,8 @@
           "conditionType": ""
         },
         "position": {
-          "x": 1025,
-          "y": 175
+          "x": 915,
+          "y": 125
         },
         "type": "BT_HasTarget"
       },
@@ -157,8 +157,8 @@
           "actionType": ""
         },
         "position": {
-          "x": 1020,
-          "y": 296
+          "x": 920,
+          "y": 255
         },
         "type": "BT_SetMoveGoalToTarget"
       }
