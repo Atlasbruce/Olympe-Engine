@@ -51,6 +51,35 @@ void RegisterInputEntityWithManager(EntityID e)
     InputsManager::Get().RegisterInputEntity(e);
 }
 //---------------------------------------------------------------------------------------------
+void LogCreatedEntityDetails(EntityID entity)
+{
+    World& world = World::Get();
+    std::string name = "<unnamed>";
+    std::string type = "<unknown>";
+    Vector position;
+    float zOrder = 0.0f;
+
+    if (world.HasComponent<Identity_data>(entity))
+    {
+        const Identity_data& id = world.GetComponent<Identity_data>(entity);
+        name = id.name;
+        type = id.type;
+    }
+
+    if (world.HasComponent<Position_data>(entity))
+    {
+        const Position_data& pos = world.GetComponent<Position_data>(entity);
+        position = pos.position;
+        zOrder = pos.zOrder;
+    }
+
+    SYSTEM_LOG << "[EntityCreated] id=" << entity
+               << " name=" << name
+               << " class=" << type
+               << " pos=(" << position.x << ", " << position.y << ", " << position.z << ")"
+               << " zOrder=" << zOrder << "\n";
+}
+//---------------------------------------------------------------------------------------------
 World::World()
 {
     Initialize_ECS_Systems();
@@ -285,11 +314,11 @@ void World::SetEntityLayer(EntityID entity, RenderLayer layer)
     }
     
     Position_data& pos = GetComponent<Position_data>(entity);
-    pos.position.z = LayerToZ(layer);
+    pos.zOrder = LayerToZ(layer);
     
     SYSTEM_LOG << "World::SetEntityLayer: Entity " << entity 
                << " assigned to layer " << static_cast<int>(layer) 
-               << " (z=" << pos.position.z << ")\n";
+               << " (zOrder=" << pos.zOrder << ")\n";
 }
 
 RenderLayer World::CalculateLayerFromZOrder(float zOrder) const
@@ -325,7 +354,7 @@ RenderLayer World::GetEntityLayer(EntityID entity) const
     }
 
     const Position_data& pos = World::Get().GetComponent<Position_data>(entity);
-    return ZToLayer(pos.position.z);
+    return ZToLayer(pos.zOrder);
 }
 //---------------------------------------------------------------------------------------------
 // Blueprint Editor notification hooks
@@ -1511,11 +1540,12 @@ EntityID World::InstantiateEntity(
     // Build instance parameters
     LevelInstanceParameters instanceParams(entityInstance->name, entityInstance->type);
     instanceParams.position = entityInstance->position;
+    instanceParams.zOrder = entityInstance->zOrder;
     ExtractCustomProperties(entityInstance->overrides, instanceParams, entityInstance.get(), blueprint);
     
     // Create entity with overrides
-    // CRITICAL: Disable autoAssignLayer to preserve position.z from Tiled level
-    // The zOrder from the Tiled level is already stored in position.z and should not be overridden
+    // CRITICAL: Disable autoAssignLayer to preserve z order imported from Tiled level
+    // The imported render order is already carried by the entity payload and should not be overridden
     EntityID entity = factory.CreateEntityWithOverrides(*blueprint, instanceParams, false);
     
     if (entity == INVALID_ENTITY_ID)
@@ -1550,10 +1580,10 @@ EntityID World::InstantiateEntity(
     if (HasComponent<Position_data>(entity))
     {
         const Position_data& pos = GetComponent<Position_data>(entity);
-        RenderLayer layer = CalculateLayerFromZOrder(pos.position.z);
+        RenderLayer layer = ZToLayer(pos.zOrder);
         SYSTEM_LOG << "    ✓ " << entityInstance->name 
                    << " [" << blueprint->prefabName << "]"
-                   << " (layer: " << static_cast<int>(layer) << ", z: " << pos.position.z << ")"
+                   << " (layer: " << static_cast<int>(layer) << ", zOrder: " << pos.zOrder << ")"
                    << std::endl;
     }
     else
@@ -2823,6 +2853,12 @@ EntityID World::CreateMissingPrefabPlaceholder(
 
     World::Get().AddComponent<Identity_data>(entity, entityInstance.name, entityInstance.type, entityInstance.type);
     World::Get().AddComponent<Position_data>(entity, entityInstance.position);
+    if (World::Get().HasComponent<Position_data>(entity))
+    {
+        World::Get().GetComponent<Position_data>(entity).zOrder = entityInstance.zOrder;
+    }
+
+    LogCreatedEntityDetails(entity);
     
     // Add visual editor marker with red color for missing prefabs
     VisualEditor_data editorData;

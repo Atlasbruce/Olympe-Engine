@@ -367,6 +367,7 @@ namespace Tiled {
         int nextobjectid;
         
         std::vector<std::shared_ptr<TiledLayer>> layers;
+        std::vector<std::shared_ptr<TiledLayer>> orderedLayers;
         std::vector<TiledTileset> tilesets;
         std::map<std::string, TiledProperty> properties;
 

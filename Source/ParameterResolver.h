@@ -44,6 +44,7 @@ struct LevelInstanceParameters
 	std::string objectName;        // Unique name/ID of this object instance
 	std::string objectType;        // Prefab type (e.g., "player", "enemy")
 	Vector position;               // Position in the level (x, y, z)
+	float zOrder;                  // Explicit render order transported from the level source
 	std::map<std::string, ComponentParameter> properties; // Custom property overrides (legacy/flat)
 	
 	// NEW: Component-scoped overrides to prevent cross-component overwrites
@@ -55,7 +56,7 @@ struct LevelInstanceParameters
 	
 	LevelInstanceParameters() = default;
 	LevelInstanceParameters(const std::string& name, const std::string& type)
-		: objectName(name), objectType(type), position(0.0f, 0.0f, 0.0f) {}
+		: objectName(name), objectType(type), position(0.0f, 0.0f, 0.0f), zOrder(0.0f) {}
 };
 
 // Resolved component instance - final component with merged parameters

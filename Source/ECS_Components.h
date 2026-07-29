@@ -140,6 +140,9 @@ struct Position_data
 {
 	/** @brief 2D/3D position vector */
 	Vector position;
+
+	/** @brief Render depth / layer order dedicated to drawing */
+	float zOrder = 0.0f;
 	
 	/** @brief Default constructor */
 	Position_data() = default;
@@ -148,7 +151,7 @@ struct Position_data
 	 * @brief Construct with position
 	 * @param pos Initial position vector
 	 */
-	Position_data(Vector pos) : position(pos) {}
+	Position_data(Vector pos) : position(pos), zOrder(pos.z) {}
 	
 	/** @brief Copy constructor */
 	Position_data(const Position_data&) = default;

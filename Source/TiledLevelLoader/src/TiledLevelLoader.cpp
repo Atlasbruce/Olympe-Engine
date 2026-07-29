@@ -15,6 +15,26 @@
 namespace Olympe {
 namespace Tiled {
 
+    namespace {
+        void AppendOrderedLayers(const std::shared_ptr<TiledLayer>& layer, std::vector<std::shared_ptr<TiledLayer>>& orderedLayers)
+        {
+            if (!layer)
+            {
+                return;
+            }
+
+            orderedLayers.push_back(layer);
+
+            if (layer->type == LayerType::Group)
+            {
+                for (const auto& child : layer->layers)
+                {
+                    AppendOrderedLayers(child, orderedLayers);
+                }
+            }
+        }
+    }
+
     TiledLevelLoader::TiledLevelLoader()
     {
     }
@@ -161,14 +181,29 @@ namespace Tiled {
             }
         }
 
+        map.orderedLayers.clear();
+
+        auto collectOrderedLayers = [&](const json& layerJson, const auto& self) -> void {
+            std::shared_ptr<TiledLayer> layer;
+            if (ParseLayer(layerJson, layer)) {
+                map.orderedLayers.push_back(layer);
+                if (layer && layer->type == LayerType::Group) {
+                    for (const auto& child : layer->layers) {
+                        map.orderedLayers.push_back(child);
+                        if (child && child->type == LayerType::Group) {
+                            self(layerJson, self);
+                        }
+                    }
+                }
+                map.layers.push_back(layer);
+            }
+        };
+
         // Parse layers
         if (HasKey(j, "layers") && j["layers"].is_array()) {
             for (size_t i = 0; i < j["layers"].size(); ++i) {
                 const json& layerJson = j["layers"][i];
-                std::shared_ptr<TiledLayer> layer;
-                if (ParseLayer(layerJson, layer)) {
-                    map.layers.push_back(layer);
-                }
+                collectOrderedLayers(layerJson, collectOrderedLayers);
             }
         }
 
@@ -684,6 +719,8 @@ namespace Tiled {
             }
         }
 
+        map.orderedLayers.clear();
+
         // Parse layers
         for (tinyxml2::XMLElement* layerElement = mapElement->FirstChildElement();
              layerElement != nullptr;
@@ -696,6 +733,7 @@ namespace Tiled {
                 std::shared_ptr<TiledLayer> layer;
                 if (ParseLayerXML(layerElement, layer)) {
                     map.layers.push_back(layer);
+                    AppendOrderedLayers(layer, map.orderedLayers);
                 }
             }
         }

@@ -88,7 +88,7 @@ namespace Tiled {
         bool firstTile = true;
 
         // Scan all layers
-        for (const auto& layer : tiledMap.layers)
+        for (const auto& layer : tiledMap.orderedLayers.empty() ? tiledMap.layers : tiledMap.orderedLayers)
         {
             // Only process tile layers
             if (layer->type != LayerType::TileLayer)
@@ -221,6 +221,18 @@ namespace Tiled {
         SYSTEM_LOG << "[Phase 1/6] Extracting Map Configuration & Metadata...\n";
         ExtractMapConfiguration(tiledMap, outLevel);
         ExtractMapMetadata(tiledMap, outLevel);
+
+        const auto& sourceLayers = tiledMap.orderedLayers.empty() ? tiledMap.layers : tiledMap.orderedLayers;
+        SYSTEM_LOG << "[LayerOrder] Source sequence size: " << sourceLayers.size() << "\n";
+        for (size_t i = 0; i < sourceLayers.size(); ++i)
+        {
+            const auto& layer = sourceLayers[i];
+            if (!layer) continue;
+            SYSTEM_LOG << "[LayerOrder] #" << i
+                       << " id=" << layer->id
+                       << " type=" << static_cast<int>(layer->type)
+                       << " name='" << layer->name << "'\n";
+        }
         
         // ===================================================================
         // PHASE 2: VISUAL LAYERS (Parallax, Image Layers, Tile Layers)
@@ -314,6 +326,7 @@ namespace Tiled {
         SYSTEM_LOG << "+===========================================================+\n";
         SYSTEM_LOG << "| Map: " << outLevel.mapConfig.orientation 
                    << " " << outLevel.mapConfig.mapWidth << "x" << outLevel.mapConfig.mapHeight << "\n";
+        SYSTEM_LOG << "| Ordered Layers: " << (tiledMap.orderedLayers.empty() ? tiledMap.layers.size() : tiledMap.orderedLayers.size()) << "\n";
         SYSTEM_LOG << "| Visual Layers: " << visualLayerCount << "\n";
         SYSTEM_LOG << "| Entities: " << stats.totalObjects << "\n";
         SYSTEM_LOG << "| Relationships: " << linkCount << "\n";
@@ -390,6 +403,7 @@ namespace Tiled {
         parallax.repeatY = layer.repeaty;
         parallax.visible = layer.visible;
         parallax.tintColor = layer.tintcolor;
+        parallax.zOrder = (layer.id > 0) ? (layer.id - 1) : 0;
 
         ParallaxLayerManager::Get().AddLayer(parallax);
     }
@@ -984,7 +998,7 @@ namespace Tiled {
             outLevel.tileMap[y].resize(mapWidth_, 0);
         }
         
-        for (const auto& layer : tiledMap.layers) {
+        for (const auto& layer : tiledMap.orderedLayers.empty() ? tiledMap.layers : tiledMap.orderedLayers) {
             if (!layer->visible) continue;
             
             switch (layer->type) {
@@ -1132,7 +1146,7 @@ namespace Tiled {
                     layerJson["offsetX"] = layer->offsetX;
                     layerJson["offsetY"] = layer->offsetY;
                     layerJson["opacity"] = layer->opacity;
-                    layerJson["zOrder"] = static_cast<int>(i);
+                    layerJson["zOrder"] = layer->zOrder;
                     layerJson["visible"] = layer->visible;
                     layerJson["tintColor"] = layer->tintColor;
                     parallaxLayersJson.push_back(layerJson);
@@ -1250,7 +1264,7 @@ namespace Tiled {
         // Initialize collision map
         InitializeCollisionMap(outLevel, mapWidth_, mapHeight_);
         
-        for (const auto& layer : tiledMap.layers) {
+        for (const auto& layer : tiledMap.orderedLayers.empty() ? tiledMap.layers : tiledMap.orderedLayers) {
             if (!layer->visible) continue;
             
             // Process collision tile layers
@@ -1344,7 +1358,7 @@ namespace Tiled {
         // ok - FIX #1: Track global zOrder across ALL layers for depth sorting
         int globalZOrder = 0;
         
-        for (const auto& layer : tiledMap.layers) {
+        for (const auto& layer : tiledMap.orderedLayers.empty() ? tiledMap.layers : tiledMap.orderedLayers) {
             // ok - Process object layers and assign zOrder
             if (layer->type == LayerType::ObjectGroup) {
                 if (!layer->visible) {
@@ -1364,8 +1378,8 @@ namespace Tiled {
                     if (obj.objectType == ObjectType::Polyline || obj.objectType == ObjectType::Polygon) {
                         auto collisionDescriptor = ParseCollisionPolylineDescriptor(obj, layer->offsetx, layer->offsety);
                         if (collisionDescriptor) {
-                            // ok - CRITICAL FIX: Store layer zOrder in position.z
-                            collisionDescriptor->position.z = static_cast<float>(globalZOrder);
+                // ok - CRITICAL FIX: Store layer zOrder explicitly
+                collisionDescriptor->zOrder = static_cast<float>(globalZOrder);
                             
                             // Create a copy for the legacy entities array
                             auto entityCopy = std::make_unique<Olympe::Editor::EntityInstance>();
@@ -1401,8 +1415,8 @@ namespace Tiled {
                 auto entityDescriptor = ParseEntityDescriptor(obj, layer->offsetx, layer->offsety);
                 if (!entityDescriptor) continue;
                 
-                // ok - CRITICAL FIX: Store layer zOrder in position.z
-                entityDescriptor->position.z = static_cast<float>(globalZOrder);
+                // ok - CRITICAL FIX: Store layer zOrder explicitly
+                entityDescriptor->zOrder = static_cast<float>(globalZOrder);
                 
                 SYSTEM_LOG << "  -> Entity '" << entityDescriptor->name 
                            << "' assigned zOrder: " << globalZOrder << "\n";
@@ -1473,7 +1487,7 @@ namespace Tiled {
         
         // Build object ID -> name mapping
         std::map<int, std::string> idToName;
-        for (const auto& layer : tiledMap.layers) {
+        for (const auto& layer : tiledMap.orderedLayers.empty() ? tiledMap.layers : tiledMap.orderedLayers) {
             if (layer->type != LayerType::ObjectGroup) continue;
             for (const auto& obj : layer->objects) {
                 idToName[obj.id] = obj.name;
@@ -1483,7 +1497,7 @@ namespace Tiled {
         SYSTEM_LOG << "[DEBUG] ExtractObjectRelationships - Processing objects...\n";
         
         // Extract relationships from custom properties
-        for (const auto& layer : tiledMap.layers) {
+        for (const auto& layer : tiledMap.orderedLayers.empty() ? tiledMap.layers : tiledMap.orderedLayers) {
             if (layer->type != LayerType::ObjectGroup) continue;
             
             for (const auto& obj : layer->objects) {
@@ -1568,7 +1582,7 @@ namespace Tiled {
         }
         
         // Extract image layer paths
-        for (const auto& layer : tiledMap.layers) {
+        for (const auto& layer : tiledMap.orderedLayers.empty() ? tiledMap.layers : tiledMap.orderedLayers) {
             if (layer->type == LayerType::ImageLayer && !layer->image.empty()) {
                 std::string resolvedPath = ResolveImagePath(layer->image);
                 outLevel.resources.imagePaths.push_back(resolvedPath);
@@ -1576,7 +1590,7 @@ namespace Tiled {
         }
         
         // Extract object template paths (from custom properties)
-        for (const auto& layer : tiledMap.layers) {
+        for (const auto& layer : tiledMap.orderedLayers.empty() ? tiledMap.layers : tiledMap.orderedLayers) {
             if (layer->type != LayerType::ObjectGroup) continue;
             for (const auto& obj : layer->objects) {
                 // Check for audio properties

@@ -177,7 +177,7 @@ namespace Tiled {
         }
 
         // Sort by z-order (back to front)
-        sort(sortedLayers.begin(), sortedLayers.end(),
+        stable_sort(sortedLayers.begin(), sortedLayers.end(),
             [](const ParallaxLayer* a, const ParallaxLayer* b) {
                 return a->zOrder < b->zOrder;
             });

@@ -134,6 +134,7 @@ EntityID PrefabFactory::CreateEntity(const std::string& prefabName)
         EntityID newEntity = World::Get().CreateEntity();
         m_prefabs[prefabName](newEntity);
         SYSTEM_LOG << "PrefabFactory::CreateEntity '" << prefabName << "' created (ID: " << newEntity << ")\n";
+        LogCreatedEntityDetails(newEntity);
         return newEntity;
     }
 
@@ -281,6 +282,7 @@ EntityID PrefabFactory::CreateEntityFromBlueprint(const PrefabBlueprint& bluepri
         }
     }
 
+    LogCreatedEntityDetails(entity);
     return entity;
 }
 
@@ -342,11 +344,12 @@ EntityID PrefabFactory::CreateEntityWithOverrides(
         }
     }
     
-    // Override position INCLUDING z component (zOrder) to preserve layer depth
+    // Override position and explicitly propagate zOrder to preserve layer depth
     if (world.HasComponent<Position_data>(entity))
     {
         auto& pos = world.GetComponent<Position_data>(entity);
         pos.position = instanceParams.position;
+        pos.zOrder = instanceParams.zOrder;
     }
     
     // -> Auto-assign render layer based on entity type (if requested)
@@ -357,6 +360,14 @@ EntityID PrefabFactory::CreateEntityWithOverrides(
         const Identity_data& identity = world.GetComponent<Identity_data>(entity);
         RenderLayer defaultLayer = world.GetDefaultLayerForType(identity.entityType);
         world.SetEntityLayer(entity, defaultLayer);
+    }
+
+    if (world.HasComponent<Position_data>(entity))
+    {
+        const Position_data& pos = world.GetComponent<Position_data>(entity);
+        SYSTEM_LOG << "PrefabFactory::CreateEntityWithOverrides -> '" << blueprint.prefabName
+                   << "' pos=(" << pos.position.x << ", " << pos.position.y << ", " << pos.position.z << ")"
+                   << " zOrder=" << pos.zOrder << "\n";
     }
 
     // --- Attacher le BehaviorTree si référencé via AIBehavior_data ---
@@ -408,6 +419,7 @@ EntityID PrefabFactory::CreateEntityWithOverrides(
     }
     SYSTEM_LOG << "\n";
     
+    LogCreatedEntityDetails(entity);
     return entity;
 }
 
@@ -612,6 +624,7 @@ bool PrefabFactory::InstantiatePosition(EntityID entity, const ComponentDefiniti
     if (def.HasParameter("position"))
     {
         position.position = def.GetParameter("position")->AsVector();
+        position.zOrder = position.position.z;
     }
     else if (def.HasParameter("x") && def.HasParameter("y"))
     {
@@ -619,6 +632,7 @@ bool PrefabFactory::InstantiatePosition(EntityID entity, const ComponentDefiniti
         float y = def.GetParameter("y")->AsFloat();
         float z = def.HasParameter("z") ? def.GetParameter("z")->AsFloat() : 0.0f;
         position.position = Vector(x, y, z);
+        position.zOrder = z;
     }
     
     // DO NOT call AddComponent() - component is already modified by reference

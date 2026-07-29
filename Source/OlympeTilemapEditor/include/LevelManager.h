@@ -29,11 +29,12 @@ namespace Editor {
 		std::string type;            // Entity type (e.g., "Player", "Enemy", "Item", "Collision"...)
 		std::string spritePath = ""; // Optional sprite path for visual representation
         Vector position;             // World position (using engine's Vector for direct usage)
+        float zOrder;                // Render order transported explicitly from the level
         float rotation;              // Rotation in degrees (0-360)
         json overrides;              // Component property overrides
 
         EntityInstance()
-            : id(""), prefabPath(""), name(""), position(), rotation(0.0f), overrides(json::object()) {}
+            : id(""), prefabPath(""), name(""), position(), zOrder(0.0f), rotation(0.0f), overrides(json::object()) {}
     };
 
     // Represents level metadata

@@ -744,7 +744,7 @@ float CalculateEntityDepth(const std::string& orientation,
                           const Vector& position,
                           int tileWidth, int tileHeight)
 {
-    float baseDepth = position.z * DEPTH_LAYER_SCALE;  // Layer zOrder
+    float baseDepth = position.z * DEPTH_LAYER_SCALE;  // Geometry z remains available
     
     if (orientation == "isometric") {
         // Use exact worldPosY for fine sorting
@@ -1027,9 +1027,8 @@ void RenderMultiLayerForCamera(const CameraTransform& cam)
             if (!cam.IsVisible(worldBounds)) continue;
             
             // -> Calculate depth
-            float depth = CalculateEntityDepth(mapOrientation, 
-                                              pos.position, 
-                                              tileWidth, tileHeight);
+            float depth = pos.zOrder * DEPTH_LAYER_SCALE;
+            depth += (mapOrientation == "isometric") ? pos.position.y : pos.position.y;
             
             renderBatch.push_back(RenderItem::MakeEntity(depth, entity));
             
@@ -1169,7 +1168,7 @@ void RenderSingleEntity(const CameraTransform& cam, EntityID entity)
         Draw_Rectangle(&destRect, SDL_Color{ 0, 255, 255, 255 }); // draw bounding box
 
 
-		string _str = id.name + ", pos: (" + std::to_string(pos.position.x) + ", " + std::to_string(pos.position.y) + ") z-order: " + std::to_string(pos.position.z) + ")";
+		string _str = id.name + ", pos: (" + std::to_string(pos.position.x) + ", " + std::to_string(pos.position.y) + ") z-order: " + std::to_string(pos.zOrder) + ")";
 		destRect.y -= 25.f;
 		destRect.w = (_str.length() * 10.f);
 		destRect.h = 16.f;

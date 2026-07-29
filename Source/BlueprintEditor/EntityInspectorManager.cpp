@@ -217,8 +217,8 @@ namespace Olympe
                 properties.push_back(prop);
 
                 prop.name = "z";
-                prop.value = std::to_string(comp.position.z);
-                prop.dataPtr = &comp.position.z;
+                prop.value = std::to_string(comp.zOrder);
+                prop.dataPtr = &comp.zOrder;
                 properties.push_back(prop);
             }
         }
@@ -275,7 +275,7 @@ namespace Olympe
                 else if (propertyName == "y")
                     comp.position.y = floatValue;
                 else if (propertyName == "z")
-                    comp.position.z = floatValue;
+                    comp.zOrder = floatValue;
                 else
                     return false;
 

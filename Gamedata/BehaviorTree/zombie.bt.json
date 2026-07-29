@@ -28,17 +28,6 @@
       },
       {
         "fromPin": {
-          "nodeId": 27,
-          "pinId": "output"
-        },
-        "id": 65,
-        "toPin": {
-          "nodeId": 26,
-          "pinId": "input"
-        }
-      },
-      {
-        "fromPin": {
           "nodeId": 28,
           "pinId": "output"
         },
@@ -67,6 +56,72 @@
         "id": 69,
         "toPin": {
           "nodeId": 10,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 31,
+          "pinId": "output"
+        },
+        "id": 71,
+        "toPin": {
+          "nodeId": 32,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 31,
+          "pinId": "output"
+        },
+        "id": 72,
+        "toPin": {
+          "nodeId": 33,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 31,
+          "pinId": "output"
+        },
+        "id": 74,
+        "toPin": {
+          "nodeId": 35,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 27,
+          "pinId": "output"
+        },
+        "id": 75,
+        "toPin": {
+          "nodeId": 31,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 27,
+          "pinId": "output"
+        },
+        "id": 76,
+        "toPin": {
+          "nodeId": 26,
+          "pinId": "input"
+        }
+      },
+      {
+        "fromPin": {
+          "nodeId": 31,
+          "pinId": "output"
+        },
+        "id": 77,
+        "toPin": {
+          "nodeId": 36,
           "pinId": "input"
         }
       }
@@ -102,14 +157,15 @@
         "name": "Idle",
         "parameters": {},
         "position": {
-          "x": 681,
-          "y": 512
+          "x": 694,
+          "y": 900
         },
         "type": "BT_Idle"
       },
       {
         "children": [
           28,
+          31,
           26
         ],
         "id": 27,
@@ -161,6 +217,65 @@
           "y": 255
         },
         "type": "BT_SetMoveGoalToTarget"
+      },
+      {
+        "children": [
+          32,
+          33,
+          35
+        ],
+        "id": 31,
+        "name": "Zombie Wander",
+        "parameters": {},
+        "position": {
+          "x": 673,
+          "y": 581
+        },
+        "type": "BT_Selector"
+      },
+      {
+        "children": [],
+        "id": 32,
+        "name": "Choose Random Navigable Point",
+        "parameters": {},
+        "position": {
+          "x": 917,
+          "y": 511
+        },
+        "type": "BT_ChooseRandomNavigablePoint"
+      },
+      {
+        "children": [],
+        "id": 33,
+        "name": "Request Pathfinding",
+        "parameters": {},
+        "position": {
+          "x": 920,
+          "y": 607
+        },
+        "type": "BT_RequestPathfinding"
+      },
+      {
+        "children": [],
+        "id": 35,
+        "name": "Wait Random Time",
+        "parameters": {},
+        "position": {
+          "x": 923,
+          "y": 806
+        },
+        "type": "BT_WaitRandomTime"
+      },
+      {
+        "children": [],
+        "id": 36,
+        "name": "Follow Path",
+        "parameters": {},
+        "position": {
+          "x": 936,
+          "y": 709
+        },
+        "type": "BT_FollowPath"
       }
     ],
     "rootNodeId": 1
