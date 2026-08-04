@@ -568,15 +568,6 @@
     <None Include="OlympeBlueprintEditor.vcxproj" />
     <None Include="verify_property_loading.py" />
     <None Include="update_project.py" />
-    <None Include="phase_70_add_missing_cpp_files.ps1" />
-    <None Include="phase_70b_fix_paths.ps1" />
-    <None Include="phase_70c_clean_and_add.ps1" />
-    <None Include="phase_70d_deep_clean.ps1" />
-    <None Include="phase_71_add_remaining.ps1" />
-    <None Include="phase_72_add_final.ps1" />
-    <None Include="phase_73_add_fragments.ps1" />
-    <None Include="phase_74_add_helpers.ps1" />
-    <None Include="phase_75_final.ps1" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="credits.txt" />

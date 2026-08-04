@@ -1,23 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="left-up" width="83" height="20" tilewidth="64" tileheight="64" infinite="0" nextlayerid="19" nextobjectid="13">
+<map version="1.10" tiledversion="1.12.2" orientation="orthogonal" renderorder="left-up" width="83" height="20" tilewidth="64" tileheight="64" infinite="0" nextlayerid="19" nextobjectid="13">
  <editorsettings>
   <export target="parallax-forext..tmj" format="json"/>
  </editorsettings>
- <tileset firstgid="1" source="parallax_forest.tsx"/>
- <tileset firstgid="8" name="tileset 2D ortho" tilewidth="64" tileheight="64" spacing="3" tilecount="9" columns="3" objectalignment="topleft">
+ <properties>
+  <property name="gravity" type="bool" value="true"/>
+ </properties>
+ <tileset firstgid="1" name="tileset 2D ortho" tilewidth="64" tileheight="64" spacing="3" tilecount="9" columns="3">
   <grid orientation="orthogonal" width="260" height="260"/>
   <image source="tileset 2D ortho.png" trans="000000" width="261" height="260"/>
+  <tile id="0">
+   <objectgroup draworder="index" id="2">
+    <object id="2" name="col_tile_stone" type="collision" x="0" y="0" width="64" height="64"/>
+   </objectgroup>
+  </tile>
+  <tile id="1">
+   <objectgroup draworder="index" id="2">
+    <object id="1" name="col_tile_stonegrass" type="collision" x="0" y="0" width="62" height="63"/>
+   </objectgroup>
+  </tile>
+  <tile id="2">
+   <objectgroup draworder="index" id="2">
+    <object id="1" name="col_tile_stone_ice" type="collision" x="0" y="0" width="64" height="64"/>
+   </objectgroup>
+  </tile>
+  <tile id="3">
+   <objectgroup draworder="index" id="2">
+    <object id="1" name="col_tile_red_bricks" type="collision" x="0" y="0" width="64" height="64"/>
+   </objectgroup>
+  </tile>
+  <tile id="4">
+   <objectgroup draworder="index" id="2">
+    <object id="1" name="col_tile_red_bricks_moss" type="collision" x="0" y="0" width="64" height="64"/>
+   </objectgroup>
+  </tile>
+  <tile id="5">
+   <objectgroup draworder="index" id="2">
+    <object id="1" name="col_tile_grass" type="collision" x="0" y="0" width="64" height="64"/>
+   </objectgroup>
+  </tile>
+  <tile id="6">
+   <objectgroup draworder="index" id="2">
+    <object id="1" name="col_tile_grey_bricks" type="collision" x="0" y="0" width="64" height="64"/>
+   </objectgroup>
+  </tile>
+  <tile id="7">
+   <objectgroup draworder="index" id="2">
+    <object id="2" name="col_tile_grey_bricks_moss" type="collision" x="0" y="0" width="64" height="64"/>
+   </objectgroup>
+  </tile>
+  <tile id="8">
+   <objectgroup draworder="index" id="2">
+    <object id="1" name="col_tile_wood" type="collision" x="0" y="0" width="60" height="60"/>
+   </objectgroup>
+  </tile>
  </tileset>
- <imagelayer id="14" name="Layer_background_4" parallaxx="0">
+ <imagelayer id="14" name="Layer_background_4" offsetx="550" offsety="0" parallaxx="0" repeatx="1">
   <image source="../Resources/Parallax Layers/2.png" width="1980" height="1080"/>
  </imagelayer>
- <imagelayer id="13" name="Layer_background_3" parallaxx="0.5" repeatx="1">
+ <imagelayer id="13" name="Layer_background_3" parallaxx="0.1" repeatx="1">
   <image source="../Resources/Parallax Layers/3.png" width="1980" height="1080"/>
  </imagelayer>
- <imagelayer id="12" name="Layer_background_2" parallaxx="0.7" repeatx="1">
+ <imagelayer id="12" name="Layer_background_2" parallaxx="0.2" repeatx="1">
   <image source="../Resources/Parallax Layers/4.png" width="1980" height="1080"/>
  </imagelayer>
- <imagelayer id="10" name="Layer_background_1" parallaxx="0.9" repeatx="1">
+ <imagelayer id="10" name="Layer_background_1" offsetx="250" offsety="0" parallaxx="0.3" repeatx="1">
   <image source="../Resources/Parallax Layers/5.png" width="1980" height="1080"/>
  </imagelayer>
  <imagelayer id="3" name="Layer_0_ground" repeatx="1">
@@ -26,14 +73,14 @@
  <imagelayer id="11" name="Layer_ground_trees" repeatx="1">
   <image source="../Resources/Parallax Layers/8.png" width="1980" height="1080"/>
  </imagelayer>
- <imagelayer id="16" name="Layer_ground_house">
-  <image source="../Resources/houses2D/housebrickdoor.png" width="512" height="512"/>
- </imagelayer>
- <imagelayer id="15" name="Layer_foreground_light" parallaxx="0">
+ <imagelayer id="15" name="Layer_foreground_light" parallaxx="0" repeatx="1">
   <image source="../Resources/Parallax Layers/6.png" width="1980" height="1080"/>
  </imagelayer>
+ <imagelayer id="16" name="Layer_ground_house" offsetx="4687.36" offsety="524.86">
+  <image source="../Resources/houses2D/housebrickdoor.png" width="512" height="512"/>
+ </imagelayer>
  <objectgroup id="17" name="Sectors">
-  <object id="12" name="Sector_1" type="sector" x="-128" y="0" width="5504" height="1088"/>
+  <object id="12" name="Sector_1" type="sector" x="-140" y="-18" width="5486" height="1322"/>
  </objectgroup>
  <objectgroup id="2" name="Layer_0_Leveldesign">
   <object id="1" name="player" type="Player" x="2529.33" y="887.879">
@@ -61,7 +108,7 @@
    <property name="useTilesetBorder" type="bool" value="false"/>
   </properties>
   <data encoding="base64" compression="zlib">
-   eJzt0lEKgCAQBFA/i8D7Hzc6gSgT2fIezN+u6GBrAACQ07++QBG96TJFlzk7dXm9PL+yNzM72+Xo7NX3VbDTv/w7XeY8PZ4SyyGxALXdIzQGig==
+   eJztldEKgCAMRS0U6f9/OISEGDaXTQI5B+5DsubdVSoEAAAAAAA/8t8GFiEHsvSCLP2YneUhFMVzq7bXI12KHzzNqK1ZPs2n9ZYzWt7vkQb6vN37fiZaTfViRd5LzZM1s5k5aLTuaVmznI/0MeKH76UfJccduWlDbnr6hyCE1tAJtG8MDQ==
   </data>
  </layer>
 </map>
