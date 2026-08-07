@@ -141,6 +141,8 @@
     <ClCompile Include="Source\BlueprintEditor\EntitiesPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\InspectorPanel.cpp" />
     <ClCompile Include="Source\CollisionMap.cpp" />
+    <ClCompile Include="Source\CollisionSystems\Collision_Intersections.cpp" />
+    <ClCompile Include="Source\CollisionSystems\Collision_Primitives.cpp" />
     <ClCompile Include="Source\ComponentDefinition.cpp" />
     <ClCompile Include="Source\Core\AssetManager.cpp" />
     <ClCompile Include="Source\Core\FontManager.cpp" />
@@ -402,6 +404,8 @@
     <ClInclude Include="Source\BlueprintEditor\VSGraphVerifier.h" />
     <ClInclude Include="Source\BlueprintEditor\WorldBridge.h" />
     <ClInclude Include="Source\CollisionMap.h" />
+    <ClInclude Include="Source\CollisionSystems\Collision_Intersections.h" />
+    <ClInclude Include="Source\CollisionSystems\Collision_Primitives.h" />
     <ClInclude Include="Source\ComponentDefinition.h" />
     <ClInclude Include="Source\Core\AssetManager.h" />
     <ClInclude Include="Source\Core\FontManager.h" />
