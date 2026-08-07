@@ -1,6 +1,7 @@
 #include "Collision_BroadPhase.h"
 
 #include <algorithm>
+#include <deque>
 #include <set>
 #include <utility>
 #include <vector>
@@ -46,8 +47,7 @@ void Collision_ComputeBroadPhasePairs(const std::vector<Collision_SpatialProxy>&
     std::vector<Collision_SpatialProxy> sorted = proxies;
     std::sort(sorted.begin(), sorted.end(), Collision_ProxySortByMinX);
 
-    std::vector<Collision_SpatialProxy> active;
-    active.reserve(sorted.size());
+    std::deque<Collision_SpatialProxy> active;
 
     std::set<std::pair<EntityID, EntityID> > uniquePairs;
 
@@ -56,17 +56,18 @@ void Collision_ComputeBroadPhasePairs(const std::vector<Collision_SpatialProxy>&
     {
         const Collision_SpatialProxy& current = *itCurrent;
 
-        active.erase(
-            std::remove_if(
-                active.begin(),
-                active.end(),
-                [&current](const Collision_SpatialProxy& candidate)
-                {
-                    return candidate.worldAABB.max.x < (current.worldAABB.min.x - COLLISION_BROAD_PHASE_EPSILON);
-                }),
-            active.end());
+        while (!active.empty())
+        {
+            const Collision_SpatialProxy& front = active.front();
+            if (front.worldAABB.max.x < (current.worldAABB.min.x - COLLISION_BROAD_PHASE_EPSILON))
+            {
+                active.pop_front();
+                continue;
+            }
+            break;
+        }
 
-        std::vector<Collision_SpatialProxy>::const_iterator itActive = active.begin();
+        std::deque<Collision_SpatialProxy>::const_iterator itActive = active.begin();
         for (; itActive != active.end(); ++itActive)
         {
             const Collision_SpatialProxy& candidate = *itActive;

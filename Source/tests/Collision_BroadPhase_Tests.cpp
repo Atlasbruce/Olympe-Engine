@@ -116,7 +116,7 @@ int main()
 
         Olympe::Collision_SpatialProxy b;
         b.entity = 200;
-        b.worldAABB = MakeAABB(1.00005f, 0.0f, 2.0f, 1.0f);
+        b.worldAABB = MakeAABB(1.0f, 0.0f, 2.0f, 1.0f);
         proxies.push_back(b);
 
         std::vector<Olympe::Collision_CandidatePair> pairs;

@@ -19,6 +19,12 @@ struct Collision_CandidatePair
     }
 };
 
+// Computes broad-phase candidate pairs from spatial proxies.
+// Contract:
+// - outPairs is cleared on entry.
+// - pairs are normalized (a < b), self-pairs are skipped, duplicates are removed.
+// - sweep uses epsilon-expanded overlap checks.
+// - output order is deterministic: sorted by a ascending, then b ascending.
 void Collision_ComputeBroadPhasePairs(const std::vector<Collision_SpatialProxy>& proxies,
                                       std::vector<Collision_CandidatePair>& outPairs);
 
