@@ -3,6 +3,7 @@
 #include "Framework/IGraphDocument.h"
 #include "IGraphRenderer.h"
 #include "AnimationGraphDocument.h"
+#include "../third_party/imgui/imgui.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -47,17 +48,29 @@ private:
     void RenderInspectorPanel();
     void RenderVerificationPanel();
     void RenderStateEditorPanel();
+    void RenderTransitionEditorPanel();
+    void RenderGraphCanvas();
+    void EnsureStatePositions();
+    int FindStateIndexByName(const std::string& name) const;
+    bool IsPointInsideState(float x, float y, size_t stateIndex) const;
 
     std::unique_ptr<AnimationGraphDocument> m_document;
     std::string m_currentPath;
     char m_bankPathBuffer[512];
     char m_stateNameBuffer[128];
     char m_animationNameBuffer[128];
+    char m_transitionFromBuffer[128];
+    char m_transitionToBuffer[128];
+    float m_transitionTimeBuffer;
     bool m_minimapVisible;
     float m_minimapSize;
     int m_minimapPosition;
     bool m_showVerification;
     bool m_showRunPreview;
+    int m_draggedStateIndex;
+    ImVec2 m_dragStartPos;
+    int m_selectedStateIndex;
+    int m_selectedTransitionIndex;
     std::vector<std::string> m_logs;
 };
 

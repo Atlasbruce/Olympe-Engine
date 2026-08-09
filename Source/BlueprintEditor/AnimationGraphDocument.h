@@ -33,7 +33,14 @@ public:
     void SetAnimationBankPath(const std::string& path);
     const std::string& GetAnimationBankPath() const { return m_bankRef; }
     void SetDefaultState(const std::string& stateName);
+    const std::string& GetDefaultState() const { return m_defaultState; }
     bool AddStateFromClip(const std::string& stateName, const std::string& animationName);
+    bool RemoveState(const std::string& stateName);
+    bool AddTransition(const std::string& fromState, const std::string& toState, float transitionTime);
+    bool RemoveTransition(size_t index);
+    bool GenerateDefaultTransitions(float transitionTime = 0.1f);
+    bool GenerateStatesFromBank();
+    bool AutoLayoutStates();
     bool ReloadAnimationBankMetadata();
     const std::vector<std::string>& GetAvailableAnimations() const { return m_availableAnimations; }
 
