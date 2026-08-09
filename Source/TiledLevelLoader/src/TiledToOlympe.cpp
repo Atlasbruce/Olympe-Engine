@@ -314,6 +314,7 @@ namespace Tiled {
         // ===================================================================
         SYSTEM_LOG << "[Phase 6/6] Building Resource Catalog...\n";
         BuildResourceCatalog(tiledMap, outLevel);
+        BuildCollisionAndNavigationMaps(tiledMap, outLevel);
         SYSTEM_LOG << "  ok - Tilesets: " << outLevel.resources.tilesetPaths.size()
                    << " | Images: " << outLevel.resources.imagePaths.size()
                    << " | Audio: " << outLevel.resources.audioPaths.size() << "\n";
@@ -333,6 +334,73 @@ namespace Tiled {
         SYSTEM_LOG << "+===========================================================+\n\n";
         
         return true;
+    }
+
+    void TiledToOlympe::BuildCollisionAndNavigationMaps(const TiledMap& tiledMap,
+                                                        Olympe::Editor::LevelDefinition& outLevel)
+    {
+        outLevel.levelCollisionMap.width = tiledMap.width;
+        outLevel.levelCollisionMap.height = tiledMap.height;
+        outLevel.levelCollisionMap.tileWidth = static_cast<float>(tiledMap.tilewidth);
+        outLevel.levelCollisionMap.tileHeight = static_cast<float>(tiledMap.tileheight);
+        outLevel.levelCollisionMap.orientation = config_.mapOrientation;
+        outLevel.levelCollisionMap.solidCells.assign(static_cast<size_t>(tiledMap.width * tiledMap.height), 0);
+
+        outLevel.levelNavigationMap.width = tiledMap.width;
+        outLevel.levelNavigationMap.height = tiledMap.height;
+        outLevel.levelNavigationMap.tileWidth = static_cast<float>(tiledMap.tilewidth);
+        outLevel.levelNavigationMap.tileHeight = static_cast<float>(tiledMap.tileheight);
+        outLevel.levelNavigationMap.orientation = config_.mapOrientation;
+        outLevel.levelNavigationMap.walkableCells.assign(static_cast<size_t>(tiledMap.width * tiledMap.height), 1);
+        outLevel.levelNavigationMap.traversalCosts.assign(static_cast<size_t>(tiledMap.width * tiledMap.height), 1.0f);
+
+        const std::vector<std::shared_ptr<TiledLayer> >& layers = tiledMap.orderedLayers.empty() ? tiledMap.layers : tiledMap.orderedLayers;
+        for (size_t i = 0; i < layers.size(); ++i)
+        {
+            const std::shared_ptr<TiledLayer>& layer = layers[i];
+            if (!layer || layer->type != LayerType::TileLayer)
+            {
+                continue;
+            }
+
+            bool collisionLayer = MatchesPattern(layer->name, config_.collisionLayerPatterns);
+            bool sectorLayer = MatchesPattern(layer->name, config_.sectorLayerPatterns);
+            if (!collisionLayer && !sectorLayer)
+            {
+                continue;
+            }
+
+            for (int y = 0; y < layer->height; ++y)
+            {
+                for (int x = 0; x < layer->width; ++x)
+                {
+                    size_t index = static_cast<size_t>(y) * static_cast<size_t>(layer->width) + static_cast<size_t>(x);
+                    if (index >= layer->data.size())
+                    {
+                        continue;
+                    }
+
+                    uint32_t gid = layer->data[index] & TILE_ID_MASK;
+                    size_t mapIndex = static_cast<size_t>(y) * static_cast<size_t>(tiledMap.width) + static_cast<size_t>(x);
+                    if (mapIndex >= outLevel.levelCollisionMap.solidCells.size())
+                    {
+                        continue;
+                    }
+
+                    if (gid != 0)
+                    {
+                        if (collisionLayer)
+                        {
+                            outLevel.levelCollisionMap.solidCells[mapIndex] = 1;
+                        }
+                        if (sectorLayer)
+                        {
+                            outLevel.levelNavigationMap.walkableCells[mapIndex] = 0;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     void TiledToOlympe::ConvertTileLayer(const TiledLayer& layer, Olympe::Editor::LevelDefinition& level)

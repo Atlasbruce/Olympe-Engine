@@ -26,6 +26,7 @@
 
 #include "TiledStructures.h"
 #include "../../vector.h"
+#include "../../Level.h"
 #include <string>
 #include <map>
 #include <set>
@@ -150,6 +151,8 @@ namespace Tiled {
                                        int& linkCount);
         void BuildResourceCatalog(const TiledMap& tiledMap,
                                  Olympe::Editor::LevelDefinition& outLevel);
+        void BuildCollisionAndNavigationMaps(const TiledMap& tiledMap,
+                                            Olympe::Editor::LevelDefinition& outLevel);
 
         // Helper methods
         std::string ResolveImagePath(const std::string& imagePath);

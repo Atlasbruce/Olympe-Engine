@@ -1,4 +1,3 @@
-#include "../CollisionSystems/Collision_SpatialProxyRegistry.h"
 #include "../CollisionSystems/Collision_BroadPhase.h"
 
 #include "../system/system_utils.h"
@@ -28,6 +27,35 @@ static Olympe::Collision_AABB MakeAABB(float minX, float minY, float maxX, float
     return box;
 }
 
+static bool RejectSpecificPair(const Olympe::Collision_SpatialProxy& lhs,
+                               const Olympe::Collision_SpatialProxy& rhs,
+                               void* userData)
+{
+    const EntityID* ids = static_cast<const EntityID*>(userData);
+    const EntityID first = (lhs.entity < rhs.entity) ? lhs.entity : rhs.entity;
+    const EntityID second = (lhs.entity < rhs.entity) ? rhs.entity : lhs.entity;
+    return !(first == ids[0] && second == ids[1]);
+}
+
+static bool SamePairs(const std::vector<Olympe::Collision_CandidatePair>& lhs,
+                      const std::vector<Olympe::Collision_CandidatePair>& rhs)
+{
+    if (lhs.size() != rhs.size())
+    {
+        return false;
+    }
+
+    for (size_t index = 0; index < lhs.size(); ++index)
+    {
+        if (lhs[index].a != rhs[index].a || lhs[index].b != rhs[index].b)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 int main()
 {
     bool ok = true;
@@ -45,65 +73,49 @@ int main()
         b.worldAABB = MakeAABB(2.0f, 0.0f, 3.0f, 1.0f);
         proxies.push_back(b);
 
-        std::vector<Olympe::Collision_CandidatePair> pairs;
-        Olympe::Collision_ComputeBroadPhasePairs(proxies, pairs);
+        std::vector<Olympe::Collision_CandidatePair> sapPairs;
+        std::vector<Olympe::Collision_CandidatePair> brutePairs;
+        Olympe::Collision_BroadPhaseScratch scratch;
+        Olympe::Collision_BroadPhaseMetrics sapMetrics;
+        Olympe::Collision_BroadPhaseMetrics bruteMetrics;
 
-        ok = AssertTrue(pairs.empty(), "No overlap -> 0 pair") && ok;
+        Olympe::Collision_ComputeBroadPhasePairs(proxies, sapPairs, scratch, &sapMetrics, Olympe::Collision_BroadPhaseFilter());
+        Olympe::Collision_ComputeBroadPhasePairsBruteForce(proxies, brutePairs, scratch, &bruteMetrics, Olympe::Collision_BroadPhaseFilter());
+
+        ok = AssertTrue(sapPairs.empty(), "No overlap -> SAP empty") && ok;
+        ok = AssertTrue(brutePairs.empty(), "No overlap -> brute force empty") && ok;
+        ok = AssertTrue(SamePairs(sapPairs, brutePairs), "No overlap -> same outputs") && ok;
+        ok = AssertTrue(sapMetrics.invalidProxyCount == 0, "No overlap -> no invalid proxies") && ok;
     }
 
     {
         std::vector<Olympe::Collision_SpatialProxy> proxies;
-
-        Olympe::Collision_SpatialProxy a;
-        a.entity = 10;
-        a.worldAABB = MakeAABB(0.0f, 0.0f, 2.0f, 2.0f);
-        proxies.push_back(a);
-
-        Olympe::Collision_SpatialProxy b;
-        b.entity = 20;
-        b.worldAABB = MakeAABB(1.0f, 1.0f, 3.0f, 3.0f);
-        proxies.push_back(b);
-
-        std::vector<Olympe::Collision_CandidatePair> pairs;
-        Olympe::Collision_ComputeBroadPhasePairs(proxies, pairs);
-
-        ok = AssertTrue(pairs.size() == 1, "Single overlap -> 1 pair") && ok;
-        ok = AssertTrue(pairs[0].a == 10 && pairs[0].b == 20,
-                        "Single overlap expected pair") && ok;
-    }
-
-    {
-        std::vector<Olympe::Collision_SpatialProxy> proxies;
-        for (EntityID i = 1; i <= 128; ++i)
+        for (EntityID i = 1; i <= 32; ++i)
         {
             Olympe::Collision_SpatialProxy proxy;
             proxy.entity = i;
 
             const float left = static_cast<float>(i - 1) * 0.75f;
             const float right = left + 1.0f;
-
             proxy.worldAABB = MakeAABB(left, 0.0f, right, 1.0f);
             proxies.push_back(proxy);
         }
 
-        std::vector<Olympe::Collision_CandidatePair> pairs;
-        Olympe::Collision_ComputeBroadPhasePairs(proxies, pairs);
+        std::vector<Olympe::Collision_CandidatePair> sapPairs;
+        std::vector<Olympe::Collision_CandidatePair> brutePairs;
+        Olympe::Collision_BroadPhaseScratch scratch;
+        Olympe::Collision_BroadPhaseMetrics sapMetrics;
+        Olympe::Collision_BroadPhaseMetrics bruteMetrics;
 
-        ok = AssertTrue(pairs.size() == 127, "Chain overlap count is deterministic") && ok;
+        Olympe::Collision_ComputeBroadPhasePairs(proxies, sapPairs, scratch, &sapMetrics, Olympe::Collision_BroadPhaseFilter());
+        Olympe::Collision_ComputeBroadPhasePairsBruteForce(proxies, brutePairs, scratch, &bruteMetrics, Olympe::Collision_BroadPhaseFilter());
 
-        bool ordered = true;
-        for (size_t index = 0; index < pairs.size(); ++index)
-        {
-            const EntityID expectedA = static_cast<EntityID>(index + 1);
-            const EntityID expectedB = static_cast<EntityID>(index + 2);
-            if (pairs[index].a != expectedA || pairs[index].b != expectedB)
-            {
-                ordered = false;
-                break;
-            }
-        }
-
-        ok = AssertTrue(ordered, "Chain overlap pair ordering deterministic") && ok;
+        ok = AssertTrue(SamePairs(sapPairs, brutePairs), "Chain overlap -> SAP matches brute force") && ok;
+        ok = AssertTrue(sapPairs.size() == 31, "Chain overlap -> expected pair count") && ok;
+        ok = AssertTrue(sapMetrics.comparisons > 0, "Chain overlap -> sweep comparisons recorded") && ok;
+        ok = AssertTrue(sapMetrics.maxActiveCount > 0, "Chain overlap -> active window recorded") && ok;
+        ok = AssertTrue(bruteMetrics.comparisons > sapMetrics.comparisons,
+                        "Chain overlap -> brute force does more comparisons") && ok;
     }
 
     {
@@ -119,50 +131,70 @@ int main()
         b.worldAABB = MakeAABB(1.0f, 0.0f, 2.0f, 1.0f);
         proxies.push_back(b);
 
-        std::vector<Olympe::Collision_CandidatePair> pairs;
-        Olympe::Collision_ComputeBroadPhasePairs(proxies, pairs);
+        EntityID rejectedPair[2] = {100, 200};
+        Olympe::Collision_BroadPhaseFilter filter;
+        filter.predicate = &RejectSpecificPair;
+        filter.userData = rejectedPair;
 
-        ok = AssertTrue(pairs.size() == 1 && pairs[0].a == 100 && pairs[0].b == 200,
-                        "Edge touching with epsilon -> pair exists") && ok;
-    }
+        std::vector<Olympe::Collision_CandidatePair> sapPairs;
+        std::vector<Olympe::Collision_CandidatePair> brutePairs;
+        Olympe::Collision_BroadPhaseScratch scratch;
+        Olympe::Collision_BroadPhaseMetrics sapMetrics;
+        Olympe::Collision_BroadPhaseMetrics bruteMetrics;
 
-    {
-        Olympe::Collision_SpatialProxyRegistry registry;
+        Olympe::Collision_ComputeBroadPhasePairs(proxies, sapPairs, scratch, &sapMetrics, filter);
+        Olympe::Collision_ComputeBroadPhasePairsBruteForce(proxies, brutePairs, scratch, &bruteMetrics, filter);
 
-        registry.RegisterOrUpdateProxy(1, MakeAABB(5.0f, 5.0f, 3.0f, 6.0f));
-        registry.RegisterOrUpdateProxy(2, MakeAABB(0.0f, 0.0f, 1.0f, 1.0f));
-
-        std::vector<Olympe::Collision_SpatialProxy> snapshot;
-        registry.GetSnapshot(snapshot);
-
-        ok = AssertTrue(snapshot.size() == 1, "Invalid AABB ignored by registry") && ok;
-        ok = AssertTrue(snapshot[0].entity == 2, "Registry snapshot keeps valid entity") && ok;
+        ok = AssertTrue(sapPairs.empty(), "Filter -> SAP rejects pair") && ok;
+        ok = AssertTrue(brutePairs.empty(), "Filter -> brute force rejects pair") && ok;
+        ok = AssertTrue(sapMetrics.filteredPairs == 1, "Filter -> metrics count rejected pair") && ok;
     }
 
     {
         std::vector<Olympe::Collision_SpatialProxy> proxies;
 
-        Olympe::Collision_SpatialProxy first;
-        first.entity = 10;
-        first.worldAABB = MakeAABB(0.0f, 0.0f, 2.0f, 2.0f);
-        proxies.push_back(first);
+        Olympe::Collision_SpatialProxy valid;
+        valid.entity = 2;
+        valid.worldAABB = MakeAABB(0.0f, 0.0f, 1.0f, 1.0f);
+        proxies.push_back(valid);
 
-        Olympe::Collision_SpatialProxy duplicateSameEntity;
-        duplicateSameEntity.entity = 10;
-        duplicateSameEntity.worldAABB = MakeAABB(0.5f, 0.0f, 2.5f, 2.0f);
-        proxies.push_back(duplicateSameEntity);
+        Olympe::Collision_SpatialProxy invalid;
+        invalid.entity = 3;
+        invalid.worldAABB = MakeAABB(5.0f, 5.0f, 2.0f, 2.0f);
+        proxies.push_back(invalid);
 
-        Olympe::Collision_SpatialProxy other;
-        other.entity = 20;
-        other.worldAABB = MakeAABB(1.0f, 0.0f, 3.0f, 2.0f);
-        proxies.push_back(other);
+        std::vector<Olympe::Collision_CandidatePair> sapPairs;
+        Olympe::Collision_BroadPhaseScratch scratch;
+        Olympe::Collision_BroadPhaseMetrics metrics;
+        Olympe::Collision_ComputeBroadPhasePairs(proxies, sapPairs, scratch, &metrics, Olympe::Collision_BroadPhaseFilter());
+
+        ok = AssertTrue(sapPairs.empty(), "Invalid AABB -> no pairs") && ok;
+        ok = AssertTrue(metrics.invalidProxyCount == 1, "Invalid AABB -> counted") && ok;
+        ok = AssertTrue(metrics.validProxyCount == 1, "Invalid AABB -> one valid proxy") && ok;
+    }
+
+    {
+        std::vector<Olympe::Collision_SpatialProxy> proxies;
+        for (EntityID i = 1; i <= 8; ++i)
+        {
+            Olympe::Collision_SpatialProxy proxy;
+            proxy.entity = i;
+            proxy.worldAABB = MakeAABB(static_cast<float>(i - 1), 0.0f, static_cast<float>(i), 1.0f);
+            proxies.push_back(proxy);
+        }
 
         std::vector<Olympe::Collision_CandidatePair> pairs;
-        Olympe::Collision_ComputeBroadPhasePairs(proxies, pairs);
+        Olympe::Collision_BroadPhaseScratch scratch;
+        Olympe::Collision_BroadPhaseMetrics metrics;
 
-        ok = AssertTrue(pairs.size() == 1, "Dedup/self-pair not emitted") && ok;
-        ok = AssertTrue(pairs[0].a == 10 && pairs[0].b == 20,
-                        "Dedup/self-pair expected output") && ok;
+        Olympe::Collision_ComputeBroadPhasePairs(proxies, pairs, scratch, &metrics, Olympe::Collision_BroadPhaseFilter());
+        const size_t sortedCapacity = scratch.sortedProxies.capacity();
+        const size_t pairCapacity = scratch.normalizedPairs.capacity();
+
+        Olympe::Collision_ComputeBroadPhasePairs(proxies, pairs, scratch, &metrics, Olympe::Collision_BroadPhaseFilter());
+
+        ok = AssertTrue(scratch.sortedProxies.capacity() == sortedCapacity, "Scratch reuse -> sorted capacity stable") && ok;
+        ok = AssertTrue(scratch.normalizedPairs.capacity() == pairCapacity, "Scratch reuse -> pair capacity stable") && ok;
     }
 
     if (!ok)

@@ -259,8 +259,10 @@
     <ClCompile Include="Source\BlueprintEditor\Framework\DocumentVersionManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabEditorV2.cpp" />
     <ClCompile Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabStrategyRegistration.cpp" />
+    <ClCompile Include="Source\CollisionSystems\Collision_BroadPhase.cpp" />
     <ClCompile Include="Source\CollisionSystems\Collision_Intersections.cpp" />
     <ClCompile Include="Source\CollisionSystems\Collision_Primitives.cpp" />
+    <ClCompile Include="Source\CollisionSystems\Collision_SpatialProxyRegistry.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -556,8 +558,10 @@
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabEditorV2.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\EntityPrefabStrategyRegistration.h" />
     <ClInclude Include="Source\AI\BehaviorTreeDebugAPI.h" />
+    <ClInclude Include="Source\CollisionSystems\Collision_BroadPhase.h" />
     <ClInclude Include="Source\CollisionSystems\Collision_Intersections.h" />
     <ClInclude Include="Source\CollisionSystems\Collision_Primitives.h" />
+    <ClInclude Include="Source\CollisionSystems\Collision_SpatialProxyRegistry.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

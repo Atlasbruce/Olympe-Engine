@@ -82,6 +82,28 @@ namespace Editor {
         std::vector<std::vector<int>> tileMap;      // 2D grid of tile IDs
         std::vector<std::vector<uint8_t>> collisionMap;  // 2D grid of collision masks
 
+        struct LevelCollisionMapResource {
+            int width = 0;
+            int height = 0;
+            float tileWidth = 0.0f;
+            float tileHeight = 0.0f;
+            std::string orientation;
+            std::vector<uint8_t> solidCells;
+        };
+
+        struct LevelNavigationMapResource {
+            int width = 0;
+            int height = 0;
+            float tileWidth = 0.0f;
+            float tileHeight = 0.0f;
+            std::string orientation;
+            std::vector<uint8_t> walkableCells;
+            std::vector<float> traversalCosts;
+        };
+
+        LevelCollisionMapResource levelCollisionMap;
+        LevelNavigationMapResource levelNavigationMap;
+
         // Visual layers (Pass 1)
         struct VisualLayer {
             std::string name;
