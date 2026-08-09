@@ -177,6 +177,8 @@
     <ClCompile Include="..\Source\BlueprintEditor\SubgraphMigrator.cpp" xmlns="" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptRenderer.cpp" xmlns="" />
     <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphDocument.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphRenderer.cpp" xmlns="" />
     <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphRenderer.cpp" xmlns="" />
     <ClCompile Include="..\Source\Runtime\ConditionPresetEvaluator.cpp" xmlns="" />
     <ClCompile Include="..\Source\Editor\ConditionPreset\Operand.cpp" xmlns="" />
@@ -270,6 +272,8 @@
     <ClInclude Include="..\Source\BlueprintEditor\AssetBrowser.h" />
     <ClInclude Include="..\Source\BlueprintEditor\AssetInfoPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeEditorPlugin.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\AnimationGraphDocument.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\AnimationGraphRenderer.h" />
     <ClInclude Include="..\Source\BlueprintEditor\blueprinteditor.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditorGUI.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditorPlugin.h" />
@@ -558,4 +562,3 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
-

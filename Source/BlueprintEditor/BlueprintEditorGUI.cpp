@@ -312,6 +312,9 @@ namespace Olympe
                 if (ImGui::MenuItem(ICON_FA_BRAIN " New Behavior Tree", "Ctrl+Shift+N"))
                     TabManager::Get().CreateNewTab("BehaviorTree");
 
+                if (ImGui::MenuItem("New Animation Graph", "Ctrl+Alt+A"))
+                    TabManager::Get().CreateNewTab("AnimationGraph");
+
                 if (ImGui::MenuItem(ICON_FA_CUBES " New Entity Prefab", "Ctrl+Alt+N"))
                     TabManager::Get().CreateNewTab("EntityPrefab");
 

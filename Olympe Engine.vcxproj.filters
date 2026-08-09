@@ -22,6 +22,8 @@
     <ClCompile Include="Source\BlueprintEditor\AssetBrowser.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AssetInfoPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BehaviorTreeEditorPlugin.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\AnimationGraphDocument.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\AnimationGraphRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlueprintEditor.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlueprintEditorGUI.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlueprintMigrator.cpp" />

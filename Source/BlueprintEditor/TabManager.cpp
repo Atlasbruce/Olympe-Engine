@@ -10,6 +10,7 @@
 #include "TabManager.h"
 #include "VisualScriptRenderer.h"
 #include "BehaviorTreeRenderer.h"
+#include "AnimationGraphRenderer.h"
 #include "NodeGraphPanel.h"
 #include "PlaceholderEditor/PlaceholderGraphRenderer.h"
 #include "PlaceholderEditor/PlaceholderGraphDocument.h"
@@ -106,7 +107,7 @@ std::string TabManager::DetectGraphType(const std::string& filePath)
     if (root.contains("graphType") && root["graphType"].is_string())
     {
         std::string gt = root["graphType"].get<std::string>();
-        if (gt == "VisualScript" || gt == "BehaviorTree" || gt == "AnimGraph" || gt == "Placeholder")
+        if (gt == "VisualScript" || gt == "BehaviorTree" || gt == "AnimGraph" || gt == "AnimationGraph" || gt == "Placeholder")
             return gt;
     }
     if (root.contains("blueprintType") && root["blueprintType"].is_string())
@@ -134,6 +135,9 @@ std::string TabManager::DetectGraphType(const std::string& filePath)
 
     if (root.contains("states") && root.contains("transitions"))
         return "AnimGraph";
+
+    if (root.contains("animationBankRef") && root.contains("states"))
+        return "AnimationGraph";
 
     // Legacy BT v2 format
     if (root.contains("blueprintType"))
@@ -224,6 +228,13 @@ std::string TabManager::CreateNewTab(const std::string& graphType)
         tab.document = r->GetDocument();
 
         SYSTEM_LOG << "[TabManager::CreateNewTab] Created new BehaviorTree tab with document adapter\n";
+    }
+    else if (graphType == "AnimationGraph" || graphType == "AnimGraph")
+    {
+        AnimationGraphRenderer* r = new AnimationGraphRenderer();
+        tab.renderer = r;
+        tab.document = r->GetDocument();
+        SYSTEM_LOG << "[TabManager::CreateNewTab] Created new AnimationGraph tab\n";
     }
     else if (graphType == "Placeholder")
     {
@@ -330,6 +341,22 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
         // This ensures framework and tab system use the same document object.
         tab.document = r->GetDocument();
         SYSTEM_LOG << "[TabManager::OpenFileInTab] BehaviorTree document assigned to tab\n";
+    }
+    else if (graphType == "AnimationGraph" || graphType == "AnimGraph")
+    {
+        AnimationGraphRenderer* r = new AnimationGraphRenderer();
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] AnimationGraphRenderer created for tab: " << tab.tabID << "\n";
+
+        if (!r->Load(filePath))
+        {
+            SYSTEM_LOG << "[TabManager::OpenFileInTab] ERROR: AnimationGraphRenderer::Load() failed for " << filePath << "\n";
+            delete r;
+            return "";
+        }
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] AnimationGraphRenderer::Load() SUCCESS\n";
+
+        tab.renderer = r;
+        tab.document = r->GetDocument();
     }
     else if (graphType == "EntityPrefab")
     {

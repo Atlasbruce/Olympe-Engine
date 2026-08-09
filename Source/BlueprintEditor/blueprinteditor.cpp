@@ -359,7 +359,7 @@ namespace Olympe
                     if (dotPos != std::string::npos)
                     {
                         std::string ext = filename.substr(dotPos);
-                        if ((ext == ".json" || ext == ".ats") && !IsEditorSupportFile(filename))
+                        if ((ext == ".json" || ext == ".ats" || ext == ".tsx") && !IsEditorSupportFile(filename))
                         {
                             auto fileNode = std::make_shared<AssetNode>(filename, fullPath, false);
                             fileNode->type = DetectAssetType(fullPath);
@@ -404,6 +404,11 @@ namespace Olympe
             size_t dotPos = filepath.find_last_of('.');
             if (dotPos != std::string::npos)
                 ext = filepath.substr(dotPos);
+
+            if (ext == ".tsx")
+            {
+                return "AnimationBank";
+            }
 
             // .ats files are ATS task graphs — detect type from their graphType field
             // without going through the full blueprint type-detection logic.
@@ -499,6 +504,12 @@ namespace Olympe
             {
                 logStructuralDetection("HFSM");
                 return "HFSM";
+            }
+
+            if (j.contains("animationBankRef") && j.contains("states"))
+            {
+                logStructuralDetection("AnimationGraph");
+                return "AnimationGraph";
             }
 
             // Priority 6: Structural detection for Visual Script graphs

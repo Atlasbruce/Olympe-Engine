@@ -28,6 +28,12 @@
     <ClCompile Include="..\Source\BlueprintEditor\AdditionalEditorPlugins.cpp">
       <Filter>Source Files\BlueprintEditor</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphDocument.cpp">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphRenderer.cpp">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClCompile>
     <ClCompile Include="..\Source\BlueprintEditor\AssetBrowser.cpp">
       <Filter>Source Files\BlueprintEditor</Filter>
     </ClCompile>
@@ -847,6 +853,12 @@
       <Filter>Source Files\ImGui</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\BlueprintEditor\AdditionalEditorPlugins.h">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\BlueprintEditor\AnimationGraphDocument.h">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Source\BlueprintEditor\AnimationGraphRenderer.h">
       <Filter>Source Files\BlueprintEditor</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\BlueprintEditor\AssetBrowser.h">
