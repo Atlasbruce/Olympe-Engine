@@ -36,6 +36,8 @@ void AnimationGraphDocument::Clear()
     m_name = "Untitled Animation Graph";
     m_description.clear();
     m_bankRef.clear();
+    m_prefabRef.clear();
+    m_animationGraphRef.clear();
     m_defaultState = "Idle";
     m_data = json::object();
     m_data["states"] = json::array();
@@ -53,6 +55,8 @@ void AnimationGraphDocument::MarkDefaultContent(const std::string& name)
     m_data["name"] = name;
     m_data["description"] = "";
     m_data["animationBankRef"] = "";
+    m_data["prefabRef"] = "";
+    m_data["animationGraphRef"] = "";
     m_data["defaultState"] = "Idle";
 }
 
@@ -61,6 +65,20 @@ void AnimationGraphDocument::SetAnimationBankPath(const std::string& path)
     m_bankRef = path;
     m_data["animationBankRef"] = path;
     ReloadAnimationBankMetadata();
+    m_isDirty = true;
+}
+
+void AnimationGraphDocument::SetPrefabPath(const std::string& path)
+{
+    m_prefabRef = path;
+    m_data["prefabRef"] = path;
+    m_isDirty = true;
+}
+
+void AnimationGraphDocument::SetAnimationGraphPath(const std::string& path)
+{
+    m_animationGraphRef = path;
+    m_data["animationGraphRef"] = path;
     m_isDirty = true;
 }
 
@@ -161,6 +179,38 @@ bool AnimationGraphDocument::RemoveTransition(size_t index)
             filteredTransitions.push_back(transitions[i]);
     }
     transitions = filteredTransitions;
+    m_isDirty = true;
+    return true;
+}
+
+bool AnimationGraphDocument::AddEvent(const std::string& stateName, const std::string& eventName, float normalizedTime)
+{
+    if (stateName.empty() || eventName.empty())
+        return false;
+
+    json evt = json::object();
+    evt["state"] = stateName;
+    evt["name"] = eventName;
+    evt["time"] = normalizedTime;
+    m_data["events"].push_back(evt);
+    m_isDirty = true;
+    return true;
+}
+
+bool AnimationGraphDocument::RemoveEvent(size_t index)
+{
+    if (!m_data.contains("events") || !m_data["events"].is_array())
+        return false;
+    json& events = m_data["events"];
+    if (index >= events.size())
+        return false;
+    json filteredEvents = json::array();
+    for (size_t i = 0; i < events.size(); ++i)
+    {
+        if (i != index)
+            filteredEvents.push_back(events[i]);
+    }
+    events = filteredEvents;
     m_isDirty = true;
     return true;
 }
@@ -282,6 +332,8 @@ bool AnimationGraphDocument::LoadFromJson(const json& root)
     m_name = JsonHelper::GetString(root, "name", "Untitled Animation Graph");
     m_description = JsonHelper::GetString(root, "description", "");
     m_bankRef = JsonHelper::GetString(root, "animationBankRef", "");
+    m_prefabRef = JsonHelper::GetString(root, "prefabRef", "");
+    m_animationGraphRef = JsonHelper::GetString(root, "animationGraphRef", "");
     m_defaultState = JsonHelper::GetString(root, "defaultState", "Idle");
     m_data = root;
     if (!m_data.contains("states")) m_data["states"] = json::array();
@@ -310,6 +362,8 @@ json AnimationGraphDocument::BuildJson() const
     root["name"] = m_name;
     root["description"] = m_description;
     root["animationBankRef"] = m_bankRef;
+    root["prefabRef"] = m_prefabRef;
+    root["animationGraphRef"] = m_animationGraphRef;
     root["defaultState"] = m_defaultState;
     return root;
 }

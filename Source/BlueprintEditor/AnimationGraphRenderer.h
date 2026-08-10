@@ -49,10 +49,14 @@ private:
     void RenderVerificationPanel();
     void RenderStateEditorPanel();
     void RenderTransitionEditorPanel();
+    void RenderTimelinePanel();
     void RenderGraphCanvas();
+    void RenderRightPanel();
+    float DistanceToCubicBezier(const ImVec2& p, const ImVec2& p0, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3) const;
     void EnsureStatePositions();
     int FindStateIndexByName(const std::string& name) const;
     bool IsPointInsideState(float x, float y, size_t stateIndex) const;
+    int FindEventIndexByState(const std::string& stateName) const;
 
     std::unique_ptr<AnimationGraphDocument> m_document;
     std::string m_currentPath;
@@ -61,16 +65,24 @@ private:
     char m_animationNameBuffer[128];
     char m_transitionFromBuffer[128];
     char m_transitionToBuffer[128];
+    char m_eventNameBuffer[128];
+    char m_eventStateBuffer[128];
     float m_transitionTimeBuffer;
+    float m_eventTimeBuffer;
     bool m_minimapVisible;
     float m_minimapSize;
     int m_minimapPosition;
     bool m_showVerification;
     bool m_showRunPreview;
+    float m_previewTime;
+    float m_previewDuration;
+    float m_rightPanelWidth;
+    float m_timelinePanelHeight;
     int m_draggedStateIndex;
     ImVec2 m_dragStartPos;
     int m_selectedStateIndex;
     int m_selectedTransitionIndex;
+    int m_selectedEventIndex;
     std::vector<std::string> m_logs;
 };
 

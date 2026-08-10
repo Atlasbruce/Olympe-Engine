@@ -32,12 +32,18 @@ public:
     void MarkDefaultContent(const std::string& name);
     void SetAnimationBankPath(const std::string& path);
     const std::string& GetAnimationBankPath() const { return m_bankRef; }
+    void SetPrefabPath(const std::string& path);
+    const std::string& GetPrefabPath() const { return m_prefabRef; }
+    void SetAnimationGraphPath(const std::string& path);
+    const std::string& GetAnimationGraphPath() const { return m_animationGraphRef; }
     void SetDefaultState(const std::string& stateName);
     const std::string& GetDefaultState() const { return m_defaultState; }
     bool AddStateFromClip(const std::string& stateName, const std::string& animationName);
     bool RemoveState(const std::string& stateName);
     bool AddTransition(const std::string& fromState, const std::string& toState, float transitionTime);
     bool RemoveTransition(size_t index);
+    bool AddEvent(const std::string& stateName, const std::string& eventName, float normalizedTime);
+    bool RemoveEvent(size_t index);
     bool GenerateDefaultTransitions(float transitionTime = 0.1f);
     bool GenerateStatesFromBank();
     bool AutoLayoutStates();
@@ -51,6 +57,8 @@ private:
     std::string m_name;
     std::string m_description;
     std::string m_bankRef;
+    std::string m_prefabRef;
+    std::string m_animationGraphRef;
     std::string m_defaultState;
     std::string m_filePath;
     bool m_isDirty;
