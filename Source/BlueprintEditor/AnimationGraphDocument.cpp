@@ -2,6 +2,7 @@
 #include "../../Source/json_helper.h"
 #include "../../Source/system/system_utils.h"
 #include <fstream>
+#include <algorithm>
 
 using json = nlohmann::json;
 
@@ -10,6 +11,9 @@ namespace Olympe {
 AnimationGraphDocument::AnimationGraphDocument()
     : m_isDirty(false)
     , m_renderer(nullptr)
+    , m_nextNodeId(1)
+    , m_selectedStateIndex(-1)
+    , m_selectedTransitionIndex(-1)
 {
     MarkDefaultContent("Untitled Animation Graph");
 }
@@ -64,8 +68,16 @@ void AnimationGraphDocument::SetAnimationBankPath(const std::string& path)
 {
     m_bankRef = path;
     m_data["animationBankRef"] = path;
-    ReloadAnimationBankMetadata();
+    SYSTEM_LOG << "[AnimationGraphDocument] SetAnimationBankPath: " << path << "\n";
+    const bool ok = ReloadAnimationBankMetadata();
+    SYSTEM_LOG << "[AnimationGraphDocument] ReloadAnimationBankMetadata: " << (ok ? "OK" : "EMPTY") << " clips=" << m_availableAnimations.size() << "\n";
     m_isDirty = true;
+}
+
+bool AnimationGraphDocument::LoadAnimationBankFromFile(const std::string& path)
+{
+    SetAnimationBankPath(path);
+    return !m_availableAnimations.empty();
 }
 
 void AnimationGraphDocument::SetPrefabPath(const std::string& path)
@@ -80,6 +92,12 @@ void AnimationGraphDocument::SetAnimationGraphPath(const std::string& path)
     m_animationGraphRef = path;
     m_data["animationGraphRef"] = path;
     m_isDirty = true;
+}
+
+bool AnimationGraphDocument::LoadAnimationGraphRuntimeFromFile(const std::string& path)
+{
+    SetAnimationGraphPath(path);
+    return true;
 }
 
 void AnimationGraphDocument::SetDefaultState(const std::string& stateName)
@@ -108,6 +126,49 @@ bool AnimationGraphDocument::AddStateFromClip(const std::string& stateName, cons
         SetDefaultState(stateName);
     m_isDirty = true;
     return true;
+}
+
+bool AnimationGraphDocument::AddStateNode(const std::string& stateName, const std::string& animationName, float x, float y)
+{
+    if (!AddStateFromClip(stateName, animationName))
+        return false;
+    if (m_data.contains("states") && m_data["states"].is_array() && !m_data["states"].empty())
+    {
+        nlohmann::json& state = m_data["states"][m_data["states"].size() - 1];
+        state["x"] = x;
+        state["y"] = y;
+        state["nodeId"] = m_nextNodeId++;
+    }
+    return true;
+}
+
+std::string AnimationGraphDocument::MakeUniqueStateName(const std::string& baseName) const
+{
+    if (!m_data.contains("states") || !m_data["states"].is_array())
+        return baseName;
+
+    std::string candidate = baseName;
+    int suffix = 1;
+    while (true)
+    {
+        bool exists = false;
+        for (size_t i = 0; i < m_data["states"].size(); ++i)
+        {
+            const nlohmann::json& state = m_data["states"][i];
+            if (state.contains("name") && state["name"].is_string() && state["name"].get<std::string>() == candidate)
+            {
+                exists = true;
+                break;
+            }
+        }
+
+        if (!exists)
+            break;
+
+        candidate = baseName + "_" + std::to_string(suffix++);
+    }
+
+    return candidate;
 }
 
 bool AnimationGraphDocument::RemoveState(const std::string& stateName)
@@ -165,6 +226,16 @@ bool AnimationGraphDocument::AddTransition(const std::string& fromState, const s
     return true;
 }
 
+bool AnimationGraphDocument::AddTransitionByIndex(size_t fromIndex, size_t toIndex, float transitionTime)
+{
+    if (!m_data.contains("states") || !m_data["states"].is_array())
+        return false;
+    const nlohmann::json& states = m_data["states"];
+    if (fromIndex >= states.size() || toIndex >= states.size())
+        return false;
+    return AddTransition(GetStateNameAt(fromIndex), GetStateNameAt(toIndex), transitionTime);
+}
+
 bool AnimationGraphDocument::RemoveTransition(size_t index)
 {
     if (!m_data.contains("transitions") || !m_data["transitions"].is_array())
@@ -181,6 +252,13 @@ bool AnimationGraphDocument::RemoveTransition(size_t index)
     transitions = filteredTransitions;
     m_isDirty = true;
     return true;
+}
+
+std::string AnimationGraphDocument::GetStateNameAt(size_t index) const
+{
+    if (!m_data.contains("states") || !m_data["states"].is_array() || index >= m_data["states"].size())
+        return "";
+    return m_data["states"][index].value("name", "");
 }
 
 bool AnimationGraphDocument::AddEvent(const std::string& stateName, const std::string& eventName, float normalizedTime)
@@ -239,40 +317,7 @@ bool AnimationGraphDocument::GenerateStatesFromBank()
 {
     if (!ReloadAnimationBankMetadata())
         return false;
-
-    if (m_availableAnimations.empty())
-        return false;
-
-    for (size_t i = 0; i < m_availableAnimations.size(); ++i)
-    {
-        const std::string& animName = m_availableAnimations[i];
-        if (animName.empty())
-            continue;
-
-        bool alreadyPresent = false;
-        if (m_data.contains("states") && m_data["states"].is_array())
-        {
-            const nlohmann::json& states = m_data["states"];
-            for (size_t j = 0; j < states.size(); ++j)
-            {
-                if (states[j].contains("animation") && states[j]["animation"].is_string() && states[j]["animation"].get<std::string>() == animName)
-                {
-                    alreadyPresent = true;
-                    break;
-                }
-            }
-        }
-
-        if (!alreadyPresent)
-        {
-            AddStateFromClip(animName, animName);
-        }
-    }
-
-    if (m_defaultState.empty() && !m_availableAnimations.empty())
-        SetDefaultState(m_availableAnimations.front());
-
-    return true;
+    return !m_availableAnimations.empty();
 }
 
 bool AnimationGraphDocument::AutoLayoutStates()
@@ -300,22 +345,121 @@ bool AnimationGraphDocument::ReloadAnimationBankMetadata()
 {
     m_availableAnimations.clear();
     if (m_bankRef.empty())
-        return false;
-
-    json root;
-    if (!JsonHelper::LoadJsonFromFile(m_bankRef, root))
-        return false;
-
-    if (!root.contains("animations") || !root["animations"].is_array())
-        return false;
-
-    const nlohmann::json& animations = root["animations"];
-    for (size_t i = 0; i < animations.size(); ++i)
     {
-        if (animations[i].contains("name") && animations[i]["name"].is_string())
-            m_availableAnimations.push_back(animations[i]["name"].get<std::string>());
+        SYSTEM_LOG << "[AnimationGraphDocument] ReloadAnimationBankMetadata: empty bank ref\n";
+        return false;
     }
 
+    std::string resolvedPath = m_bankRef;
+    std::replace(resolvedPath.begin(), resolvedPath.end(), '\\', '/');
+    if (resolvedPath.rfind("./", 0) == 0)
+        resolvedPath.erase(0, 2);
+    std::ifstream ifs(resolvedPath.c_str());
+    if (!ifs.good())
+    {
+        SYSTEM_LOG << "[AnimationGraphDocument] ReloadAnimationBankMetadata: cannot open " << resolvedPath << " (from " << m_bankRef << ")\n";
+        return false;
+    }
+
+    std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    if (content.empty())
+        return false;
+
+    size_t pos = 0;
+    while (true)
+    {
+        size_t tilePos = content.find("<tile", pos);
+        if (tilePos == std::string::npos)
+            break;
+
+        size_t tagEnd = content.find('>', tilePos);
+        if (tagEnd == std::string::npos)
+            break;
+
+        size_t typePos = content.find("type=\"", tilePos);
+        if (typePos != std::string::npos && typePos < tagEnd)
+        {
+            typePos += 6;
+            size_t typeEnd = content.find('"', typePos);
+            if (typeEnd != std::string::npos && typeEnd < tagEnd + 128)
+            {
+                std::string clipName = content.substr(typePos, typeEnd - typePos);
+                if (!clipName.empty())
+                    m_availableAnimations.push_back(clipName);
+            }
+        }
+
+        pos = tagEnd + 1;
+    }
+
+    SYSTEM_LOG << "[AnimationGraphDocument] ReloadAnimationBankMetadata: parsed " << m_availableAnimations.size() << " clip(s)\n";
+    return !m_availableAnimations.empty();
+}
+
+std::vector<std::string> AnimationGraphDocument::ValidateBinding() const
+{
+    std::vector<std::string> warnings;
+
+    if (m_bankRef.empty())
+        warnings.push_back("Animation bank is not linked.");
+    if (m_prefabRef.empty())
+        warnings.push_back("Prefab is not linked.");
+    if (m_animationGraphRef.empty())
+        warnings.push_back("Animation graph reference is not linked.");
+    if (m_defaultState.empty())
+        warnings.push_back("Default state is not set.");
+
+    if (!m_data.contains("states") || !m_data["states"].is_array() || m_data["states"].empty())
+        warnings.push_back("No animation states defined.");
+    if (!m_data.contains("transitions") || !m_data["transitions"].is_array())
+        warnings.push_back("Transition list is missing.");
+    if (!m_data.contains("events") || !m_data["events"].is_array())
+        warnings.push_back("Event list is missing.");
+
+    if (m_data.contains("states") && m_data["states"].is_array())
+    {
+        const json& states = m_data["states"];
+        for (size_t i = 0; i < states.size(); ++i)
+        {
+            if (!states[i].contains("animation") || !states[i]["animation"].is_string() || states[i]["animation"].get<std::string>().empty())
+                warnings.push_back("A state is missing its animation clip reference.");
+        }
+    }
+
+    if (m_data.contains("events") && m_data["events"].is_array())
+    {
+        const json& events = m_data["events"];
+        for (size_t i = 0; i < events.size(); ++i)
+        {
+            if (!events[i].contains("state") || !events[i]["state"].is_string() || events[i]["state"].get<std::string>().empty())
+                warnings.push_back("An event is missing its owning state.");
+        }
+    }
+
+    return warnings;
+}
+
+nlohmann::json AnimationGraphDocument::BuildRuntimeJson() const
+{
+    json root = json::object();
+    root["graphName"] = m_name;
+    root["animationBankRef"] = m_bankRef;
+    root["prefabRef"] = m_prefabRef;
+    root["defaultState"] = m_defaultState;
+    root["states"] = m_data.contains("states") ? m_data["states"] : json::array();
+    root["transitions"] = m_data.contains("transitions") ? m_data["transitions"] : json::array();
+    root["events"] = m_data.contains("events") ? m_data["events"] : json::array();
+    return root;
+}
+
+bool AnimationGraphDocument::ExportRuntimeJson(const std::string& filePath) const
+{
+    if (filePath.empty())
+        return false;
+    std::ofstream ofs(filePath.c_str());
+    if (!ofs.good())
+        return false;
+    ofs << BuildRuntimeJson().dump(2);
     return true;
 }
 
@@ -339,6 +483,11 @@ bool AnimationGraphDocument::LoadFromJson(const json& root)
     if (!m_data.contains("states")) m_data["states"] = json::array();
     if (!m_data.contains("transitions")) m_data["transitions"] = json::array();
     if (!m_data.contains("events")) m_data["events"] = json::array();
+    m_availableAnimations.clear();
+    if (!m_bankRef.empty())
+    {
+        ReloadAnimationBankMetadata();
+    }
     m_isDirty = false;
     return true;
 }
@@ -351,6 +500,7 @@ bool AnimationGraphDocument::Load(const std::string& filePath)
     if (!LoadFromJson(root))
         return false;
     m_filePath = filePath;
+    SYSTEM_LOG << "[AnimationGraphDocument] Loaded graph: " << filePath << " bankRef=" << m_bankRef << " clips=" << m_availableAnimations.size() << "\n";
     return true;
 }
 
@@ -381,6 +531,7 @@ bool AnimationGraphDocument::Save(const std::string& filePath)
     ofs << root.dump(2);
     m_filePath = targetPath;
     m_isDirty = false;
+    SYSTEM_LOG << "[AnimationGraphDocument] Saved graph: " << targetPath << " bankRef=" << m_bankRef << " states=" << (m_data.contains("states") ? m_data["states"].size() : 0) << "\n";
     return true;
 }
 

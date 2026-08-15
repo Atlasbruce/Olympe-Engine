@@ -17,6 +17,16 @@ Animation System - Animation Manager Implementation
 
 namespace OlympeAnimation
 {
+    namespace
+    {
+        bool EndsWith(const std::string& value, const std::string& suffix)
+        {
+            if (value.size() < suffix.size())
+                return false;
+            return std::equal(suffix.rbegin(), suffix.rend(), value.rbegin());
+        }
+    }
+
     // ========================================================================
     // AnimationManager Implementation
     // ========================================================================
@@ -63,7 +73,10 @@ namespace OlympeAnimation
         auto files = ScanDirectory(directoryPath);
         for (const auto& filePath : files)
         {
-            LoadAnimationGraph(filePath);
+            if (EndsWith(filePath, ".ani.runtime.json"))
+            {
+                LoadAnimationGraph(filePath);
+            }
         }
 
         SYSTEM_LOG << "AnimationManager: Loaded " << m_graphs.size() << " animation graphs\n";
@@ -197,7 +210,7 @@ namespace OlympeAnimation
 
 #ifdef _WIN32
         // Windows implementation
-        std::string searchPattern = directoryPath + "\\*.json";
+        std::string searchPattern = directoryPath + "\\*.ani.runtime.json";
         WIN32_FIND_DATAA findData;
         HANDLE hFind = FindFirstFileA(searchPattern.c_str(), &findData);
 

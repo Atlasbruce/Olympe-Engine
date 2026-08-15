@@ -356,6 +356,7 @@ struct VisualAnimation_data
 	std::string bankId;               // Reference to animation bank
 	std::string currentAnimName;      // Current animation name
 	std::string animGraphPath;        // Optional path to FSM graph
+	std::string currentGraphState;    // Runtime state name from animation graph
 	
 	// Frame tracking
 	int currentFrame = 0;             // Current frame index
@@ -377,11 +378,13 @@ struct VisualAnimation_data
 	
 	// Runtime pointer (resolved from AnimationManager)
 	const Olympe::AnimationSequence* currentSequence = nullptr;
+	OlympeAnimation::AnimationGraph* currentGraph = nullptr;
 	
 	// Runtime parameters for FSM transitions (NEW)
 	std::unordered_map<std::string, float> floatParams;
 	std::unordered_map<std::string, bool> boolParams;
 	std::unordered_map<std::string, int> intParams;
+	std::vector<std::string> firedGraphEvents;
 	
 	// Constructors
 	VisualAnimation_data() = default;

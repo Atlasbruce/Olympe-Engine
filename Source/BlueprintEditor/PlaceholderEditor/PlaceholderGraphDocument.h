@@ -3,8 +3,6 @@
 #include "../Framework/IGraphDocument.h"
 #include <string>
 #include <vector>
-#include <map>
-#include <memory>
 
 namespace Olympe {
 

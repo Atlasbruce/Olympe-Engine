@@ -139,6 +139,20 @@ public:
      */
     void CloseBehaviorTreeModal();
 
+    void OpenAnimationBankFilePickerModal(const std::string& initialPath);
+    void RenderAnimationBankFilePickerModal();
+    bool IsAnimationBankModalConfirmed() const;
+    std::string GetSelectedAnimationBankFile() const;
+    bool IsAnimationBankModalOpen() const;
+    void CloseAnimationBankModal();
+
+    void OpenAnimationGraphFilePickerModal(const std::string& initialPath);
+    void RenderAnimationGraphFilePickerModal();
+    bool IsAnimationGraphModalConfirmed() const;
+    std::string GetSelectedAnimationGraphFile() const;
+    bool IsAnimationGraphModalOpen() const;
+    void CloseAnimationGraphModal();
+
     // ========================================================================
     // SaveAs File Picker Modal
     // ========================================================================
@@ -205,6 +219,8 @@ private:
      * Phase 44.1: Unified from PropertyEditorPanel::m_behaviorTreeModal.
      */
     FilePickerModal m_behaviorTreeModal{FilePickerType::BehaviorTree};
+    FilePickerModal m_animationBankModal{FilePickerType::AnimationBank};
+    FilePickerModal m_animationGraphModal{FilePickerType::AnimationGraph};
 
     /**
      * @brief Instance of Save file picker modal.
@@ -235,6 +251,10 @@ private:
      * @brief Whether BehaviorTree modal was confirmed last frame.
      */
     bool m_behaviorTreeConfirmed = false;
+    std::string m_cachedAnimationBankSelection;
+    bool m_animationBankConfirmed = false;
+    std::string m_cachedAnimationGraphSelection;
+    bool m_animationGraphConfirmed = false;
 
     /**
      * @brief Last confirmed selection from Save modal.

@@ -178,6 +178,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptRenderer.cpp" xmlns="" />
     <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.cpp" xmlns="" />
     <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphDocument.cpp" xmlns="" />
+    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphCanvas.cpp" xmlns="" />
     <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphRenderer.cpp" xmlns="" />
     <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphRenderer.cpp" xmlns="" />
     <ClCompile Include="..\Source\Runtime\ConditionPresetEvaluator.cpp" xmlns="" />
@@ -260,6 +261,7 @@
     <ClInclude Include="..\Source\AI\BehaviorTreeDependencyScanner.h" />
     <ClInclude Include="..\Source\AI\BTEditorCommand.h" />
     <ClInclude Include="..\Source\AI\BTGraphLayoutEngine.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\AnimationGraphCanvas.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.h" />
     <ClInclude Include="..\Source\NodeGraphShared\RenderHelpers.h" />
     <ClInclude Include="..\Source\Animation\AnimationBank.h" />

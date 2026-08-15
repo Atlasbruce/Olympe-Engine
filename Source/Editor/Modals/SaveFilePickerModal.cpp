@@ -222,6 +222,8 @@ std::string SaveFilePickerModal::GetDefaultDirectory() const
             return "./Gamedata/BehaviorTree/";
         case SaveFileType::Blueprint:
             return "./Gamedata/VisualScript/";
+        case SaveFileType::AnimationGraph:
+            return "./Gamedata/Animation/AnimationGraphs/";
         case SaveFileType::EntityPrefab:
             return "./Gamedata/EntityPrefab/";
         case SaveFileType::Audio:
@@ -239,6 +241,8 @@ std::string SaveFilePickerModal::GetFileExtension() const
             return ".bt.json";
         case SaveFileType::Blueprint:
             return ".ats.json";
+        case SaveFileType::AnimationGraph:
+            return ".ani.json";
         case SaveFileType::EntityPrefab:
             return ".pref.json";
         case SaveFileType::Audio:
@@ -256,6 +260,8 @@ std::string SaveFilePickerModal::GetModalTitle() const
             return "Save BehaviorTree As##save_bt";
         case SaveFileType::Blueprint:
             return "Save Blueprint As##save_ats";
+        case SaveFileType::AnimationGraph:
+            return "Save AnimationGraph As##save_anim";
         case SaveFileType::EntityPrefab:
             return "Save Entity Prefab As##save_pref";
         case SaveFileType::Audio:
@@ -273,6 +279,8 @@ std::string SaveFilePickerModal::GetDescriptionText() const
             return "Save your BehaviorTree with a new name";
         case SaveFileType::Blueprint:
             return "Save your Blueprint with a new name";
+        case SaveFileType::AnimationGraph:
+            return "Save your Animation Graph with a new name";
         case SaveFileType::EntityPrefab:
             return "Save your Entity Prefab with a new name";
         case SaveFileType::Audio:
@@ -300,6 +308,7 @@ void SaveFilePickerModal::RefreshFileListInternal(bool bLog)
     m_folderList.clear();
 
     std::string extension = GetFileExtension();
+    const std::string filterExtension = extension;
 
 #ifdef _WIN32
     WIN32_FIND_DATAA findData;
@@ -331,8 +340,8 @@ void SaveFilePickerModal::RefreshFileListInternal(bool bLog)
         else
         {
             // Only show files with matching extension
-            if (filename.length() >= extension.length() &&
-                filename.substr(filename.length() - extension.length()) == extension)
+            if (filename.length() >= filterExtension.length() &&
+                filename.substr(filename.length() - filterExtension.length()) == filterExtension)
             {
                 m_fileList.push_back(filename);
             }
@@ -477,9 +486,14 @@ void SaveFilePickerModal::RenderActionButtons()
     {
         if (ImGui::Button("Save##save", ImVec2(120, 0)))
         {
-            std::string fullPath = m_currentPath + "/" + 
-                                   std::string(m_filenameBuffer) + 
-                                   GetFileExtension();
+            std::string filename = m_filenameBuffer;
+            std::string ext = GetFileExtension();
+            if (filename.size() >= ext.size() && filename.compare(filename.size() - ext.size(), ext.size(), ext) == 0)
+            {
+                filename = filename.substr(0, filename.size() - ext.size());
+            }
+
+            std::string fullPath = m_currentPath + "/" + filename + ext;
 
             if (FileExists(fullPath))
             {

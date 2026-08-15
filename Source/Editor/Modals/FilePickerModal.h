@@ -27,6 +27,8 @@ enum class FilePickerType
     BehaviorTree,  ///< .bt.json files in ./Gamedata/BehaviorTree
     SubGraph,      ///< .ats files in ./Gamedata/VisualScript and ./Blueprint
     EntityPrefab,  ///< .prefab.json files in ./Gamedata/EntityPrefab
+    AnimationBank, ///< .tsx / bank json files for animation banks
+    AnimationGraph, ///< .ani.runtime.json animation graph exports
     Audio,         ///< Future: .ogg, .wav files
     Tileset        ///< Future: .tsj tileset files
 };
@@ -56,7 +58,7 @@ public:
      * @brief Constructs a file picker modal for the given file type.
      * @param fileType Type of files to browse (BehaviorTree, SubGraph, etc.)
      */
-    explicit FilePickerModal(FilePickerType fileType);
+    explicit FilePickerModal(FilePickerType fileType, const std::string& instanceId = "");
     ~FilePickerModal() = default;
 
     // ====================================================================
@@ -122,6 +124,7 @@ private:
     // ====================================================================
 
     FilePickerType m_fileType;              ///< Type of files to browse
+    std::string m_instanceId;               ///< Unique ImGui ID suffix for this modal
     bool m_isOpen = false;                  ///< Is modal currently visible
     bool m_confirmed = false;               ///< Did user click Select
     std::string m_selectedFile = "";        ///< Full path to selected file

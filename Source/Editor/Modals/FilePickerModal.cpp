@@ -27,8 +27,9 @@ namespace Olympe {
 // Constructor
 // ============================================================================
 
-FilePickerModal::FilePickerModal(FilePickerType fileType)
+FilePickerModal::FilePickerModal(FilePickerType fileType, const std::string& instanceId)
     : m_fileType(fileType)
+    , m_instanceId(instanceId)
 {
     // Initialize path to default directory for this file type
     m_currentPath = GetDefaultDirectory();
@@ -82,9 +83,9 @@ void FilePickerModal::Render()
     ImGui::SetNextWindowSize(ImVec2(900.0f, 600.0f), ImGuiCond_Appearing);
     ImGui::SetNextWindowSizeConstraints(ImVec2(600.0f, 400.0f), ImVec2(1400.0f, 900.0f));
 
-    bool open = true;
     std::string title = GetModalTitle();
-    if (ImGui::BeginPopupModal(title.c_str(), &open, ImGuiWindowFlags_AlwaysAutoResize))
+    ImGui::OpenPopup(title.c_str());
+    if (ImGui::BeginPopupModal(title.c_str(), &m_isOpen, ImGuiWindowFlags_AlwaysAutoResize))
     {
         // Description
         ImGui::TextColored(ImVec4(0.8f, 0.95f, 1.0f, 1.0f), "%s", GetDescriptionText().c_str());
@@ -97,14 +98,16 @@ void FilePickerModal::Render()
         ImGui::TextDisabled("Path:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(-100.0f);
-        if (ImGui::InputText("##path", m_pathBuffer, sizeof(m_pathBuffer)))
+        std::string pathId = "##path_" + m_instanceId;
+        if (ImGui::InputText(pathId.c_str(), m_pathBuffer, sizeof(m_pathBuffer)))
         {
             m_currentPath = m_pathBuffer;
             RefreshFileList();
         }
 
         ImGui::SameLine();
-        if (ImGui::Button("Refresh##refresh", ImVec2(90, 0)))
+        std::string refreshId = "Refresh##refresh_" + m_instanceId;
+        if (ImGui::Button(refreshId.c_str(), ImVec2(90, 0)))
         {
             RefreshFileList();
         }
@@ -119,8 +122,7 @@ void FilePickerModal::Render()
         ImGui::SameLine();
         ImGui::SetNextItemWidth(150.0f);
 
-        // Build filter options based on file type
-        const char* filterOptions[] = { "All (*.*)", "Type 1", "Type 2", "Type 3" };
+        const char* filterOptions[5] = { "All (*.*)", "", "", "", "" };
         int filterCount = 1;
 
         if (m_fileType == FilePickerType::BehaviorTree)
@@ -136,8 +138,22 @@ void FilePickerModal::Render()
             filterOptions[2] = "All Files (*.*)";
             filterCount = 3;
         }
+        else if (m_fileType == FilePickerType::AnimationBank)
+        {
+            filterOptions[1] = "Animation Bank (*.tsx)";
+            filterOptions[2] = "Animation Bank JSON (*.json)";
+            filterOptions[3] = "All Files (*.*)";
+            filterCount = 4;
+        }
+        else if (m_fileType == FilePickerType::AnimationGraph)
+        {
+            filterOptions[1] = "Animation Graph (*.ani.runtime.json)";
+            filterOptions[2] = "All Files (*.*)";
+            filterCount = 3;
+        }
 
-        if (ImGui::Combo("##filter", &m_selectedFilterIndex, filterOptions, filterCount))
+        std::string filterId = "##filter_" + m_instanceId;
+        if (ImGui::Combo(filterId.c_str(), &m_selectedFilterIndex, filterOptions, filterCount))
         {
             // Update filter based on selection
             if (m_fileType == FilePickerType::BehaviorTree)
@@ -153,6 +169,19 @@ void FilePickerModal::Render()
                 else if (m_selectedFilterIndex == 1) m_currentFilter = ".ats";
                 else m_currentFilter = "*";
             }
+            else if (m_fileType == FilePickerType::AnimationBank)
+            {
+                if (m_selectedFilterIndex == 0) m_currentFilter = "*";
+                else if (m_selectedFilterIndex == 1) m_currentFilter = ".tsx";
+                else if (m_selectedFilterIndex == 2) m_currentFilter = ".json";
+                else m_currentFilter = "*";
+            }
+            else if (m_fileType == FilePickerType::AnimationGraph)
+            {
+                if (m_selectedFilterIndex == 0) m_currentFilter = "*";
+                else if (m_selectedFilterIndex == 1) m_currentFilter = ".ani.runtime.json";
+                else m_currentFilter = "*";
+            }
             else
             {
                 m_currentFilter = "*";
@@ -164,7 +193,8 @@ void FilePickerModal::Render()
         ImGui::TextDisabled("Search:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(-1.0f);
-        ImGui::InputText("##search", m_searchBuffer, sizeof(m_searchBuffer));
+        std::string searchId = "##search_" + m_instanceId;
+        ImGui::InputText(searchId.c_str(), m_searchBuffer, sizeof(m_searchBuffer));
 
         ImGui::Separator();
 
@@ -172,11 +202,13 @@ void FilePickerModal::Render()
         // Files and Folders (Split Panel)
         // ====================================================================
 
-        ImGui::BeginChild("##file_browser", ImVec2(0, 300), true);
+        std::string browserId = "##file_browser_" + m_instanceId;
+        ImGui::BeginChild(browserId.c_str(), ImVec2(0, 300), true);
         {
             // Left column: Folders
             float folderWidth = 150.0f;
-            ImGui::BeginChild("##folders", ImVec2(folderWidth, -1), true);
+            std::string foldersId = "##folders_" + m_instanceId;
+            ImGui::BeginChild(foldersId.c_str(), ImVec2(folderWidth, -1), true);
             ImGui::TextDisabled("Folders:");
 
             // Parent directory ".."
@@ -211,7 +243,8 @@ void FilePickerModal::Render()
 
         // Right column: Files
         ImGui::SameLine();
-        ImGui::BeginChild("##files", ImVec2(0, -1), true);
+        std::string filesId = "##files_" + m_instanceId;
+        ImGui::BeginChild(filesId.c_str(), ImVec2(0, -1), true);
         ImGui::TextDisabled("Available Files:");
 
         RenderFileList();
@@ -246,12 +279,6 @@ void FilePickerModal::Render()
 
         ImGui::EndPopup();
     }
-
-    if (!open)
-    {
-        m_isOpen = false;
-        ImGui::OpenPopup(title.c_str());
-    }
 }
 
 // ============================================================================
@@ -268,6 +295,10 @@ std::string FilePickerModal::GetDefaultDirectory() const
             return "./Gamedata/VisualScript";  // Changed from "Blueprints" to match new structure
         case FilePickerType::EntityPrefab:
             return "./Gamedata/EntityPrefab";
+        case FilePickerType::AnimationBank:
+            return "./Gamedata/Animation/AnimationBanks";
+        case FilePickerType::AnimationGraph:
+            return "./Blueprints";
         case FilePickerType::Audio:
             return "./Gamedata/Audio";
         case FilePickerType::Tileset:
@@ -284,9 +315,13 @@ std::string FilePickerModal::GetFilePattern() const
         case FilePickerType::BehaviorTree:
             return ".bt.json";
         case FilePickerType::SubGraph:
-            return ".ats.json";  // Changed to include .json extension
+            return ".ats.json";
         case FilePickerType::EntityPrefab:
             return ".prefab.json";
+        case FilePickerType::AnimationBank:
+            return ".tsx";
+        case FilePickerType::AnimationGraph:
+            return ".ani.runtime.json";
         case FilePickerType::Audio:
             return ".ogg";
         case FilePickerType::Tileset:
@@ -301,17 +336,21 @@ std::string FilePickerModal::GetModalTitle() const
     switch (m_fileType)
     {
         case FilePickerType::BehaviorTree:
-            return "Select BehaviorTree File##filepicker_bt";
+            return ("Select BehaviorTree File##filepicker_bt_" + m_instanceId);
         case FilePickerType::SubGraph:
-            return "Select VisualScript File##filepicker_ats";
+            return ("Select VisualScript File##filepicker_ats_" + m_instanceId);
         case FilePickerType::EntityPrefab:
-            return "Select EntityPrefab File##filepicker_prefab";
+            return ("Select EntityPrefab File##filepicker_prefab_" + m_instanceId);
+        case FilePickerType::AnimationBank:
+            return ("Select Animation Bank File##filepicker_animbank_" + m_instanceId);
+        case FilePickerType::AnimationGraph:
+            return ("Select Animation Graph File##filepicker_animgraph_" + m_instanceId);
         case FilePickerType::Audio:
-            return "Select Audio File##filepicker_audio";
+            return ("Select Audio File##filepicker_audio_" + m_instanceId);
         case FilePickerType::Tileset:
-            return "Select Tileset File##filepicker_tileset";
+            return ("Select Tileset File##filepicker_tileset_" + m_instanceId);
         default:
-            return "Select File##filepicker";
+            return ("Select File##filepicker_" + m_instanceId);
     }
 }
 
@@ -325,6 +364,10 @@ std::string FilePickerModal::GetDescriptionText() const
             return "Select a VisualScript file (.ats.json) to use as SubGraph";
         case FilePickerType::EntityPrefab:
             return "Select an EntityPrefab file (.prefab.json) to load";
+        case FilePickerType::AnimationBank:
+            return "Select an Animation Bank file (.tsx) to load";
+        case FilePickerType::AnimationGraph:
+            return "Select an Animation Graph export (.ani.runtime.json) to load";
         case FilePickerType::Audio:
             return "Select an Audio file (.ogg)";
         case FilePickerType::Tileset:
@@ -493,7 +536,7 @@ void FilePickerModal::RenderFileList()
 
     ImGui::TextDisabled("Available Files:");
 
-    ImGui::BeginChild("##file_list", ImVec2(0, 250), true);
+    ImGui::BeginChild(("##file_list_" + m_instanceId).c_str(), ImVec2(0, 250), true);
 
     for (int i = 0; i < static_cast<int>(filteredFiles.size()); ++i)
     {

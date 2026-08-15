@@ -265,6 +265,7 @@
     <ClCompile Include="Source\CollisionSystems\Collision_Intersections.cpp" />
     <ClCompile Include="Source\CollisionSystems\Collision_Primitives.cpp" />
     <ClCompile Include="Source\CollisionSystems\Collision_SpatialProxyRegistry.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\AnimationGraphCanvas.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -564,6 +565,8 @@
     <ClInclude Include="Source\CollisionSystems\Collision_Intersections.h" />
     <ClInclude Include="Source\CollisionSystems\Collision_Primitives.h" />
     <ClInclude Include="Source\CollisionSystems\Collision_SpatialProxyRegistry.h" />
+    <ClInclude Include="Source\BlueprintEditor\AnimationGraphRenderer.h" />
+    <ClInclude Include="Source\BlueprintEditor\AnimationGraphCanvas.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Olympe Engine.rc" />

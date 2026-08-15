@@ -221,6 +221,9 @@
     <ClCompile Include="..\Source\BlueprintEditor\ConditionRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\OperatorRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphDocument.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphCanvas.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEditor\AIEditorClipboard.h" />
@@ -372,6 +375,9 @@
     <ClInclude Include="..\Source\TiledLevelLoader\include\TilesetParser.h" />
     <ClInclude Include="..\Source\TiledLevelLoader\include\TiledDecoder.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\AnimationGraphDocument.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\AnimationGraphRenderer.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\AnimationGraphCanvas.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />

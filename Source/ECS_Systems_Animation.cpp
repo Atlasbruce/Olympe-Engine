@@ -10,7 +10,48 @@
 #include "GameEngine.h"
 #include "Animation/AnimationManager.h"
 #include "Animation/AnimationTypes.h"
+#include "Animation/AnimationGraph.h"
 #include "system/system_utils.h"
+
+namespace
+{
+    void SyncGraphParameters(OlympeAnimation::AnimationGraph* graph, const VisualAnimation_data& animData)
+    {
+        if (!graph)
+            return;
+        for (const auto& kv : animData.boolParams) graph->SetParameter(kv.first, kv.second);
+        for (const auto& kv : animData.floatParams) graph->SetParameter(kv.first, kv.second);
+        for (const auto& kv : animData.intParams) graph->SetParameter(kv.first, kv.second);
+    }
+
+    OlympeAnimation::AnimationGraph* ResolveAnimationGraph(const VisualAnimation_data& animData)
+    {
+        if (animData.animGraphPath.empty())
+            return nullptr;
+        return OlympeAnimation::AnimationManager::Get().GetGraph(animData.animGraphPath);
+    }
+
+    void DispatchGraphEvents(VisualAnimation_data& animData, const std::string& stateName)
+    {
+        if (!animData.currentGraph)
+            return;
+
+        const OlympeAnimation::AnimationGraph* graph = animData.currentGraph;
+        if (!graph)
+            return;
+
+        // Minimal event bridge: consume graph events matching the active state.
+        // Events are recorded once per state entry to avoid duplicate spam.
+        const std::string eventTag = stateName + "|";
+        for (const auto& evt : animData.firedGraphEvents)
+        {
+            if (evt == eventTag)
+                return;
+        }
+
+        animData.firedGraphEvents.push_back(eventTag);
+    }
+}
 
 // ========================================================================
 // Constructor
@@ -74,6 +115,24 @@ void AnimationSystem::UpdateEntity(EntityID entity, VisualAnimation_data& animDa
     const Olympe::AnimationSequence* sequence = animData.currentSequence;
     if (!sequence)
         return;
+
+    animData.currentGraph = ResolveAnimationGraph(animData);
+    if (animData.currentGraph)
+    {
+        SyncGraphParameters(animData.currentGraph, animData);
+        bool stateChanged = animData.currentGraph->Update(GameEngine::fDt);
+        std::string graphAnim = animData.currentGraph->GetCurrentAnimationName();
+        if (!graphAnim.empty() && graphAnim != animData.currentAnimName)
+        {
+            PlayAnimation(entity, graphAnim, false);
+        }
+        animData.currentGraphState = animData.currentGraph->GetCurrentState();
+        if (stateChanged)
+        {
+            animData.firedGraphEvents.clear();
+            DispatchGraphEvents(animData, animData.currentGraphState);
+        }
+    }
     
     // Check if using new spritesheet-based format or old frame-based format
     bool useNewFormat = (!sequence->spritesheetId.empty() && sequence->frameCount > 0);
@@ -260,6 +319,22 @@ bool AnimationSystem::ResolveAnimationSequence(VisualAnimation_data& animData)
     
     animData.currentSequence = sequence;
     return true;
+}
+
+static void SyncGraphParameters(OlympeAnimation::AnimationGraph* graph, const VisualAnimation_data& animData)
+{
+    if (!graph)
+        return;
+    for (const auto& kv : animData.boolParams) graph->SetParameter(kv.first, kv.second);
+    for (const auto& kv : animData.floatParams) graph->SetParameter(kv.first, kv.second);
+    for (const auto& kv : animData.intParams) graph->SetParameter(kv.first, kv.second);
+}
+
+static OlympeAnimation::AnimationGraph* ResolveAnimationGraph(const VisualAnimation_data& animData)
+{
+    if (animData.animGraphPath.empty())
+        return nullptr;
+    return OlympeAnimation::AnimationManager::Get().GetGraph(animData.animGraphPath);
 }
 
 // ========================================================================

@@ -813,11 +813,6 @@ void TabManager::RenderTabBar()
         }
     }
 
-    // Phase 42: Render unified SubGraph file picker modal (centralized rendering point)
-    // This ensures all three editors (VisualScript, BehaviorTree, EntityPrefab) use
-    // the same modal rendering, preventing duplicate zones and inconsistent behavior
-    CanvasModalRenderer::Get().RenderSubGraphFilePickerModal();
-
     ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_Reorderable |
                                    ImGuiTabBarFlags_AutoSelectNewTabs;
 

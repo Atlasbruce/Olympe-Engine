@@ -23,6 +23,7 @@ enum class SaveFileType
 {
     BehaviorTree,  ///< .bt.json files
     Blueprint,     ///< .ats files (SubGraph/VisualScript)
+    AnimationGraph, ///< .ani.json files (Animation Graph)
     EntityPrefab,  ///< .pref.json files (Entity Prefab)
     Audio          ///< .ogg files (audio assets)
 };

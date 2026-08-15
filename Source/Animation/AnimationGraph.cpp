@@ -38,6 +38,10 @@ namespace OlympeAnimation
             m_graphName = JsonHelper::GetString(j, "graphName", "unknown");
             m_description = JsonHelper::GetString(j, "description", "");
             m_animationBankPath = JsonHelper::GetString(j, "animationBankPath", "");
+            if (m_animationBankPath.empty())
+                m_animationBankPath = JsonHelper::GetString(j, "animationBankRef", "");
+            if (m_animationBankPath.empty())
+                m_animationBankPath = JsonHelper::GetString(j, "bankRef", "");
             m_defaultState = JsonHelper::GetString(j, "defaultState", "Idle");
             m_currentState = m_defaultState;
 
@@ -106,6 +110,7 @@ namespace OlympeAnimation
                     trans.fromState = JsonHelper::GetString(transJson, "from", "");
                     trans.toState = JsonHelper::GetString(transJson, "to", "");
                     trans.transitionTime = JsonHelper::GetFloat(transJson, "transitionTime", 0.1f);
+                    trans.priority = JsonHelper::GetInt(transJson, "priority", 0);
 
                     // Parse conditions
                     if (transJson.contains("conditions") && transJson["conditions"].is_array())
@@ -236,6 +241,7 @@ namespace OlympeAnimation
 
     bool AnimationGraph::Update(float deltaTime)
     {
+        (void)deltaTime;
         const Transition* validTransition = FindValidTransition();
         if (validTransition)
         {
@@ -315,28 +321,22 @@ namespace OlympeAnimation
 
     const Transition* AnimationGraph::FindValidTransition() const
     {
-        // Check transitions sorted by priority (higher priority first)
-        // First check "ANY" transitions, then specific transitions
-        const Transition* anyTransition = nullptr;
-
+        const Transition* bestTransition = nullptr;
         for (const auto& trans : m_transitions)
         {
-            if (trans.fromState == "ANY")
+            const bool matchesState = (trans.fromState == "ANY" || trans.fromState == m_currentState);
+            if (!matchesState)
+                continue;
+
+            if (!EvaluateTransition(trans))
+                continue;
+
+            if (!bestTransition || trans.priority > bestTransition->priority)
             {
-                if (EvaluateTransition(trans))
-                {
-                    if (!anyTransition)
-                        anyTransition = &trans;
-                }
-            }
-            else if (trans.fromState == m_currentState)
-            {
-                if (EvaluateTransition(trans))
-                    return &trans; // Specific transitions take priority
+                bestTransition = &trans;
             }
         }
-
-        return anyTransition; // Return ANY transition if no specific transition found
+        return bestTransition;
     }
 
 } // namespace OlympeAnimation

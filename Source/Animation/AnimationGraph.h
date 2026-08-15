@@ -41,6 +41,7 @@ namespace OlympeAnimation
         std::string fromState;           // Source state (or "ANY" for any state)
         std::string toState;             // Target state
         float transitionTime = 0.1f;     // Blend duration in seconds
+        int priority = 0;                // Higher priority transitions win first
         std::vector<Condition> conditions; // Conditions that must be met
 
         Transition() = default;

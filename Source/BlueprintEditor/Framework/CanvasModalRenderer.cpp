@@ -144,6 +144,84 @@ void CanvasModalRenderer::CloseBehaviorTreeModal()
     m_cachedBehaviorTreeSelection = "";
 }
 
+void CanvasModalRenderer::OpenAnimationBankFilePickerModal(const std::string& initialPath)
+{
+    m_animationBankModal.Open(initialPath);
+    m_animationBankConfirmed = false;
+    m_cachedAnimationBankSelection = "";
+}
+
+void CanvasModalRenderer::RenderAnimationBankFilePickerModal()
+{
+    m_animationBankModal.Render();
+    if (!m_animationBankConfirmed && m_animationBankModal.IsConfirmed())
+    {
+        m_animationBankConfirmed = true;
+        m_cachedAnimationBankSelection = m_animationBankModal.GetSelectedFile();
+    }
+}
+
+bool CanvasModalRenderer::IsAnimationBankModalConfirmed() const
+{
+    return m_animationBankConfirmed;
+}
+
+std::string CanvasModalRenderer::GetSelectedAnimationBankFile() const
+{
+    return m_cachedAnimationBankSelection;
+}
+
+bool CanvasModalRenderer::IsAnimationBankModalOpen() const
+{
+    return m_animationBankModal.IsOpen();
+}
+
+void CanvasModalRenderer::CloseAnimationBankModal()
+{
+    m_animationBankModal.Close();
+    m_animationBankConfirmed = false;
+    m_cachedAnimationBankSelection = "";
+}
+
+void CanvasModalRenderer::OpenAnimationGraphFilePickerModal(const std::string& initialPath)
+{
+    m_animationGraphModal.Open(initialPath);
+    m_animationGraphConfirmed = false;
+    m_cachedAnimationGraphSelection = "";
+}
+
+void CanvasModalRenderer::RenderAnimationGraphFilePickerModal()
+{
+    m_animationGraphModal.Render();
+    if (!m_animationGraphConfirmed && m_animationGraphModal.IsConfirmed())
+    {
+        m_animationGraphConfirmed = true;
+        m_cachedAnimationGraphSelection = m_animationGraphModal.GetSelectedFile();
+    }
+}
+
+bool CanvasModalRenderer::IsAnimationGraphModalConfirmed() const
+{
+    return m_animationGraphConfirmed;
+}
+
+std::string CanvasModalRenderer::GetSelectedAnimationGraphFile() const
+{
+    return m_cachedAnimationGraphSelection;
+}
+
+bool CanvasModalRenderer::IsAnimationGraphModalOpen() const
+{
+    return m_animationGraphModal.IsOpen();
+}
+
+void CanvasModalRenderer::CloseAnimationGraphModal()
+{
+    m_animationGraphModal.Close();
+    m_animationGraphConfirmed = false;
+    m_cachedAnimationGraphSelection = "";
+}
+
 // ============================================================================
 // Save File Picker Modal - Public Interface
 // ============================================================================

@@ -31,6 +31,9 @@
     <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphDocument.cpp">
       <Filter>Source Files\BlueprintEditor</Filter>
     </ClCompile>
+    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphCanvas.cpp">
+      <Filter>Source Files\BlueprintEditor</Filter>
+    </ClCompile>
     <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphRenderer.cpp">
       <Filter>Source Files\BlueprintEditor</Filter>
     </ClCompile>

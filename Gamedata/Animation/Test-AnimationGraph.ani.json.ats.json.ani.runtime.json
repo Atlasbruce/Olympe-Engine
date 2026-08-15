@@ -1,0 +1,551 @@
+{
+  "animationBankRef": "./Gamedata/Animation/AnimationBanks/ani_bank_zombie.tsx",
+  "defaultState": "Idle",
+  "events": [],
+  "graphName": "Untitled Animation Graph",
+  "prefabRef": "",
+  "states": [
+    {
+      "animation": "ani_zombie_idle_s",
+      "loop": true,
+      "name": "ani_zombie_idle_s",
+      "priority": 0,
+      "speed": 1,
+      "x": 703,
+      "y": 438
+    },
+    {
+      "animation": "ani_zombie_idle_sw",
+      "loop": true,
+      "name": "ani_zombie_idle_sw",
+      "priority": 0,
+      "speed": 1,
+      "x": 645,
+      "y": 71
+    },
+    {
+      "animation": "ani_zombie_idle_w",
+      "loop": true,
+      "name": "ani_zombie_idle_w",
+      "priority": 0,
+      "speed": 1,
+      "x": 357,
+      "y": 233
+    },
+    {
+      "animation": "ani_zombie_idle_nw",
+      "loop": true,
+      "name": "ani_zombie_idle_nw",
+      "priority": 0,
+      "speed": 1,
+      "x": 99,
+      "y": 430
+    },
+    {
+      "animation": "ani_zombie_idle_n",
+      "loop": true,
+      "name": "ani_zombie_idle_n",
+      "priority": 0,
+      "speed": 1,
+      "x": 387,
+      "y": 366
+    },
+    {
+      "animation": "ani_zombie_idle_ne",
+      "loop": true,
+      "name": "ani_zombie_idle_ne",
+      "priority": 0,
+      "speed": 1,
+      "x": 598,
+      "y": 252
+    },
+    {
+      "animation": "ani_zombie_idle_e",
+      "loop": true,
+      "name": "ani_zombie_idle_e",
+      "priority": 0,
+      "speed": 1,
+      "x": 379,
+      "y": 95
+    },
+    {
+      "animation": "ani_zombie_idle_se",
+      "loop": true,
+      "name": "ani_zombie_idle_se",
+      "priority": 0,
+      "speed": 1,
+      "x": 101,
+      "y": 130
+    },
+    {
+      "animation": "ani_zombie_idle_n",
+      "loop": true,
+      "name": "ani_zombie_idle_n_1",
+      "priority": 0,
+      "speed": 1,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "animation": "ani_zombie_idle_n",
+      "loop": true,
+      "name": "ani_zombie_idle_n_2",
+      "priority": 0,
+      "speed": 1,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "animation": "ani_zombie_idle_e",
+      "loop": true,
+      "name": "ani_zombie_idle_e_1",
+      "priority": 0,
+      "speed": 1,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "animation": "ani_zombie_idle_n",
+      "loop": true,
+      "name": "ani_zombie_idle_n_3",
+      "priority": 0,
+      "speed": 1,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "transitions": [
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_s",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_s",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_sw",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_sw",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_w",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_w",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_nw",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_nw",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_n",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_n",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_ne",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_ne",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_e",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_e",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_se",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_se",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_n_1",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_n_1",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_n_2",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_n_2",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_e_1",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_e_1",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_n_3",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_n_3",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_s",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_s",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_sw",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_sw",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_w",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_w",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_nw",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_nw",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_n",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_n",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_ne",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_ne",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_e",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_e",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_se",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_se",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_n_1",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_n_1",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_n_2",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_n_2",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_e_1",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_e_1",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_n_3",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_n_3",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_s",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_s",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_sw",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_sw",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_w",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_w",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_nw",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_nw",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_n",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_n",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_ne",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_ne",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_e",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_e",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_se",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_se",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_n_1",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_n_1",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_n_2",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_n_2",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_e_1",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_e_1",
+      "to": "Idle",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "Idle",
+      "to": "ani_zombie_idle_n_3",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_n_3",
+      "to": "Idle",
+      "transitionTime": 0.1
+    }
+  ]
+}
