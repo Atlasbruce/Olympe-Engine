@@ -2,7 +2,7 @@
   "animationBankRef": "./Gamedata/Animation/AnimationBanks/ani_bank_zombie.tsx",
   "animationGraphRef": "",
   "blueprintType": "AnimationGraph",
-  "defaultState": "ani_zombie_idle_s",
+  "defaultState": "ani_zombie_idle_w",
   "description": "",
   "events": [
     {
@@ -32,8 +32,8 @@
       "nodeId": 1,
       "priority": 0,
       "speed": 1,
-      "x": 151,
-      "y": 208
+      "x": 104,
+      "y": 151
     },
     {
       "animation": "ani_zombie_idle_w",
@@ -42,8 +42,8 @@
       "nodeId": 2,
       "priority": 0,
       "speed": 1,
-      "x": 419,
-      "y": 370
+      "x": 446,
+      "y": 301
     },
     {
       "animation": "ani_zombie_idle_e",
@@ -52,8 +52,8 @@
       "nodeId": 3,
       "priority": 0,
       "speed": 1,
-      "x": 713,
-      "y": 189
+      "x": 702,
+      "y": 168
     },
     {
       "animation": "ani_zombie_idle_w",
@@ -62,8 +62,18 @@
       "nodeId": 1,
       "priority": 0,
       "speed": 1,
-      "x": 425,
-      "y": 57
+      "x": 452,
+      "y": 40
+    },
+    {
+      "animation": "ani_zombie_idle_nw",
+      "loop": true,
+      "name": "ani_zombie_idle_nw",
+      "nodeId": 1,
+      "priority": 0,
+      "speed": 1,
+      "x": 911,
+      "y": 342
     }
   ],
   "transitions": [
@@ -89,6 +99,18 @@
       "conditions": [],
       "from": "ani_zombie_idle_w_2",
       "to": "ani_zombie_idle_e",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_w_2",
+      "to": "ani_zombie_idle_e",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_e",
+      "to": "ani_zombie_idle_nw",
       "transitionTime": 0.1
     }
   ]

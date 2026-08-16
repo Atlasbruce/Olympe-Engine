@@ -548,6 +548,12 @@ void AnimationGraphRenderer::RenderGraphCanvas()
     bool hovered = ImGui::IsItemHovered();
     const ImVec2 mouse = ImGui::GetIO().MousePos;
     const ImGuiPayload* activePayload = ImGui::GetDragDropPayload();
+
+    // Phase 53: Update transition preview endpoint when dragging
+    if (m_hasPendingTransitionDrag)
+    {
+        m_transitionPreviewEnd = mouse;
+    }
     bool isClipPayload = activePayload && activePayload->IsDataType("ANIMGRAPH_CLIP");
 
     // Drag/drop: accept an animation clip dragged from the palette (RenderStateEditorPanel)
@@ -591,31 +597,34 @@ void AnimationGraphRenderer::RenderGraphCanvas()
     }
 
     nlohmann::json& states = data["states"];
+    // Phase 54: Render all transitions with directional arrows
     for (size_t i = 0; i < data["transitions"].size(); ++i)
     {
-        const nlohmann::json& tr = data["transitions"][i];
-        std::string from = tr.value("from", "");
-        std::string to = tr.value("to", "");
-        int fi = FindStateIndexByName(from);
-        int ti = FindStateIndexByName(to);
-        if (fi < 0 || ti < 0) continue;
-        float fx = states[fi].value("x", 0.0f);
-        float fy = states[fi].value("y", 0.0f);
-        float tx = states[ti].value("x", 0.0f);
-        float ty = states[ti].value("y", 0.0f);
-        ImVec2 p1(canvasOrigin.x + fx + nodeW, canvasOrigin.y + fy + nodeH * 0.5f);
-        ImVec2 p2(canvasOrigin.x + tx, canvasOrigin.y + ty + nodeH * 0.5f);
-        ImVec2 c1(p1.x + 60.0f, p1.y);
-        ImVec2 c2(p2.x - 60.0f, p2.y);
-        dl->PathLineTo(p1);
-        dl->PathBezierCubicCurveTo(c1, c2, p2, 20);
-        ImU32 color = IM_COL32(255, 220, 80, 255);
-        if (m_selectedTransitionIndex == static_cast<int>(i))
-            color = IM_COL32(120, 200, 255, 255);
-        dl->PathStroke(color, false, (m_selectedTransitionIndex == static_cast<int>(i)) ? 3.0f : 2.0f);
+        RenderSingleTransition(i, canvasOrigin);
+    }
 
-        if (hovered)
+    // Phase 54: Hit-test transitions for selection/context menu
+    if (hovered)
+    {
+        for (size_t i = 0; i < data["transitions"].size(); ++i)
         {
+            const nlohmann::json& tr = data["transitions"][i];
+            std::string from = tr.value("from", "");
+            std::string to = tr.value("to", "");
+            int fi = FindStateIndexByName(from);
+            int ti = FindStateIndexByName(to);
+            if (fi < 0 || ti < 0) continue;
+
+            float fx = states[fi].value("x", 0.0f);
+            float fy = states[fi].value("y", 0.0f);
+            float tx = states[ti].value("x", 0.0f);
+            float ty = states[ti].value("y", 0.0f);
+
+            ImVec2 p1(canvasOrigin.x + fx + nodeW, canvasOrigin.y + fy + nodeH * 0.5f);
+            ImVec2 p2(canvasOrigin.x + tx, canvasOrigin.y + ty + nodeH * 0.5f);
+            ImVec2 c1(p1.x + 60.0f, p1.y);
+            ImVec2 c2(p2.x - 60.0f, p2.y);
+
             float dist = DistanceToCubicBezier(mouse, p1, c1, c2, p2);
             if (dist < 8.0f)
             {
@@ -762,6 +771,9 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         dl->AddCircleFilled(inPortPos, portRadius, IM_COL32(90, 160, 220, 255));
         dl->AddCircle(inPortPos, portRadius, IM_COL32(20, 20, 20, 255), 0, 1.5f);
     }
+
+    // Phase 53: Render transition preview line while dragging
+    RenderTransitionPreview();
 
     if (ImGui::BeginPopup("AnimStateContextMenu"))
     {
@@ -1122,6 +1134,207 @@ void AnimationGraphRenderer::RunGraph()
 {
     m_showRunPreview = true;
     m_logs.push_back("Run preview started");
+}
+
+void AnimationGraphRenderer::RenderTransitionPreview()
+{
+    // Phase 53: Render transition preview line while dragging
+    if (!m_hasPendingTransitionDrag || m_transitionFromIndex < 0)
+        return;
+
+    nlohmann::json& data = m_document->GetDataMutable();
+    if (!data.contains("states") || !data["states"].is_array())
+        return;
+
+    auto& states = data["states"];
+    if (m_transitionFromIndex >= static_cast<int>(states.size()))
+        return;
+
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+
+    // Use the saved m_linkDragStartPos (exact port position clicked) instead of recalculating
+    // This ensures the preview line starts from the correct port location
+    ImVec2 sourcePortPos = m_linkDragStartPos;
+
+    // Yellow bezier curve from source port to mouse position
+    float controlPointOffset = (m_transitionPreviewEnd.x - sourcePortPos.x) * 0.4f;
+    ImVec2 cp1(sourcePortPos.x + controlPointOffset, sourcePortPos.y);
+    ImVec2 cp2(m_transitionPreviewEnd.x - controlPointOffset, m_transitionPreviewEnd.y);
+
+    // Draw bezier curve preview (yellow)
+    dl->PathLineTo(sourcePortPos);
+    dl->PathBezierCubicCurveTo(cp1, cp2, m_transitionPreviewEnd, 32);
+    dl->PathStroke(IM_COL32(255, 200, 0, 255), false, 3.0f);
+
+    // Optional: Pulsing highlight on hovered target state
+    if (ImGui::IsMouseDown(0))  // Only while mouse is held
+    {
+        const float nodeW = 180.0f;
+        const float nodeH = 70.0f;
+        const float portRadius = 6.0f;
+        const ImVec2 canvasOrigin = ImGui::GetCursorScreenPos();
+        ImVec2 mousePos = ImGui::GetIO().MousePos;
+
+        // Check each state for hover
+        for (size_t i = 0; i < states.size(); ++i)
+        {
+            if (static_cast<int>(i) == m_transitionFromIndex)
+                continue;  // Skip self
+
+            const auto& targetState = states[i];
+            float tx = targetState.value("x", 100.0f);
+            float ty = targetState.value("y", 100.0f);
+
+            ImVec2 nodeTopLeft(canvasOrigin.x + tx, canvasOrigin.y + ty);
+            ImVec2 nodeBottomRight(nodeTopLeft.x + nodeW, nodeTopLeft.y + nodeH);
+
+            // Check if mouse is over this node
+            if (mousePos.x >= nodeTopLeft.x && mousePos.x <= nodeBottomRight.x &&
+                mousePos.y >= nodeTopLeft.y && mousePos.y <= nodeBottomRight.y)
+            {
+                // Pulsing highlight on target input port (left side, middle)
+                float t = ImGui::GetTime();
+                float pulse = 0.5f + 0.5f * sinf(t * 6.0f);
+                float highlightRadius = 8.0f + pulse * 4.0f;
+                ImU32 highlightCol = ImGui::GetColorU32(ImVec4(0.2f, 0.6f, 1.0f, 0.5f + 0.5f * pulse));
+
+                ImVec2 targetInputPort(nodeTopLeft.x, nodeTopLeft.y + nodeH * 0.5f);
+                dl->AddCircleFilled(targetInputPort, highlightRadius, highlightCol);
+                break;
+            }
+        }
+    }
+}
+
+// Phase 54: Evaluate cubic Bezier at parameter t in [0,1]
+// B(t) = (1-t)³P0 + 3(1-t)²t·P1 + 3(1-t)t²·P2 + t³·P3
+ImVec2 AnimationGraphRenderer::EvaluateBezier(const ImVec2& p0, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, float t) const
+{
+    float mt = 1.0f - t;
+    float mt2 = mt * mt;
+    float mt3 = mt2 * mt;
+    float t2 = t * t;
+    float t3 = t2 * t;
+    float w0 = mt3;
+    float w1 = 3.0f * mt2 * t;
+    float w2 = 3.0f * mt * t2;
+    float w3 = t3;
+
+    return ImVec2(
+        w0 * p0.x + w1 * p1.x + w2 * p2.x + w3 * p3.x,
+        w0 * p0.y + w1 * p1.y + w2 * p2.y + w3 * p3.y
+    );
+}
+
+// Phase 54: Calculate tangent (derivative) at parameter t
+// B'(t) = 3(1-t)²(P1-P0) + 6(1-t)t(P2-P1) + 3t²(P3-P2)
+ImVec2 AnimationGraphRenderer::GetBezierTangent(const ImVec2& p0, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, float t) const
+{
+    float mt = 1.0f - t;
+    float mt2 = mt * mt;
+    float t2 = t * t;
+
+    ImVec2 dp1 = ImVec2(p1.x - p0.x, p1.y - p0.y);
+    ImVec2 dp2 = ImVec2(p2.x - p1.x, p2.y - p1.y);
+    ImVec2 dp3 = ImVec2(p3.x - p2.x, p3.y - p2.y);
+
+    ImVec2 tangent = ImVec2(
+        3.0f * mt2 * dp1.x + 6.0f * mt * t * dp2.x + 3.0f * t2 * dp3.x,
+        3.0f * mt2 * dp1.y + 6.0f * mt * t * dp2.y + 3.0f * t2 * dp3.y
+    );
+
+    // Normalize
+    float len = std::sqrt(tangent.x * tangent.x + tangent.y * tangent.y);
+    if (len > 0.001f)
+    {
+        tangent.x /= len;
+        tangent.y /= len;
+    }
+
+    return tangent;
+}
+
+// Phase 54: Draw arrow head pointing in tangent direction
+void AnimationGraphRenderer::DrawArrowOnCurve(ImDrawList* dl, const ImVec2& curveEnd, const ImVec2& tangent, ImU32 color, float arrowSize)
+{
+    if (!dl) return;
+
+    // Arrow back point (opposite to direction)
+    ImVec2 backPoint = ImVec2(
+        curveEnd.x - tangent.x * arrowSize,
+        curveEnd.y - tangent.y * arrowSize
+    );
+
+    // Perpendicular vector (rotate 90 degrees)
+    ImVec2 perp = ImVec2(-tangent.y, tangent.x);
+    float arrowWidth = arrowSize * 0.5f;
+
+    ImVec2 leftPoint = ImVec2(
+        backPoint.x + perp.x * arrowWidth,
+        backPoint.y + perp.y * arrowWidth
+    );
+    ImVec2 rightPoint = ImVec2(
+        backPoint.x - perp.x * arrowWidth,
+        backPoint.y - perp.y * arrowWidth
+    );
+
+    // Draw filled triangle: curveEnd, leftPoint, rightPoint
+    dl->AddTriangleFilled(curveEnd, leftPoint, rightPoint, color);
+}
+
+// Phase 54: Render a single transition with arrow and source-based color
+void AnimationGraphRenderer::RenderSingleTransition(size_t transitionIndex, const ImVec2& canvasOrigin)
+{
+    if (!m_document) return;
+
+    auto data = m_document->GetDataMutable();
+    if (data["transitions"].size() <= transitionIndex) return;
+
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    const nlohmann::json& transitions = data["transitions"];
+    const nlohmann::json& states = data["states"];
+
+    const nlohmann::json& tr = transitions[transitionIndex];
+    std::string from = tr.value("from", "");
+    std::string to = tr.value("to", "");
+
+    int fi = FindStateIndexByName(from);
+    int ti = FindStateIndexByName(to);
+    if (fi < 0 || ti < 0) return;
+
+    float fx = states[fi].value("x", 0.0f);
+    float fy = states[fi].value("y", 0.0f);
+    float tx = states[ti].value("x", 0.0f);
+    float ty = states[ti].value("y", 0.0f);
+
+    // Node dimensions
+    float nodeW = 140.0f;
+    float nodeH = 60.0f;
+
+    // Output port is on the right (from-state)
+    ImVec2 p1(canvasOrigin.x + fx + nodeW, canvasOrigin.y + fy + nodeH * 0.5f);
+    // Input port is on the left (to-state)
+    ImVec2 p2(canvasOrigin.x + tx, canvasOrigin.y + ty + nodeH * 0.5f);
+
+    // Control points for Bézier
+    ImVec2 c1(p1.x + 60.0f, p1.y);
+    ImVec2 c2(p2.x - 60.0f, p2.y);
+
+    // Draw the Bézier curve
+    dl->PathLineTo(p1);
+    dl->PathBezierCubicCurveTo(c1, c2, p2, 20);
+
+    // Phase 54: Determine color based on source port (output = orange/yellow)
+    ImU32 color = IM_COL32(255, 200, 80, 255);  // Output port default = orange
+    if (m_selectedTransitionIndex == static_cast<int>(transitionIndex))
+        color = IM_COL32(120, 200, 255, 255);  // Selected = light blue
+
+    float lineWidth = (m_selectedTransitionIndex == static_cast<int>(transitionIndex)) ? 3.0f : 2.0f;
+    dl->PathStroke(color, false, lineWidth);
+
+    // Phase 54: Draw arrow head at the end (pointing toward input)
+    ImVec2 tangent = GetBezierTangent(p1, c1, c2, p2, 0.95f);
+    DrawArrowOnCurve(dl, p2, tangent, color, 10.0f);
 }
 
 void AnimationGraphRenderer::RenderFrameworkModals()
