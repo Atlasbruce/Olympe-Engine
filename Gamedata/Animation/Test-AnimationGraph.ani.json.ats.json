@@ -4,10 +4,92 @@
   "blueprintType": "AnimationGraph",
   "defaultState": "ani_zombie_idle_s",
   "description": "",
-  "events": [],
+  "events": [
+    {
+      "name": "Event_1",
+      "state": "ani_zombie_idle_w_2",
+      "time": 0.5
+    },
+    {
+      "name": "Event 2",
+      "state": "ani_zombie_idle_e",
+      "time": 0.21
+    },
+    {
+      "name": "Event 3",
+      "state": "ani_zombie_idle_w",
+      "time": 0.34
+    }
+  ],
   "name": "Untitled Animation Graph",
   "prefabRef": "",
   "schema_version": 1,
-  "states": [],
-  "transitions": []
+  "states": [
+    {
+      "animation": "ani_zombie_idle_w",
+      "loop": true,
+      "name": "ani_zombie_idle_w",
+      "nodeId": 1,
+      "priority": 0,
+      "speed": 1,
+      "x": 151,
+      "y": 208
+    },
+    {
+      "animation": "ani_zombie_idle_w",
+      "loop": true,
+      "name": "ani_zombie_idle_w_2",
+      "nodeId": 2,
+      "priority": 0,
+      "speed": 1,
+      "x": 419,
+      "y": 370
+    },
+    {
+      "animation": "ani_zombie_idle_e",
+      "loop": true,
+      "name": "ani_zombie_idle_e",
+      "nodeId": 3,
+      "priority": 0,
+      "speed": 1,
+      "x": 713,
+      "y": 189
+    },
+    {
+      "animation": "ani_zombie_idle_w",
+      "loop": true,
+      "name": "ani_zombie_idle_w_3",
+      "nodeId": 1,
+      "priority": 0,
+      "speed": 1,
+      "x": 425,
+      "y": 57
+    }
+  ],
+  "transitions": [
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_w",
+      "to": "ani_zombie_idle_w_3",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_w",
+      "to": "ani_zombie_idle_w_2",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_w_3",
+      "to": "ani_zombie_idle_e",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "ani_zombie_idle_w_2",
+      "to": "ani_zombie_idle_e",
+      "transitionTime": 0.1
+    }
+  ]
 }

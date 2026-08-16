@@ -22,6 +22,10 @@ AnimationGraphRenderer::AnimationGraphRenderer()
     , m_selectedStateIndex(-1)
     , m_selectedTransitionIndex(-1)
     , m_selectedEventIndex(-1)
+    , m_linkStartStateIndex(-1)
+    , m_hasPendingTransitionDrag(false)
+    , m_transitionFromIndex(-1)
+    , m_linkDragStartPos(0.0f, 0.0f)
 {
     m_bankPathBuffer[0] = 0;
     m_stateNameBuffer[0] = 0;
@@ -225,7 +229,6 @@ void AnimationGraphRenderer::RenderStateEditorPanel()
             {
                 ImGui::SetDragDropPayload("ANIMGRAPH_CLIP", clips[i].c_str(), clips[i].size() + 1);
                 ImGui::Text("New state: %s", clips[i].c_str());
-                SYSTEM_LOG << "[AnimationGraphRenderer] Begin drag item=" << clips[i] << " graphType=AnimationGraph\n";
                 ImGui::EndDragDropSource();
             }
         }
@@ -349,6 +352,11 @@ void AnimationGraphRenderer::RenderMainPanel()
 
 void AnimationGraphRenderer::RenderRightPanel()
 {
+    RenderRightPanelTabs();
+}
+
+void AnimationGraphRenderer::RenderRightPanelTabs()
+{
     const nlohmann::json& data = m_document->GetData();
     std::string bankRef = "";
     std::string defaultState = "Idle";
@@ -357,18 +365,114 @@ void AnimationGraphRenderer::RenderRightPanel()
     if (data.contains("defaultState") && data["defaultState"].is_string())
         defaultState = data["defaultState"].get<std::string>();
 
-    RenderRightPanelTabs();
-}
-
-void AnimationGraphRenderer::RenderRightPanelTabs()
-{
-    if (ImGui::BeginTabBar("AnimGraphRightTabs"))
+    if (ImGui::BeginTabBar("AnimationGraphRightTabs"))
     {
         if (ImGui::BeginTabItem("Properties"))
         {
+            ImGui::Text("Animation Graph");
+            ImGui::Separator();
+            ImGui::Text("Path: %s", m_currentPath.empty() ? "(unsaved)" : m_currentPath.c_str());
+            ImGui::Text("Bank: %s", bankRef.c_str());
+            ImGui::Text("Prefab: %s", m_document->GetPrefabPath().empty() ? "(unbound)" : m_document->GetPrefabPath().c_str());
+            ImGui::Text("Graph bind: %s", m_document->GetAnimationGraphPath().empty() ? "(unbound)" : m_document->GetAnimationGraphPath().c_str());
+            ImGui::Text("Default state: %s", defaultState.c_str());
+            ImGui::Text("States: %d", data.contains("states") && data["states"].is_array() ? (int)data["states"].size() : 0);
+            ImGui::Text("Transitions: %d", data.contains("transitions") && data["transitions"].is_array() ? (int)data["transitions"].size() : 0);
+            ImGui::Text("Events: %d", data.contains("events") && data["events"].is_array() ? (int)data["events"].size() : 0);
+            if (m_showRunPreview)
+                ImGui::Text("Run preview active");
+
+            ImGui::Separator();
+            ImGui::Text("Editor");
+            ImGui::Separator();
+            ImGui::Text("Minimap: %s", m_minimapVisible ? "On" : "Off");
+            ImGui::Text("Binding status: %s",
+                (!m_document->GetPrefabPath().empty() && !m_document->GetAnimationGraphPath().empty() && !m_document->GetAnimationBankPath().empty()) ? "Ready" : "Incomplete");
+            const std::vector<std::string> warnings = m_document->ValidateBinding();
+            if (!warnings.empty())
+            {
+                ImGui::Separator();
+                ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.2f, 1.0f), "Warnings");
+                for (size_t i = 0; i < warnings.size(); ++i)
+                    ImGui::BulletText("%s", warnings[i].c_str());
+            }
+            ImGui::Separator();
             RenderInspectorPanel();
+            ImGui::Separator();
+            ImGui::Text("Events");
+            ImGui::InputText("Event state", m_eventStateBuffer, sizeof(m_eventStateBuffer));
+            ImGui::InputText("Event name", m_eventNameBuffer, sizeof(m_eventNameBuffer));
+            ImGui::DragFloat("Event time", &m_eventTimeBuffer, 0.01f, 0.0f, 1.0f);
+            if (ImGui::Button("Add event"))
+            {
+                m_document->AddEvent(m_eventStateBuffer, m_eventNameBuffer, m_eventTimeBuffer);
+                m_eventNameBuffer[0] = 0;
+            }
+
+            if (data.contains("events") && data["events"].is_array())
+            {
+                const nlohmann::json& events = data["events"];
+                for (size_t i = 0; i < events.size(); ++i)
+                {
+                    std::string stateName = events[i].value("state", "");
+                    std::string eventName = events[i].value("name", "");
+                    float eventTime = events[i].value("time", 0.0f);
+                    bool selected = (m_selectedEventIndex == static_cast<int>(i));
+                    if (selected)
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
+                    if (ImGui::Selectable((eventName + " @ " + stateName).c_str(), selected))
+                    {
+                        m_selectedEventIndex = static_cast<int>(i);
+                        if (i < m_eventStateBuffer[0] == 0)
+                            strncpy_s(m_eventStateBuffer, stateName.c_str(), _TRUNCATE);
+                        strncpy_s(m_eventNameBuffer, eventName.c_str(), _TRUNCATE);
+                        m_eventTimeBuffer = eventTime;
+                    }
+                    if (selected)
+                        ImGui::PopStyleColor();
+                }
+            }
+            if (m_selectedEventIndex >= 0 && ImGui::Button("Delete selected event"))
+            {
+                m_document->RemoveEvent(static_cast<size_t>(m_selectedEventIndex));
+                m_selectedEventIndex = -1;
+                m_eventNameBuffer[0] = 0;
+                m_eventStateBuffer[0] = 0;
+            }
+
+            if (m_selectedEventIndex >= 0 && data.contains("events") && data["events"].is_array() && m_selectedEventIndex < static_cast<int>(data["events"].size()))
+            {
+                ImGui::Separator();
+                ImGui::Text("Selected event #%d", m_selectedEventIndex);
+                nlohmann::json& event = m_document->GetDataMutable()["events"][m_selectedEventIndex];
+                std::string stateName = event.value("state", "");
+                std::string eventName = event.value("name", "");
+                float eventTime = event.value("time", 0.0f);
+
+                char stateBuffer[128];
+                char eventBuffer[128];
+                strncpy_s(stateBuffer, stateName.c_str(), _TRUNCATE);
+                strncpy_s(eventBuffer, eventName.c_str(), _TRUNCATE);
+
+                if (ImGui::InputText("Selected event state", stateBuffer, sizeof(stateBuffer)))
+                {
+                    event["state"] = stateBuffer;
+                    m_document->OnDocumentModified();
+                }
+                if (ImGui::InputText("Selected event name", eventBuffer, sizeof(eventBuffer)))
+                {
+                    event["name"] = eventBuffer;
+                    m_document->OnDocumentModified();
+                }
+                if (ImGui::DragFloat("Selected event time", &eventTime, 0.01f, 0.0f, 1.0f))
+                {
+                    event["time"] = eventTime;
+                    m_document->OnDocumentModified();
+                }
+            }
             ImGui::EndTabItem();
         }
+
         if (ImGui::BeginTabItem("Nodes"))
         {
             RenderStateEditorPanel();
@@ -421,28 +525,6 @@ void AnimationGraphRenderer::RenderTimelinePanel()
     dl->AddLine(ImVec2(scrubX, barMin.y - 2.0f), ImVec2(scrubX, barMin.y + barSize.y + 2.0f), IM_COL32(80, 200, 255, 255), 3.0f);
     ImGui::Dummy(ImVec2(barSize.x, barSize.y + 8.0f));
 
-    ImGui::Text("Events");
-    for (size_t i = 0; i < events.size(); ++i)
-    {
-        std::string stateName = events[i].value("state", "");
-        std::string eventName = events[i].value("name", "");
-        float eventTime = events[i].value("time", 0.0f);
-        bool selected = (m_selectedEventIndex == static_cast<int>(i));
-        if (selected)
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
-        if (ImGui::Selectable((eventName + " @ " + stateName).c_str(), selected))
-        {
-            m_selectedEventIndex = static_cast<int>(i);
-            m_selectedStateIndex = -1;
-            m_selectedTransitionIndex = -1;
-        }
-        if (selected)
-        {
-            ImGui::SameLine();
-            ImGui::Text("(%.2f)", eventTime);
-            ImGui::PopStyleColor();
-        }
-    }
 }
 
 void AnimationGraphRenderer::RenderGraphCanvas()
@@ -493,7 +575,11 @@ void AnimationGraphRenderer::RenderGraphCanvas()
             float dropY = mouse.y - canvasOrigin.y - nodeH * 0.5f;
             if (dropX < 0.0f) dropX = 0.0f;
             if (dropY < 0.0f) dropY = 0.0f;
-            LogBlueprintDropCreated(ctx, clipName);
+            std::string uniqueName = MakeUniqueStateName(clipName);
+            if (m_document->AddStateNode(uniqueName, clipName, dropX, dropY))
+            {
+                LogBlueprintDropCreated(ctx, uniqueName);
+            }
         }
         ImGui::EndDragDropTarget();
     }
@@ -560,21 +646,40 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         float y = states[i].value("y", 0.0f);
         ImVec2 min(canvasOrigin.x + x, canvasOrigin.y + y);
         ImVec2 max(min.x + nodeW, min.y + nodeH);
-        bool isHover = hovered && mouse.x >= min.x && mouse.x <= max.x && mouse.y >= min.y && mouse.y <= max.y;
-
         ImVec2 outPortPos(max.x, min.y + nodeH * 0.5f);
         ImVec2 inPortPos(min.x, min.y + nodeH * 0.5f);
         float outDist = sqrtf((mouse.x - outPortPos.x) * (mouse.x - outPortPos.x) + (mouse.y - outPortPos.y) * (mouse.y - outPortPos.y));
+        float inDist = sqrtf((mouse.x - inPortPos.x) * (mouse.x - inPortPos.x) + (mouse.y - inPortPos.y) * (mouse.y - inPortPos.y));
         bool isHoverOutPort = hovered && outDist <= (portRadius + 3.0f);
+        bool isHoverInPort = hovered && inDist <= (portRadius + 3.0f);
+        bool isHover = hovered && mouse.x >= min.x && mouse.x <= max.x && mouse.y >= min.y && mouse.y <= max.y;
 
         if (isHoverOutPort && ImGui::IsMouseClicked(0))
         {
-            m_draggedStateIndex = static_cast<int>(i);
+            // Start transition creation from the output pin.
+            // Consume the interaction so the node body does not begin dragging.
             m_selectedStateIndex = static_cast<int>(i);
             m_selectedTransitionIndex = -1;
+            m_draggedStateIndex = -1;
+            m_hasPendingTransitionDrag = true;
+            m_transitionFromIndex = static_cast<int>(i);
+            m_linkDragStartPos = outPortPos;
+            return;
+        }
+        else if (isHoverInPort && ImGui::IsMouseClicked(0))
+        {
+            // Input pin also starts a transition gesture, but does not move the node.
+            m_selectedStateIndex = static_cast<int>(i);
+            m_selectedTransitionIndex = -1;
+            m_draggedStateIndex = -1;
+            m_hasPendingTransitionDrag = true;
+            m_transitionFromIndex = static_cast<int>(i);
+            m_linkDragStartPos = inPortPos;
+            return;
         }
         else if (isHover && ImGui::IsMouseClicked(0))
         {
+            // Only the node body should start dragging.
             m_draggedStateIndex = static_cast<int>(i);
             m_selectedStateIndex = static_cast<int>(i);
             m_selectedTransitionIndex = -1;
@@ -585,7 +690,56 @@ void AnimationGraphRenderer::RenderGraphCanvas()
             m_selectedTransitionIndex = -1;
             ImGui::OpenPopup("AnimStateContextMenu");
         }
-        if (m_draggedStateIndex == static_cast<int>(i) && ImGui::IsMouseDown(0))
+        if (m_hasPendingTransitionDrag && m_transitionFromIndex == static_cast<int>(i))
+        {
+            if (ImGui::IsMouseReleased(0))
+            {
+                bool linkedSuccessfully = false;
+
+                for (size_t j = 0; j < states.size(); ++j)
+                {
+                    if (static_cast<int>(j) == m_transitionFromIndex)
+                        continue;
+
+                    const nlohmann::json& targetState = states[j];
+                    float tx = targetState.value("x", 0.0f);
+                    float ty = targetState.value("y", 0.0f);
+                    ImVec2 targetMin(canvasOrigin.x + tx, canvasOrigin.y + ty);
+                    ImVec2 targetMax(targetMin.x + nodeW, targetMin.y + nodeH);
+                    ImVec2 targetInPort(targetMin.x, targetMin.y + nodeH * 0.5f);
+                    ImVec2 targetOutPort(targetMax.x, targetMin.y + nodeH * 0.5f);
+
+                    float dxIn = mouse.x - targetInPort.x;
+                    float dyIn = mouse.y - targetInPort.y;
+                    float dxOut = mouse.x - targetOutPort.x;
+                    float dyOut = mouse.y - targetOutPort.y;
+
+                    bool hitTargetPort = (dxIn * dxIn + dyIn * dyIn) <= (portRadius + 3.0f) * (portRadius + 3.0f)
+                        || (dxOut * dxOut + dyOut * dyOut) <= (portRadius + 3.0f) * (portRadius + 3.0f);
+
+                    if (hitTargetPort)
+                    {
+                        std::string fromName = states[m_transitionFromIndex].value("name", "");
+                        std::string toName = targetState.value("name", "");
+                        if (m_document->AddTransition(fromName, toName, 0.1f))
+                        {
+                            SYSTEM_LOG << "[AnimationGraphRenderer] Created transition: " << fromName << " -> " << toName << "\n";
+                            linkedSuccessfully = true;
+                        }
+                        break;
+                    }
+                }
+
+                if (!linkedSuccessfully)
+                {
+                    SYSTEM_LOG << "[AnimationGraphRenderer] Transition drag cancelled (no valid target)\n";
+                }
+
+                m_hasPendingTransitionDrag = false;
+                m_transitionFromIndex = -1;
+            }
+        }
+        else if (m_draggedStateIndex == static_cast<int>(i) && ImGui::IsMouseDown(0))
         {
             states[i]["x"] = x + ImGui::GetIO().MouseDelta.x;
             states[i]["y"] = y + ImGui::GetIO().MouseDelta.y;
@@ -723,41 +877,6 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         }
     }
 
-    if (m_selectedEventIndex >= 0 && data.contains("events") && data["events"].is_array() && m_selectedEventIndex < static_cast<int>(data["events"].size()))
-    {
-        ImGui::Separator();
-        ImGui::Text("Selected event #%d", m_selectedEventIndex);
-        nlohmann::json& event = data["events"][m_selectedEventIndex];
-        std::string stateName = event.value("state", "");
-        std::string eventName = event.value("name", "");
-        float eventTime = event.value("time", 0.0f);
-
-        char stateBuffer[128];
-        char eventBuffer[128];
-        strncpy_s(stateBuffer, stateName.c_str(), _TRUNCATE);
-        strncpy_s(eventBuffer, eventName.c_str(), _TRUNCATE);
-
-        if (ImGui::InputText("Event state", stateBuffer, sizeof(stateBuffer)))
-        {
-            event["state"] = stateBuffer;
-            m_document->OnDocumentModified();
-        }
-        if (ImGui::InputText("Event name", eventBuffer, sizeof(eventBuffer)))
-        {
-            event["name"] = eventBuffer;
-            m_document->OnDocumentModified();
-        }
-        if (ImGui::DragFloat("Event time", &eventTime, 0.01f, 0.0f, 1.0f))
-        {
-            event["time"] = eventTime;
-            m_document->OnDocumentModified();
-        }
-        if (ImGui::Button("Delete selected event"))
-        {
-            m_document->RemoveEvent(static_cast<size_t>(m_selectedEventIndex));
-            m_selectedEventIndex = -1;
-        }
-    }
 }
 
 void AnimationGraphRenderer::RenderInspectorPanel()
@@ -915,6 +1034,7 @@ void AnimationGraphRenderer::Render()
     // Left column: canvas on top, timeline at bottom
     ImGui::BeginChild("AnimGraphLeftColumn", ImVec2(leftWidth, contentHeight), false);
     ImGui::BeginChild("AnimGraphCanvasPane", ImVec2(0, canvasHeight), true, ImGuiWindowFlags_NoScrollbar);
+    // No-op placeholder: keep canvas pane render path explicit for re-evaluation.
     RenderMainPanel();
     ImGui::EndChild();
 

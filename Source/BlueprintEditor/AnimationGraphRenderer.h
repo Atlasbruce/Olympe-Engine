@@ -3,8 +3,6 @@
 #include "Framework/IGraphDocument.h"
 #include "IGraphRenderer.h"
 #include "AnimationGraphDocument.h"
-#include "Framework/CanvasModalRenderer.h"
-#include "AnimationGraphCanvas.h"
 #include "../third_party/imgui/imgui.h"
 #include <memory>
 #include <string>
@@ -49,35 +47,19 @@ private:
     void RenderMainPanel();
     void RenderInspectorPanel();
     void RenderVerificationPanel();
-    void RenderBindingPanel();
     void RenderStateEditorPanel();
     void RenderTransitionEditorPanel();
-    void RenderPropertiesPanel();
-    void RenderNodesPanel();
-    void RenderRightPanelTabs();
     void RenderTimelinePanel();
     void RenderGraphCanvas();
     void RenderRightPanel();
-    void RenderCanvasContextMenu();
-    void RenderPaletteDragSource(const std::string& clipName);
-    void AddStateNodeFromPalette(const std::string& clipName, const ImVec2& canvasPos);
-    void UpdateCanvasLayoutFromCurrentWindow();
-    std::string BuildBrowserSelectionPath(const std::string& ext) const;
+    void RenderRightPanelTabs();
     float DistanceToCubicBezier(const ImVec2& p, const ImVec2& p0, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3) const;
     void EnsureStatePositions();
-    std::string BuildRuntimeExportPath() const;
+    void RenderGraphNodePorts(const nlohmann::json& state, int stateIndex, bool isSelected);
     int FindStateIndexByName(const std::string& name) const;
-    bool IsPointInsideState(float x, float y, size_t stateIndex) const;
     int FindEventIndexByState(const std::string& stateName) const;
     std::string MakeUniqueStateName(const std::string& baseName) const;
-    void RenderNodePalette();
-    std::unique_ptr<AnimationGraphCanvas> m_canvas;
-    std::unique_ptr<ICanvasEditor> m_canvasEditor;
-    ImVec2 m_canvasScreenPos;
-    bool m_showGrid;
-    bool m_showContextMenu;
-    bool m_pendingPaletteDrop;
-    std::string m_pendingDropClip;
+
     std::unique_ptr<AnimationGraphDocument> m_document;
     std::string m_currentPath;
     char m_bankPathBuffer[512];
@@ -103,11 +85,13 @@ private:
     int m_selectedStateIndex;
     int m_selectedTransitionIndex;
     int m_selectedEventIndex;
+    int m_linkStartStateIndex;
+    // Transition drag state (Phase 52 fix for pin-based connection creation)
+    bool m_hasPendingTransitionDrag;
+    int m_transitionFromIndex;
+    ImVec2 m_linkDragStartPos;
     std::vector<std::string> m_logs;
-    bool m_pendingLoadBank;
-    bool m_pendingLoadPrefab;
-    bool m_pendingLoadGraph;
-    int m_rightPanelTab;
+
 };
 
 } // namespace Olympe

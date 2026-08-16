@@ -265,7 +265,6 @@
     <ClCompile Include="Source\CollisionSystems\Collision_Intersections.cpp" />
     <ClCompile Include="Source\CollisionSystems\Collision_Primitives.cpp" />
     <ClCompile Include="Source\CollisionSystems\Collision_SpatialProxyRegistry.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\AnimationGraphCanvas.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />

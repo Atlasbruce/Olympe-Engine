@@ -40,7 +40,6 @@
     <ClCompile Include="Source\Animation\AnimationGraph.cpp" />
     <ClCompile Include="Source\Animation\AnimationManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AdditionalEditorPlugins.cpp" />
-    <ClCompile Include="Source\BlueprintEditor\AnimationGraphCanvas.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AssetBrowser.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AssetInfoPanel.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AtomicTaskUIRegistry.cpp" />
