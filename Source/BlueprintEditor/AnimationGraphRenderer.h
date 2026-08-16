@@ -54,6 +54,7 @@ private:
     void RenderTransitionEditorPanel();
     void RenderPropertiesPanel();
     void RenderNodesPanel();
+    void RenderRightPanelTabs();
     void RenderTimelinePanel();
     void RenderGraphCanvas();
     void RenderRightPanel();
@@ -68,6 +69,7 @@ private:
     int FindStateIndexByName(const std::string& name) const;
     bool IsPointInsideState(float x, float y, size_t stateIndex) const;
     int FindEventIndexByState(const std::string& stateName) const;
+    std::string MakeUniqueStateName(const std::string& baseName) const;
     void RenderNodePalette();
     std::unique_ptr<AnimationGraphCanvas> m_canvas;
     std::unique_ptr<ICanvasEditor> m_canvasEditor;
