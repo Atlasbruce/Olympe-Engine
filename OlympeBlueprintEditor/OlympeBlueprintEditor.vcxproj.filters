@@ -33,6 +33,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\BlueprintMigrator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BlueprintValidator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BPCommandSystem.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphDocument.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BTNodeGraphManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\Clipboard.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EditorContext.cpp" />
@@ -221,9 +222,8 @@
     <ClCompile Include="..\Source\BlueprintEditor\ConditionRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\OperatorRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphDocument.cpp" />
-    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphCanvas.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphRenderer.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\AnimationGraphFrameworkDocument.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Source\AI\AIEditor\AIEditorClipboard.h" />
@@ -375,9 +375,8 @@
     <ClInclude Include="..\Source\TiledLevelLoader\include\TilesetParser.h" />
     <ClInclude Include="..\Source\TiledLevelLoader\include\TiledDecoder.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\AnimationGraphDocument.h" />
     <ClInclude Include="..\Source\BlueprintEditor\AnimationGraphRenderer.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\AnimationGraphCanvas.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Framework\AnimationGraphDocument.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />
@@ -387,13 +386,6 @@
     <Image Include="Resources\olympe.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="add_missing_files.ps1" />
-    <None Include="add_remaining_files.ps1" />
-    <None Include="add_batch4_files.ps1" />
-    <None Include="add_batch5_files.ps1" />
-    <None Include="add_batch6_files.ps1" />
-    <None Include="add_batch7_files.ps1" />
-    <None Include="add_linker_fixes.ps1" />
     <None Include="phase64_add_critical_missing_files.ps1" />
     <None Include="phase64b_add_remaining_files.ps1" />
   </ItemGroup>

@@ -1,7 +1,10 @@
 #include "AnimationGraphRenderer.h"
-#include "AnimationGraphDocument.h"
+#include "AnimationGraphDocument.h"  // Legacy data model
+#include "Framework/AnimationGraphFrameworkDocument.h"  // Phase 55: Framework adapter
+#include "Framework/CanvasFramework.h"  // Phase 55: Framework orchestrator
+#include "Framework/CanvasToolbarRenderer.h"  // Phase 55: Toolbar rendering
 #include "Framework/CanvasModalRenderer.h"
-#include "Framework\BlueprintDropRouting.h"
+#include "Framework/BlueprintDropRouting.h"
 #include "../third_party/imgui/imgui.h"
 #include "../system/system_utils.h"
 #include <fstream>
@@ -135,6 +138,14 @@ void AnimationGraphRenderer::EnsureDocument()
         m_document = std::make_unique<AnimationGraphDocument>();
         m_document->SetRenderer(this);
     }
+
+    // Phase 55: Initialize framework for toolbar/modals if not already done
+    if (!m_framework)
+    {
+        m_frameworkDocument = std::make_unique<AnimationGraphFrameworkDocument>(this);
+        m_framework = std::make_unique<CanvasFramework>(m_frameworkDocument.get());
+        SYSTEM_LOG << "[AnimationGraphRenderer] CanvasFramework initialized for AnimationGraph\n";
+    }
 }
 
 bool AnimationGraphRenderer::Load(const std::string& path)
@@ -158,26 +169,15 @@ bool AnimationGraphRenderer::Save(const std::string& path)
 
 void AnimationGraphRenderer::RenderToolbar()
 {
-    if (ImGui::Button("Save")) Save("");
-    ImGui::SameLine();
-    if (ImGui::Button("Save As")) {}
-    ImGui::SameLine();
-    if (ImGui::Button("Browse")) {}
-    ImGui::SameLine();
-    if (ImGui::Button("Verify")) VerifyGraph();
-    ImGui::SameLine();
-    if (ImGui::Button("Run")) RunGraph();
-    ImGui::SameLine();
-    ImGui::Checkbox("Minimap", &m_minimapVisible);
-    ImGui::SameLine();
-    ImGui::Text("Size %.2f", m_minimapSize);
-    ImGui::SameLine();
-    ImGui::Text("Pos %d", m_minimapPosition);
-    ImGui::SameLine();
-    if (ImGui::Button("Add default state"))
+    // Phase 55: Use unified framework toolbar instead of local buttons
+    if (m_framework)
     {
-        m_document->AddStateFromClip("Idle", "Idle");
-        m_document->SetDefaultState("Idle");
+        m_framework->GetToolbar()->Render();
+    }
+    else
+    {
+        // Fallback for early initialization edge cases
+        ImGui::TextDisabled("[Framework not initialized]");
     }
 }
 

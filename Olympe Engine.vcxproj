@@ -49,6 +49,7 @@
     <ClCompile Include="Source\BlueprintEditor\BehaviorTreeRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AnimationGraphDocument.cpp" />
     <ClCompile Include="Source\BlueprintEditor\AnimationGraphRenderer.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\Framework\AnimationGraphFrameworkDocument.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlackboardVariablePresetRegistry.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlueprintEditor.cpp" />
     <ClCompile Include="Source\BlueprintEditor\BlueprintEditorGUI.cpp" />

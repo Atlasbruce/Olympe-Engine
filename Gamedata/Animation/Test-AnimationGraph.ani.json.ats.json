@@ -32,8 +32,8 @@
       "nodeId": 1,
       "priority": 0,
       "speed": 1,
-      "x": 104,
-      "y": 151
+      "x": 99,
+      "y": 130
     },
     {
       "animation": "ani_zombie_idle_w",

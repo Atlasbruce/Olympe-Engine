@@ -36,6 +36,8 @@
     <ClCompile Include="..\Source\AI\BTEditorCommand.cpp" />
     <ClCompile Include="..\Source\AI\BTGraphLayoutEngine.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Framework\AnimationGraphFrameworkDocument.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphRenderer.cpp" />
     <ClCompile Include="..\Source\NodeGraphShared\BTGraphDocumentConverter.cpp" />
     <ClCompile Include="..\Source\NodeGraphShared\RenderHelpers.cpp" />
     <ClCompile Include="..\Source\Animation\AnimationBank.cpp" />
@@ -52,6 +54,7 @@
     <ClCompile Include="..\Source\BlueprintEditor\BlueprintMigrator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BlueprintValidator.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BPCommandSystem.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphDocument.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\BTNodeGraphManager.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\Clipboard.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\EditorContext.cpp" />
@@ -177,9 +180,6 @@
     <ClCompile Include="..\Source\BlueprintEditor\SubgraphMigrator.cpp" xmlns="" />
     <ClCompile Include="..\Source\BlueprintEditor\VisualScriptRenderer.cpp" xmlns="" />
     <ClCompile Include="..\Source\BlueprintEditor\BehaviorTreeRenderer.cpp" xmlns="" />
-    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphDocument.cpp" xmlns="" />
-
-    <ClCompile Include="..\Source\BlueprintEditor\AnimationGraphRenderer.cpp" xmlns="" />
     <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphRenderer.cpp" xmlns="" />
     <ClCompile Include="..\Source\Runtime\ConditionPresetEvaluator.cpp" xmlns="" />
     <ClCompile Include="..\Source\Editor\ConditionPreset\Operand.cpp" xmlns="" />
@@ -261,8 +261,8 @@
     <ClInclude Include="..\Source\AI\BehaviorTreeDependencyScanner.h" />
     <ClInclude Include="..\Source\AI\BTEditorCommand.h" />
     <ClInclude Include="..\Source\AI\BTGraphLayoutEngine.h" />
-
     <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeExecutor.h" />
+    <ClInclude Include="..\Source\BlueprintEditor\Framework\AnimationGraphDocument.h" />
     <ClInclude Include="..\Source\NodeGraphShared\RenderHelpers.h" />
     <ClInclude Include="..\Source\Animation\AnimationBank.h" />
     <ClInclude Include="..\Source\Animation\AnimationErrorHandler.h" />
@@ -274,7 +274,6 @@
     <ClInclude Include="..\Source\BlueprintEditor\AssetBrowser.h" />
     <ClInclude Include="..\Source\BlueprintEditor\AssetInfoPanel.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BehaviorTreeEditorPlugin.h" />
-    <ClInclude Include="..\Source\BlueprintEditor\AnimationGraphDocument.h" />
     <ClInclude Include="..\Source\BlueprintEditor\AnimationGraphRenderer.h" />
     <ClInclude Include="..\Source\BlueprintEditor\blueprinteditor.h" />
     <ClInclude Include="..\Source\BlueprintEditor\BlueprintEditorGUI.h" />
@@ -405,13 +404,6 @@
     <ResourceCompile Include="OlympeBlueprintEditor.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="add_batch4_files.ps1" />
-    <None Include="add_batch5_files.ps1" />
-    <None Include="add_batch6_files.ps1" />
-    <None Include="add_batch7_files.ps1" />
-    <None Include="add_linker_fixes.ps1" />
-    <None Include="add_missing_files.ps1" />
-    <None Include="add_remaining_files.ps1" />
     <None Include="phase64b_add_remaining_files.ps1" />
     <None Include="phase64_add_critical_missing_files.ps1" />
   </ItemGroup>

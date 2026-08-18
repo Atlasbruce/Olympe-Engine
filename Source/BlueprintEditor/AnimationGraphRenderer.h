@@ -1,8 +1,12 @@
 #pragma once
 
 #include "Framework/IGraphDocument.h"
+#include "Framework/CanvasFramework.h"
+#include "Framework/AnimationGraphFrameworkDocument.h"  // Phase 55: Framework adapter (AnimationGraphFrameworkDocument)
 #include "IGraphRenderer.h"
-#include "AnimationGraphDocument.h"
+#include "AnimationGraphDocument.h"  // Legacy data model
+#include "Utilities/CustomCanvasEditor.h"  // Phase 55: Zoom/pan support
+#include "Utilities/CanvasMinimapRenderer.h"  // Phase 55: Minimap support
 #include "../third_party/imgui/imgui.h"
 #include <memory>
 #include <string>
@@ -10,7 +14,8 @@
 
 namespace Olympe {
 
-class AnimationGraphDocument;
+class AnimationGraphDocument;  // Legacy data model
+class AnimationGraphFrameworkDocument;  // Framework adapter
 
 class AnimationGraphRenderer : public IGraphRenderer
 {
@@ -97,6 +102,13 @@ private:
     ImVec2 m_linkDragStartPos;
     ImVec2 m_transitionPreviewEnd;  // Phase 53: Current mouse position during transition drag for preview rendering
     std::vector<std::string> m_logs;
+
+    // Phase 55: Framework integration for unified toolbar/modals
+    std::unique_ptr<AnimationGraphFrameworkDocument> m_frameworkDocument;  // IGraphDocument adapter
+    std::unique_ptr<CanvasFramework> m_framework;  // Framework for toolbar/modals
+
+    // Phase 55: Canvas interaction
+    std::unique_ptr<CustomCanvasEditor> m_canvasEditor;  // Zoom/pan support
 
 };
 
