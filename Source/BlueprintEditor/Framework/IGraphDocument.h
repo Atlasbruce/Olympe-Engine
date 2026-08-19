@@ -17,6 +17,7 @@ class IGraphRenderer;
 enum class DocumentType {
     VISUAL_SCRIPT,    ///< Visual Script graph (imnodes-based)
     BEHAVIOR_TREE,    ///< Behavior Tree graph (imnodes-based)
+    ANIMATION_GRAPH,  ///< Animation Graph (timeline-based)
     ENTITY_PREFAB,    ///< Entity Prefab graph (custom canvas)
     UNKNOWN           ///< Unknown or invalid type
 };
@@ -186,6 +187,7 @@ public:
         switch (type) {
             case DocumentType::VISUAL_SCRIPT:  return "Visual Script";
             case DocumentType::BEHAVIOR_TREE:  return "Behavior Tree";
+            case DocumentType::ANIMATION_GRAPH:return "Animation Graph";
             case DocumentType::ENTITY_PREFAB:  return "Entity Prefab";
             case DocumentType::UNKNOWN:
             default:                           return "Unknown";

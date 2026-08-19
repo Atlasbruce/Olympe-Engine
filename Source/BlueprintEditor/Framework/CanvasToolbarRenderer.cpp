@@ -94,6 +94,8 @@ std::string CanvasToolbarRenderer::GetSaveFileFilter() const
         return "*.ats.json";
     case DocumentType::BEHAVIOR_TREE:
         return "*.bt.json";
+    case DocumentType::ANIMATION_GRAPH:
+        return "*.ani.json";
     case DocumentType::ENTITY_PREFAB:
         return "*.pref.json";
     default:
@@ -112,6 +114,8 @@ std::string CanvasToolbarRenderer::GetDefaultSaveDirectory() const
         return "./Gamedata/VisualScript/";
     case DocumentType::BEHAVIOR_TREE:
         return "./Gamedata/BehaviorTree/";
+    case DocumentType::ANIMATION_GRAPH:
+        return "./Gamedata/Animation/";
     case DocumentType::ENTITY_PREFAB:
         return "./Gamedata/EntityPrefab/";
     default:
@@ -193,6 +197,9 @@ void CanvasToolbarRenderer::RenderModals()
             {
             case DocumentType::BEHAVIOR_TREE:
                 fileType = Olympe::SaveFileType::BehaviorTree;
+                break;
+            case DocumentType::ANIMATION_GRAPH:
+                fileType = Olympe::SaveFileType::AnimationGraph;
                 break;
             case DocumentType::ENTITY_PREFAB:
                 fileType = Olympe::SaveFileType::EntityPrefab;

@@ -357,6 +357,7 @@ std::string TabManager::OpenFileInTab(const std::string& filePath)
 
         tab.renderer = r;
         tab.document = r->GetDocument();
+        SYSTEM_LOG << "[TabManager::OpenFileInTab] AnimationGraph document assigned to tab\n";
     }
     else if (graphType == "EntityPrefab")
     {

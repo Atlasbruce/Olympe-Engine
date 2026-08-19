@@ -154,6 +154,10 @@ bool AnimationGraphRenderer::Load(const std::string& path)
     if (!m_document->Load(path))
         return false;
     m_currentPath = path;
+    if (m_frameworkDocument)
+    {
+        m_frameworkDocument->SetFilePath(path);
+    }
     return true;
 }
 
@@ -164,7 +168,74 @@ bool AnimationGraphRenderer::Save(const std::string& path)
     if (!m_document->Save(target))
         return false;
     m_currentPath = target;
+    if (m_frameworkDocument)
+    {
+        m_frameworkDocument->SetFilePath(target);
+        m_frameworkDocument->OnDocumentModified();
+    }
     return true;
+}
+
+void AnimationGraphRenderer::SaveCanvasState()
+{
+    nlohmann::json state = nlohmann::json::object();
+    state["minimapVisible"] = m_minimapVisible;
+    state["minimapSize"] = m_minimapSize;
+    state["minimapPosition"] = m_minimapPosition;
+    state["rightPanelWidth"] = m_rightPanelWidth;
+    state["timelinePanelHeight"] = m_timelinePanelHeight;
+    state["selectedStateIndex"] = m_selectedStateIndex;
+    state["selectedTransitionIndex"] = m_selectedTransitionIndex;
+    state["selectedEventIndex"] = m_selectedEventIndex;
+    state["showVerification"] = m_showVerification;
+    state["showRunPreview"] = m_showRunPreview;
+    state["previewTime"] = m_previewTime;
+    state["previewDuration"] = m_previewDuration;
+    m_canvasStateJson = state.dump();
+}
+
+void AnimationGraphRenderer::RestoreCanvasState()
+{
+    SetCanvasStateJSON(m_canvasStateJson);
+}
+
+std::string AnimationGraphRenderer::GetCanvasStateJSON() const
+{
+    return m_canvasStateJson;
+}
+
+void AnimationGraphRenderer::SetCanvasStateJSON(const std::string& json)
+{
+    if (json.empty())
+        return;
+
+    nlohmann::json state;
+    try
+    {
+        std::istringstream iss(json);
+        iss >> state;
+    }
+    catch (...)
+    {
+        return;
+    }
+
+    if (!state.is_object())
+        return;
+
+    m_canvasStateJson = json;
+    m_minimapVisible = state.value("minimapVisible", m_minimapVisible);
+    m_minimapSize = state.value("minimapSize", m_minimapSize);
+    m_minimapPosition = state.value("minimapPosition", m_minimapPosition);
+    m_rightPanelWidth = state.value("rightPanelWidth", m_rightPanelWidth);
+    m_timelinePanelHeight = state.value("timelinePanelHeight", m_timelinePanelHeight);
+    m_selectedStateIndex = state.value("selectedStateIndex", m_selectedStateIndex);
+    m_selectedTransitionIndex = state.value("selectedTransitionIndex", m_selectedTransitionIndex);
+    m_selectedEventIndex = state.value("selectedEventIndex", m_selectedEventIndex);
+    m_showVerification = state.value("showVerification", m_showVerification);
+    m_showRunPreview = state.value("showRunPreview", m_showRunPreview);
+    m_previewTime = state.value("previewTime", m_previewTime);
+    m_previewDuration = state.value("previewDuration", m_previewDuration);
 }
 
 void AnimationGraphRenderer::RenderToolbar()
@@ -1193,7 +1264,7 @@ void AnimationGraphRenderer::RenderTransitionPreview()
                 mousePos.y >= nodeTopLeft.y && mousePos.y <= nodeBottomRight.y)
             {
                 // Pulsing highlight on target input port (left side, middle)
-                float t = ImGui::GetTime();
+                float t = static_cast<float>(ImGui::GetTime());
                 float pulse = 0.5f + 0.5f * sinf(t * 6.0f);
                 float highlightRadius = 8.0f + pulse * 4.0f;
                 ImU32 highlightCol = ImGui::GetColorU32(ImVec4(0.2f, 0.6f, 1.0f, 0.5f + 0.5f * pulse));

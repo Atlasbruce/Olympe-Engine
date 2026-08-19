@@ -29,8 +29,10 @@ public:
     bool IsDirty() const override;
     std::string GetGraphType() const override;
     std::string GetCurrentPath() const override;
-    void SaveCanvasState() override {}
-    void RestoreCanvasState() override {}
+    void SaveCanvasState() override;
+    void RestoreCanvasState() override;
+    std::string GetCanvasStateJSON() const override;
+    void SetCanvasStateJSON(const std::string& json) override;
     void VerifyGraph() override;
     void RunGraph() override;
     bool SupportsVerification() const override { return true; }
@@ -72,6 +74,7 @@ private:
 
     std::unique_ptr<AnimationGraphDocument> m_document;
     std::string m_currentPath;
+    std::string m_canvasStateJson;
     char m_bankPathBuffer[512];
     char m_stateNameBuffer[128];
     char m_animationNameBuffer[128];

@@ -47,7 +47,7 @@ namespace Olympe
 
 	DocumentType AnimationGraphFrameworkDocument::GetType() const
 	{
-		return DocumentType::UNKNOWN;  // Animation Graph not yet in enum
+		return DocumentType::ANIMATION_GRAPH;
 	}
 
 	std::string AnimationGraphFrameworkDocument::GetFilePath() const
@@ -58,8 +58,10 @@ namespace Olympe
 
 	void AnimationGraphFrameworkDocument::SetFilePath(const std::string& path)
 	{
-		// Animation graphs store path internally after Load/Save
-		// This is a no-op in the current implementation
+		if (m_renderer)
+		{
+			m_renderer->Save(path);
+		}
 	}
 
 	bool AnimationGraphFrameworkDocument::IsDirty() const

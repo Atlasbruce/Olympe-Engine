@@ -18,7 +18,7 @@ public:
     bool Save(const std::string& filePath) override;
     bool IsDirty() const override { return m_isDirty; }
     std::string GetName() const override;
-    DocumentType GetType() const override { return DocumentType::UNKNOWN; }
+    DocumentType GetType() const override { return DocumentType::ANIMATION_GRAPH; }
     std::string GetFilePath() const override { return m_filePath; }
     void SetFilePath(const std::string& path) override { m_filePath = path; }
     IGraphRenderer* GetRenderer() override;

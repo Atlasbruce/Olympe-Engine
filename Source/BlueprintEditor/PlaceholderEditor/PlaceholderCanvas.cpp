@@ -894,7 +894,7 @@ void PlaceholderCanvas::RenderMinimap()
     // Convert PlaceholderNode vector to minimap's tuple format
     std::vector<std::tuple<int, float, float, float, float>> minimapNodes;
     for (const auto& node : nodes) {
-        minimapNodes.push_back(std::make_tuple(node.nodeId, node.posX, node.posY, node.width, node.height));
+        minimapNodes.push_back(std::make_tuple(node.nodeId, node.posX, node.posY, static_cast<float>(node.width), static_cast<float>(node.height)));
     }
 
     // Update minimap with node data (pass bounds as separate parameters)

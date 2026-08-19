@@ -6,7 +6,7 @@
 namespace Olympe {
 
 class PlaceholderGraphDocument;
-class PlaceholderNode;
+struct PlaceholderNode;
 
 /**
  * @class PlaceholderPropertyEditorPanel

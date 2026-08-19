@@ -944,7 +944,7 @@ namespace Olympe
                     ImVec2 portScreen = m_canvasEditor->CanvasToScreen(ImVec2(portCanvasPos.x, portCanvasPos.y));
 
                     // Pulse animation based on time
-                    float t = ImGui::GetTime();
+                    float t = static_cast<float>(ImGui::GetTime());
                     float pulse = 0.5f + 0.5f * sinf(t * 6.0f);
                     float radius = 8.0f + pulse * 4.0f;
                     ImU32 col = ImGui::GetColorU32(ImVec4(1.0f, 0.85f, 0.2f, 0.5f + 0.5f * pulse));
