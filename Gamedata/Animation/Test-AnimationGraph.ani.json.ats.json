@@ -12,7 +12,7 @@
     },
     {
       "name": "Event 2",
-      "state": "ani_zombie_idle_e",
+      "state": "State 1 Zombie",
       "time": 0.21
     },
     {
@@ -28,7 +28,7 @@
     {
       "animation": "ani_zombie_idle_w",
       "loop": true,
-      "name": "ani_zombie_idle_w",
+      "name": "State 1 Zombie",
       "nodeId": 1,
       "priority": 0,
       "speed": 1,
@@ -62,8 +62,8 @@
       "nodeId": 1,
       "priority": 0,
       "speed": 1,
-      "x": 444,
-      "y": 149
+      "x": 439,
+      "y": 70
     },
     {
       "animation": "ani_zombie_idle_nw",
@@ -72,8 +72,8 @@
       "nodeId": 1,
       "priority": 0,
       "speed": 1,
-      "x": 863,
-      "y": 512
+      "x": 921,
+      "y": 266
     }
   ],
   "transitions": [
@@ -111,6 +111,12 @@
       "conditions": [],
       "from": "ani_zombie_idle_e",
       "to": "ani_zombie_idle_nw",
+      "transitionTime": 0.1
+    },
+    {
+      "conditions": [],
+      "from": "State 1 Zombie",
+      "to": "ani_zombie_idle_w_3",
       "transitionTime": 0.1
     }
   ]

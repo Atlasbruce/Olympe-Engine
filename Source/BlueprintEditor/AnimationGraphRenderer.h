@@ -63,10 +63,6 @@ private:
     void RenderRightPanelTabs();
     void RenderTransitionPreview();  // Phase 53: Render transition line preview during drag
     void RenderSingleTransition(size_t transitionIndex, const ImVec2& canvasOrigin);  // Phase 54: Render single transition with arrow
-    float DistanceToCubicBezier(const ImVec2& p, const ImVec2& p0, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3) const;
-    ImVec2 EvaluateBezier(const ImVec2& p0, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, float t) const;  // Phase 54: Evaluate cubic Bezier at parameter t
-    ImVec2 GetBezierTangent(const ImVec2& p0, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, float t) const;  // Phase 54: Get tangent vector at t
-    void DrawArrowOnCurve(ImDrawList* dl, const ImVec2& curveEnd, const ImVec2& tangent, ImU32 color, float arrowSize = 8.0f);  // Phase 54: Draw arrow head
     void EnsureStatePositions();
     void RenderGraphNodePorts(const nlohmann::json& state, int stateIndex, bool isSelected);
     int FindStateIndexByName(const std::string& name) const;
@@ -99,12 +95,16 @@ private:
     int m_selectedStateIndex;
     int m_selectedTransitionIndex;
     int m_selectedEventIndex;
+    std::vector<int> m_selectedStateIndices;
     int m_linkStartStateIndex;
     // Transition drag state (Phase 52 fix for pin-based connection creation)
     bool m_hasPendingTransitionDrag;
     int m_transitionFromIndex;
     ImVec2 m_linkDragStartPos;
     ImVec2 m_transitionPreviewEnd;  // Phase 53: Current mouse position during transition drag for preview rendering
+    bool m_isSelectingRectangle = false;
+    ImVec2 m_selectionRectStart = ImVec2(0.0f, 0.0f);
+    ImVec2 m_selectionRectEnd = ImVec2(0.0f, 0.0f);
     std::vector<std::string> m_logs;
 
     // Phase 55: Framework integration for unified toolbar/modals

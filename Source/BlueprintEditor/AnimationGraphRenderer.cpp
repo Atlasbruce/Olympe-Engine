@@ -84,38 +84,6 @@ int AnimationGraphRenderer::FindEventIndexByState(const std::string& stateName) 
     return -1;
 }
 
-float AnimationGraphRenderer::DistanceToCubicBezier(const ImVec2& p, const ImVec2& p0, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3) const
-{
-    float best = 1e9f;
-    ImVec2 prev = p0;
-    for (int i = 1; i <= 24; ++i)
-    {
-        float t = static_cast<float>(i) / 24.0f;
-        float u = 1.0f - t;
-        ImVec2 cur(
-            u*u*u*p0.x + 3.0f*u*u*t*p1.x + 3.0f*u*t*t*p2.x + t*t*t*p3.x,
-            u*u*u*p0.y + 3.0f*u*u*t*p1.y + 3.0f*u*t*t*p2.y + t*t*t*p3.y);
-        ImVec2 a = prev;
-        ImVec2 b = cur;
-        float vx = b.x - a.x;
-        float vy = b.y - a.y;
-        float wx = p.x - a.x;
-        float wy = p.y - a.y;
-        float c1 = vx * wx + vy * wy;
-        float c2 = vx * vx + vy * vy;
-        float tseg = c2 > 0.0f ? c1 / c2 : 0.0f;
-        if (tseg < 0.0f) tseg = 0.0f;
-        if (tseg > 1.0f) tseg = 1.0f;
-        ImVec2 proj(a.x + tseg * vx, a.y + tseg * vy);
-        float dx = p.x - proj.x;
-        float dy = p.y - proj.y;
-        float dist = sqrtf(dx * dx + dy * dy);
-        if (dist < best) best = dist;
-        prev = cur;
-    }
-    return best;
-}
-
 void AnimationGraphRenderer::EnsureStatePositions()
 {
     nlohmann::json& data = m_document->GetDataMutable();
@@ -244,16 +212,38 @@ void AnimationGraphRenderer::SetCanvasStateJSON(const std::string& json)
 
 void AnimationGraphRenderer::RenderToolbar()
 {
-    // Phase 55: Use unified framework toolbar instead of local buttons
-    if (m_framework)
+    if (ImGui::Button("Save"))
+        Save("");
+    ImGui::SameLine();
+    if (ImGui::Button("Save As"))
     {
-        m_framework->GetToolbar()->Render();
+        CanvasModalRenderer::Get().OpenSaveFilePickerModal(
+            "./Gamedata/Animation/",
+            m_document ? m_document->GetName() : "Untitled",
+            Olympe::SaveFileType::AnimationGraph);
     }
-    else
+    ImGui::SameLine();
+    if (ImGui::Button("Browse"))
     {
-        // Fallback for early initialization edge cases
-        ImGui::TextDisabled("[Framework not initialized]");
     }
+    ImGui::SameLine();
+    if (ImGui::Button("Verify"))
+        VerifyGraph();
+    ImGui::SameLine();
+    if (ImGui::Button("Run"))
+        RunGraph();
+    ImGui::SameLine();
+    if (m_canvasEditor)
+    {
+        bool visible = m_canvasEditor->IsMinimapVisible();
+        if (ImGui::Checkbox("Minimap", &visible))
+        {
+            m_canvasEditor->SetMinimapVisible(visible);
+        }
+    }
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(60.0f);
+    ImGui::DragFloat("##mini", &m_minimapSize, 0.005f, 0.05f, 0.5f, "%.2f");
 }
 
 void AnimationGraphRenderer::RenderStateEditorPanel()
@@ -428,6 +418,14 @@ void AnimationGraphRenderer::RenderMainPanel()
 void AnimationGraphRenderer::RenderRightPanel()
 {
     RenderRightPanelTabs();
+}
+
+void AnimationGraphRenderer::RenderFrameworkModals()
+{
+    if (m_framework)
+    {
+        m_framework->RenderModals();
+    }
 }
 
 void AnimationGraphRenderer::RenderRightPanelTabs()
@@ -605,24 +603,81 @@ void AnimationGraphRenderer::RenderTimelinePanel()
 void AnimationGraphRenderer::RenderGraphCanvas()
 {
     EnsureStatePositions();
+    if (!m_document)
+        return;
+
     nlohmann::json& data = m_document->GetDataMutable();
     if (!data.contains("states") || !data["states"].is_array())
         return;
 
-    const float nodeW = 180.0f;
-    const float nodeH = 70.0f;
+    const float nodeW = 200.0f;
+    const float nodeH = 86.0f;
     const float portRadius = 6.0f;
     const ImVec2 canvasOrigin = ImGui::GetCursorScreenPos();
     ImVec2 canvasSize = ImGui::GetContentRegionAvail();
     if (canvasSize.y < 320.0f)
         canvasSize.y = 320.0f;
 
+    if (!m_canvasEditor)
+    {
+        m_canvasEditor = std::make_unique<CustomCanvasEditor>(
+            "AnimationGraphCanvas",
+            canvasOrigin,
+            canvasSize,
+            1.0f,
+            0.1f,
+            3.0f);
+    }
+    m_canvasEditor->SetCanvasScreenPos(canvasOrigin);
+    m_canvasEditor->SetCanvasSize(canvasSize);
+
     ImDrawList* dl = ImGui::GetWindowDrawList();
     dl->AddRectFilled(canvasOrigin, ImVec2(canvasOrigin.x + canvasSize.x, canvasOrigin.y + canvasSize.y), IM_COL32(32, 32, 40, 255));
+    dl->AddRect(canvasOrigin, ImVec2(canvasOrigin.x + canvasSize.x, canvasOrigin.y + canvasSize.y), IM_COL32(60, 60, 70, 255));
     ImGui::InvisibleButton("##animgraph_canvas", canvasSize);
     bool hovered = ImGui::IsItemHovered();
     const ImVec2 mouse = ImGui::GetIO().MousePos;
     const ImGuiPayload* activePayload = ImGui::GetDragDropPayload();
+
+    if (hovered)
+    {
+        float wheel = ImGui::GetIO().MouseWheel;
+        if (wheel != 0.0f)
+        {
+            float zoom = m_canvasEditor->GetZoom();
+            zoom += wheel * 0.1f;
+            if (zoom < 0.1f) zoom = 0.1f;
+            if (zoom > 3.0f) zoom = 3.0f;
+            m_canvasEditor->SetZoom(zoom);
+        }
+    }
+
+    if (hovered && ImGui::IsMouseDragging(2))
+    {
+        ImVec2 offset = m_canvasEditor->GetPan();
+        offset.x += ImGui::GetIO().MouseDelta.x;
+        offset.y += ImGui::GetIO().MouseDelta.y;
+        m_canvasEditor->SetPan(offset);
+    }
+
+    if (hovered && ImGui::IsMouseClicked(0) && !ImGui::GetIO().KeyCtrl)
+    {
+        m_isSelectingRectangle = true;
+        m_selectionRectStart = mouse;
+        m_selectionRectEnd = mouse;
+    }
+    if (m_isSelectingRectangle && ImGui::IsMouseDown(0))
+    {
+        m_selectionRectEnd = mouse;
+    }
+    if (m_isSelectingRectangle && ImGui::IsMouseReleased(0))
+    {
+        m_isSelectingRectangle = false;
+        if (!ImGui::GetIO().KeyCtrl && m_selectedStateIndices.empty())
+            m_selectedStateIndex = -1;
+        if (!m_selectedStateIndices.empty())
+            m_selectedStateIndex = m_selectedStateIndices.back();
+    }
 
     // Phase 53: Update transition preview endpoint when dragging
     if (m_hasPendingTransitionDrag)
@@ -672,54 +727,20 @@ void AnimationGraphRenderer::RenderGraphCanvas()
     }
 
     nlohmann::json& states = data["states"];
-    // Phase 54: Render all transitions with directional arrows
-    for (size_t i = 0; i < data["transitions"].size(); ++i)
+
+    if (m_canvasEditor)
+        m_canvasEditor->RenderGrid(CanvasGridRenderer::Style_VisualScript);
+
+    const float zoom = m_canvasEditor ? m_canvasEditor->GetZoom() : 1.0f;
+    const ImVec2 pan = m_canvasEditor ? m_canvasEditor->GetPan() : ImVec2(0.0f, 0.0f);
+
+    auto toScreen = [&](float lx, float ly) -> ImVec2
     {
-        RenderSingleTransition(i, canvasOrigin);
-    }
+        return ImVec2(
+            canvasOrigin.x + pan.x + lx * zoom,
+            canvasOrigin.y + pan.y + ly * zoom);
+    };
 
-    // Phase 54: Hit-test transitions for selection/context menu
-    if (hovered)
-    {
-        for (size_t i = 0; i < data["transitions"].size(); ++i)
-        {
-            const nlohmann::json& tr = data["transitions"][i];
-            std::string from = tr.value("from", "");
-            std::string to = tr.value("to", "");
-            int fi = FindStateIndexByName(from);
-            int ti = FindStateIndexByName(to);
-            if (fi < 0 || ti < 0) continue;
-
-            float fx = states[fi].value("x", 0.0f);
-            float fy = states[fi].value("y", 0.0f);
-            float tx = states[ti].value("x", 0.0f);
-            float ty = states[ti].value("y", 0.0f);
-
-            ImVec2 p1(canvasOrigin.x + fx + nodeW, canvasOrigin.y + fy + nodeH * 0.5f);
-            ImVec2 p2(canvasOrigin.x + tx, canvasOrigin.y + ty + nodeH * 0.5f);
-            ImVec2 c1(p1.x + 60.0f, p1.y);
-            ImVec2 c2(p2.x - 60.0f, p2.y);
-
-            float dist = DistanceToCubicBezier(mouse, p1, c1, c2, p2);
-            if (dist < 8.0f)
-            {
-                if (ImGui::IsMouseClicked(0))
-                {
-                    m_selectedTransitionIndex = static_cast<int>(i);
-                    m_selectedStateIndex = -1;
-                }
-                if (ImGui::IsMouseClicked(1))
-                {
-                    m_selectedTransitionIndex = static_cast<int>(i);
-                    m_selectedStateIndex = -1;
-                    ImGui::OpenPopup("AnimTransitionContextMenu");
-                }
-            }
-        }
-    }
-
-    // If a link (transition) is currently being dragged from a source state's output port,
-    // draw a live preview line following the mouse (mirrors PrefabCanvas connection preview).
     bool linkResolvedThisFrame = false;
 
     for (size_t i = 0; i < states.size(); ++i)
@@ -728,21 +749,24 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         std::string anim = states[i].value("animation", "");
         float x = states[i].value("x", 0.0f);
         float y = states[i].value("y", 0.0f);
-        ImVec2 min(canvasOrigin.x + x, canvasOrigin.y + y);
-        ImVec2 max(min.x + nodeW, min.y + nodeH);
-        ImVec2 outPortPos(max.x, min.y + nodeH * 0.5f);
-        ImVec2 inPortPos(min.x, min.y + nodeH * 0.5f);
+        ImVec2 min = toScreen(x, y);
+        ImVec2 max = toScreen(x + nodeW, y + nodeH);
+        ImVec2 outPortPos = toScreen(x + nodeW, y + nodeH * 0.5f);
+        ImVec2 inPortPos = toScreen(x, y + nodeH * 0.5f);
         float outDist = sqrtf((mouse.x - outPortPos.x) * (mouse.x - outPortPos.x) + (mouse.y - outPortPos.y) * (mouse.y - outPortPos.y));
         float inDist = sqrtf((mouse.x - inPortPos.x) * (mouse.x - inPortPos.x) + (mouse.y - inPortPos.y) * (mouse.y - inPortPos.y));
         bool isHoverOutPort = hovered && outDist <= (portRadius + 3.0f);
         bool isHoverInPort = hovered && inDist <= (portRadius + 3.0f);
         bool isHover = hovered && mouse.x >= min.x && mouse.x <= max.x && mouse.y >= min.y && mouse.y <= max.y;
+        bool isSelected = std::find(m_selectedStateIndices.begin(), m_selectedStateIndices.end(), static_cast<int>(i)) != m_selectedStateIndices.end();
 
         if (isHoverOutPort && ImGui::IsMouseClicked(0))
         {
             // Start transition creation from the output pin.
             // Consume the interaction so the node body does not begin dragging.
             m_selectedStateIndex = static_cast<int>(i);
+            m_selectedStateIndices.clear();
+            m_selectedStateIndices.push_back(static_cast<int>(i));
             m_selectedTransitionIndex = -1;
             m_draggedStateIndex = -1;
             m_hasPendingTransitionDrag = true;
@@ -754,18 +778,40 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         {
             // Input pin also starts a transition gesture, but does not move the node.
             m_selectedStateIndex = static_cast<int>(i);
+            m_selectedStateIndices.clear();
+            m_selectedStateIndices.push_back(static_cast<int>(i));
             m_selectedTransitionIndex = -1;
             m_draggedStateIndex = -1;
             m_hasPendingTransitionDrag = true;
             m_transitionFromIndex = static_cast<int>(i);
-            m_linkDragStartPos = inPortPos;
+            m_linkDragStartPos = outPortPos;
             return;
         }
         else if (isHover && ImGui::IsMouseClicked(0))
         {
-            // Only the node body should start dragging.
-            m_draggedStateIndex = static_cast<int>(i);
-            m_selectedStateIndex = static_cast<int>(i);
+            // Ctrl+click toggles selection without starting a drag.
+            if (ImGui::GetIO().KeyCtrl)
+            {
+                if (isSelected)
+                {
+                    m_selectedStateIndices.erase(std::remove(m_selectedStateIndices.begin(), m_selectedStateIndices.end(), static_cast<int>(i)), m_selectedStateIndices.end());
+                }
+                else
+                {
+                    m_selectedStateIndices.push_back(static_cast<int>(i));
+                }
+                m_selectedStateIndex = static_cast<int>(i);
+            }
+            else
+            {
+                if (m_selectedStateIndices.empty() || std::find(m_selectedStateIndices.begin(), m_selectedStateIndices.end(), static_cast<int>(i)) == m_selectedStateIndices.end())
+                {
+                    m_selectedStateIndices.clear();
+                    m_selectedStateIndices.push_back(static_cast<int>(i));
+                }
+                m_selectedStateIndex = static_cast<int>(i);
+                m_draggedStateIndex = static_cast<int>(i);
+            }
             m_selectedTransitionIndex = -1;
         }
         if (isHover && ImGui::IsMouseClicked(1))
@@ -788,10 +834,10 @@ void AnimationGraphRenderer::RenderGraphCanvas()
                     const nlohmann::json& targetState = states[j];
                     float tx = targetState.value("x", 0.0f);
                     float ty = targetState.value("y", 0.0f);
-                    ImVec2 targetMin(canvasOrigin.x + tx, canvasOrigin.y + ty);
-                    ImVec2 targetMax(targetMin.x + nodeW, targetMin.y + nodeH);
-                    ImVec2 targetInPort(targetMin.x, targetMin.y + nodeH * 0.5f);
-                    ImVec2 targetOutPort(targetMax.x, targetMin.y + nodeH * 0.5f);
+                    ImVec2 targetMin = toScreen(tx, ty);
+                    ImVec2 targetMax = toScreen(tx + nodeW, ty + nodeH);
+                    ImVec2 targetInPort = toScreen(tx, ty + nodeH * 0.5f);
+                    ImVec2 targetOutPort = toScreen(tx + nodeW, ty + nodeH * 0.5f);
 
                     float dxIn = mouse.x - targetInPort.x;
                     float dyIn = mouse.y - targetInPort.y;
@@ -833,11 +879,24 @@ void AnimationGraphRenderer::RenderGraphCanvas()
             m_draggedStateIndex = -1;
 
         ImU32 fill = (name == m_document->GetDefaultState()) ? IM_COL32(80, 120, 200, 255) : IM_COL32(60, 60, 70, 255);
-        ImU32 border = isHover ? IM_COL32(255, 220, 80, 255) : IM_COL32(180, 180, 180, 255);
+        ImU32 border = isSelected ? IM_COL32(255, 220, 80, 255) : (isHover ? IM_COL32(255, 220, 80, 255) : IM_COL32(180, 180, 180, 255));
         dl->AddRectFilled(min, max, fill, 6.0f);
         dl->AddRect(min, max, border, 6.0f, 0, 2.0f);
-        dl->AddText(ImVec2(min.x + 10.0f, min.y + 10.0f), IM_COL32(255,255,255,255), name.c_str());
-        dl->AddText(ImVec2(min.x + 10.0f, min.y + 36.0f), IM_COL32(220,220,220,255), anim.c_str());
+        dl->AddText(ImVec2(min.x + 10.0f, min.y + 10.0f), IM_COL32(255,255,255,255), anim.empty() ? name.c_str() : anim.c_str());
+        dl->AddText(ImVec2(min.x + 10.0f, min.y + 34.0f), IM_COL32(220,220,220,255), name.c_str());
+        dl->AddText(ImVec2(min.x + 10.0f, min.y + 54.0f), IM_COL32(180,180,180,255), "Events:");
+        float eventY = min.y + 70.0f;
+        for (size_t e = 0; e < data["events"].size(); ++e)
+        {
+            if (data["events"][e].value("state", "") == name)
+            {
+                std::string eventLabel = data["events"][e].value("name", "");
+                float eventTime = data["events"][e].value("time", 0.0f);
+                std::string line = eventLabel + " @ " + std::to_string(eventTime);
+                dl->AddText(ImVec2(min.x + 10.0f, eventY), IM_COL32(230, 220, 150, 255), line.c_str());
+                eventY += 16.0f;
+            }
+        }
 
         // Ports: left = input, right = output (drag from output port to another node to create a transition)
         ImU32 outPortColor = isHoverOutPort ? IM_COL32(255, 240, 120, 255) : IM_COL32(200, 170, 60, 255);
@@ -845,6 +904,89 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         dl->AddCircle(outPortPos, portRadius, IM_COL32(20, 20, 20, 255), 0, 1.5f);
         dl->AddCircleFilled(inPortPos, portRadius, IM_COL32(90, 160, 220, 255));
         dl->AddCircle(inPortPos, portRadius, IM_COL32(20, 20, 20, 255), 0, 1.5f);
+    }
+
+    if (m_isSelectingRectangle)
+    {
+        ImVec2 rectMin(std::min(m_selectionRectStart.x, m_selectionRectEnd.x), std::min(m_selectionRectStart.y, m_selectionRectEnd.y));
+        ImVec2 rectMax(std::max(m_selectionRectStart.x, m_selectionRectEnd.x), std::max(m_selectionRectStart.y, m_selectionRectEnd.y));
+        std::vector<int> rectSelection;
+        for (size_t i = 0; i < states.size(); ++i)
+        {
+            float x = states[i].value("x", 0.0f);
+            float y = states[i].value("y", 0.0f);
+            ImVec2 min = toScreen(x, y);
+            ImVec2 max = toScreen(x + nodeW, y + nodeH);
+            bool hit = !(max.x < rectMin.x || min.x > rectMax.x || max.y < rectMin.y || min.y > rectMax.y);
+            if (hit)
+            {
+                rectSelection.push_back(static_cast<int>(i));
+            }
+        }
+        if (ImGui::IsMouseReleased(0))
+        {
+            if (!ImGui::GetIO().KeyCtrl)
+                m_selectedStateIndices = rectSelection;
+            else
+                m_selectedStateIndices.insert(m_selectedStateIndices.end(), rectSelection.begin(), rectSelection.end());
+            if (!m_selectedStateIndices.empty())
+                m_selectedStateIndex = m_selectedStateIndices.back();
+        }
+        dl->AddRectFilled(rectMin, rectMax, IM_COL32(80, 160, 255, 40));
+        dl->AddRect(rectMin, rectMax, IM_COL32(80, 160, 255, 180), 0.0f, 0, 2.0f);
+    }
+
+    if (!m_isSelectingRectangle && !m_selectedStateIndices.empty())
+    {
+        m_selectedStateIndex = m_selectedStateIndices.back();
+    }
+
+    if (data.contains("transitions") && data["transitions"].is_array())
+    {
+        for (size_t i = 0; i < data["transitions"].size(); ++i)
+        {
+            const nlohmann::json& tr = data["transitions"][i];
+            std::string from = tr.value("from", "");
+            std::string to = tr.value("to", "");
+            int fi = FindStateIndexByName(from);
+            int ti = FindStateIndexByName(to);
+            if (fi < 0 || ti < 0)
+                continue;
+
+            float fx = states[fi].value("x", 0.0f);
+            float fy = states[fi].value("y", 0.0f);
+            float tx = states[ti].value("x", 0.0f);
+            float ty = states[ti].value("y", 0.0f);
+
+            ImVec2 p1 = toScreen(fx + nodeW, fy + nodeH * 0.5f);
+            ImVec2 p2 = toScreen(tx, ty + nodeH * 0.5f);
+            if (hovered)
+            {
+                float midX = (p1.x + p2.x) * 0.5f;
+                float midY = (p1.y + p2.y) * 0.5f;
+                float dx = mouse.x - midX;
+                float dy = mouse.y - midY;
+                if ((dx * dx + dy * dy) < 900.0f)
+                {
+                    if (ImGui::IsMouseClicked(0))
+                    {
+                        m_selectedTransitionIndex = static_cast<int>(i);
+                        m_selectedStateIndex = -1;
+                    }
+                    if (ImGui::IsMouseClicked(1))
+                    {
+                        m_selectedTransitionIndex = static_cast<int>(i);
+                        m_selectedStateIndex = -1;
+                        ImGui::OpenPopup("AnimTransitionContextMenu");
+                    }
+                }
+            }
+
+            ImDrawList* transitionDl = ImGui::GetWindowDrawList();
+            ImVec2 c1(p1.x + 90.0f, p1.y);
+            ImVec2 c2(p2.x - 60.0f, p2.y);
+            transitionDl->AddBezierCubic(p1, c1, c2, p2, IM_COL32(255, 190, 60, 255), 2.0f, 20);
+        }
     }
 
     // Phase 53: Render transition preview line while dragging
@@ -1103,6 +1245,20 @@ void AnimationGraphRenderer::RenderVerificationPanel()
 void AnimationGraphRenderer::Render()
 {
     EnsureDocument();
+    if (!m_document)
+        return;
+
+    if (!m_canvasEditor)
+    {
+        m_canvasEditor = std::make_unique<CustomCanvasEditor>(
+            "AnimationGraphCanvas",
+            ImVec2(0.0f, 0.0f),
+            ImVec2(1.0f, 1.0f),
+            1.0f,
+            0.1f,
+            3.0f);
+    }
+
     ImGui::BeginChild("AnimGraphToolbar", ImVec2(0, -1.0f), false);
     RenderToolbar();
     ImGui::Separator();
@@ -1121,7 +1277,11 @@ void AnimationGraphRenderer::Render()
     // Left column: canvas on top, timeline at bottom
     ImGui::BeginChild("AnimGraphLeftColumn", ImVec2(leftWidth, contentHeight), false);
     ImGui::BeginChild("AnimGraphCanvasPane", ImVec2(0, canvasHeight), true, ImGuiWindowFlags_NoScrollbar);
-    // No-op placeholder: keep canvas pane render path explicit for re-evaluation.
+    if (m_canvasEditor)
+    {
+        m_canvasEditor->SetCanvasScreenPos(ImGui::GetCursorScreenPos());
+        m_canvasEditor->SetCanvasSize(ImVec2(ImGui::GetContentRegionAvail().x, canvasHeight));
+    }
     RenderMainPanel();
     ImGui::EndChild();
 
@@ -1281,140 +1441,5 @@ void AnimationGraphRenderer::RenderTransitionPreview()
     }
 }
 
-// Phase 54: Evaluate cubic Bezier at parameter t in [0,1]
-// B(t) = (1-t)³P0 + 3(1-t)²t·P1 + 3(1-t)t²·P2 + t³·P3
-ImVec2 AnimationGraphRenderer::EvaluateBezier(const ImVec2& p0, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, float t) const
-{
-    float mt = 1.0f - t;
-    float mt2 = mt * mt;
-    float mt3 = mt2 * mt;
-    float t2 = t * t;
-    float t3 = t2 * t;
-    float w0 = mt3;
-    float w1 = 3.0f * mt2 * t;
-    float w2 = 3.0f * mt * t2;
-    float w3 = t3;
-
-    return ImVec2(
-        w0 * p0.x + w1 * p1.x + w2 * p2.x + w3 * p3.x,
-        w0 * p0.y + w1 * p1.y + w2 * p2.y + w3 * p3.y
-    );
-}
-
-// Phase 54: Calculate tangent (derivative) at parameter t
-// B'(t) = 3(1-t)²(P1-P0) + 6(1-t)t(P2-P1) + 3t²(P3-P2)
-ImVec2 AnimationGraphRenderer::GetBezierTangent(const ImVec2& p0, const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, float t) const
-{
-    float mt = 1.0f - t;
-    float mt2 = mt * mt;
-    float t2 = t * t;
-
-    ImVec2 dp1 = ImVec2(p1.x - p0.x, p1.y - p0.y);
-    ImVec2 dp2 = ImVec2(p2.x - p1.x, p2.y - p1.y);
-    ImVec2 dp3 = ImVec2(p3.x - p2.x, p3.y - p2.y);
-
-    ImVec2 tangent = ImVec2(
-        3.0f * mt2 * dp1.x + 6.0f * mt * t * dp2.x + 3.0f * t2 * dp3.x,
-        3.0f * mt2 * dp1.y + 6.0f * mt * t * dp2.y + 3.0f * t2 * dp3.y
-    );
-
-    // Normalize
-    float len = std::sqrt(tangent.x * tangent.x + tangent.y * tangent.y);
-    if (len > 0.001f)
-    {
-        tangent.x /= len;
-        tangent.y /= len;
-    }
-
-    return tangent;
-}
-
-// Phase 54: Draw arrow head pointing in tangent direction
-void AnimationGraphRenderer::DrawArrowOnCurve(ImDrawList* dl, const ImVec2& curveEnd, const ImVec2& tangent, ImU32 color, float arrowSize)
-{
-    if (!dl) return;
-
-    // Arrow back point (opposite to direction)
-    ImVec2 backPoint = ImVec2(
-        curveEnd.x - tangent.x * arrowSize,
-        curveEnd.y - tangent.y * arrowSize
-    );
-
-    // Perpendicular vector (rotate 90 degrees)
-    ImVec2 perp = ImVec2(-tangent.y, tangent.x);
-    float arrowWidth = arrowSize * 0.5f;
-
-    ImVec2 leftPoint = ImVec2(
-        backPoint.x + perp.x * arrowWidth,
-        backPoint.y + perp.y * arrowWidth
-    );
-    ImVec2 rightPoint = ImVec2(
-        backPoint.x - perp.x * arrowWidth,
-        backPoint.y - perp.y * arrowWidth
-    );
-
-    // Draw filled triangle: curveEnd, leftPoint, rightPoint
-    dl->AddTriangleFilled(curveEnd, leftPoint, rightPoint, color);
-}
-
 // Phase 54: Render a single transition with arrow and source-based color
-void AnimationGraphRenderer::RenderSingleTransition(size_t transitionIndex, const ImVec2& canvasOrigin)
-{
-    if (!m_document) return;
-
-    auto data = m_document->GetDataMutable();
-    if (data["transitions"].size() <= transitionIndex) return;
-
-    ImDrawList* dl = ImGui::GetWindowDrawList();
-    const nlohmann::json& transitions = data["transitions"];
-    const nlohmann::json& states = data["states"];
-
-    const nlohmann::json& tr = transitions[transitionIndex];
-    std::string from = tr.value("from", "");
-    std::string to = tr.value("to", "");
-
-    int fi = FindStateIndexByName(from);
-    int ti = FindStateIndexByName(to);
-    if (fi < 0 || ti < 0) return;
-
-    float fx = states[fi].value("x", 0.0f);
-    float fy = states[fi].value("y", 0.0f);
-    float tx = states[ti].value("x", 0.0f);
-    float ty = states[ti].value("y", 0.0f);
-
-    // Node dimensions
-    float nodeW = 140.0f;
-    float nodeH = 60.0f;
-
-    // Output port is on the right (from-state)
-    ImVec2 p1(canvasOrigin.x + fx + nodeW, canvasOrigin.y + fy + nodeH * 0.5f);
-    // Input port is on the left (to-state)
-    ImVec2 p2(canvasOrigin.x + tx, canvasOrigin.y + ty + nodeH * 0.5f);
-
-    // Control points for Bézier
-    ImVec2 c1(p1.x + 60.0f, p1.y);
-    ImVec2 c2(p2.x - 60.0f, p2.y);
-
-    // Draw the Bézier curve
-    dl->PathLineTo(p1);
-    dl->PathBezierCubicCurveTo(c1, c2, p2, 20);
-
-    // Phase 54: Determine color based on source port (output = orange/yellow)
-    ImU32 color = IM_COL32(255, 200, 80, 255);  // Output port default = orange
-    if (m_selectedTransitionIndex == static_cast<int>(transitionIndex))
-        color = IM_COL32(120, 200, 255, 255);  // Selected = light blue
-
-    float lineWidth = (m_selectedTransitionIndex == static_cast<int>(transitionIndex)) ? 3.0f : 2.0f;
-    dl->PathStroke(color, false, lineWidth);
-
-    // Phase 54: Draw arrow head at the end (pointing toward input)
-    ImVec2 tangent = GetBezierTangent(p1, c1, c2, p2, 0.95f);
-    DrawArrowOnCurve(dl, p2, tangent, color, 10.0f);
-}
-
-void AnimationGraphRenderer::RenderFrameworkModals()
-{
-    CanvasModalRenderer::Get().RenderSaveFilePickerModal();
-}
-
 } // namespace Olympe
