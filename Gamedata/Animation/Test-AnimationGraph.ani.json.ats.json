@@ -32,8 +32,8 @@
       "nodeId": 1,
       "priority": 0,
       "speed": 1,
-      "x": 71,
-      "y": 125
+      "x": 79,
+      "y": 53
     },
     {
       "animation": "ani_zombie_idle_w",
@@ -42,8 +42,8 @@
       "nodeId": 2,
       "priority": 0,
       "speed": 1,
-      "x": 459,
-      "y": 243
+      "x": 455,
+      "y": 244
     },
     {
       "animation": "ani_zombie_idle_e",
@@ -52,8 +52,8 @@
       "nodeId": 3,
       "priority": 0,
       "speed": 1,
-      "x": 702,
-      "y": 168
+      "x": 718,
+      "y": 127
     },
     {
       "animation": "ani_zombie_idle_w",
@@ -72,8 +72,8 @@
       "nodeId": 1,
       "priority": 0,
       "speed": 1,
-      "x": 911,
-      "y": 342
+      "x": 863,
+      "y": 512
     }
   ],
   "transitions": [

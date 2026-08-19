@@ -29,6 +29,7 @@ public:
     bool IsDirty() const override;
     std::string GetGraphType() const override;
     std::string GetCurrentPath() const override;
+    void SetCurrentPath(const std::string& path);
     void SaveCanvasState() override;
     void RestoreCanvasState() override;
     std::string GetCanvasStateJSON() const override;

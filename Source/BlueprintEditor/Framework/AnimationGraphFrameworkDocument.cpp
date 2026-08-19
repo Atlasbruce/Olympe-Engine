@@ -58,10 +58,17 @@ namespace Olympe
 
 	void AnimationGraphFrameworkDocument::SetFilePath(const std::string& path)
 	{
-		if (m_renderer)
+		if (!m_renderer)
 		{
-			m_renderer->Save(path);
+			return;
 		}
+
+		if (m_renderer->GetCurrentPath() == path)
+		{
+			return;
+		}
+
+		m_renderer->SetCurrentPath(path);
 	}
 
 	bool AnimationGraphFrameworkDocument::IsDirty() const

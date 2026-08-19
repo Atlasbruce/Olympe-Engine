@@ -170,10 +170,14 @@ bool AnimationGraphRenderer::Save(const std::string& path)
     m_currentPath = target;
     if (m_frameworkDocument)
     {
-        m_frameworkDocument->SetFilePath(target);
         m_frameworkDocument->OnDocumentModified();
     }
     return true;
+}
+
+void AnimationGraphRenderer::SetCurrentPath(const std::string& path)
+{
+    m_currentPath = path;
 }
 
 void AnimationGraphRenderer::SaveCanvasState()
