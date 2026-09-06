@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tileset version="1.10" tiledversion="1.12.2" name="Animation Bank Zombie" tilewidth="39" tileheight="79" tilecount="120" columns="15" objectalignment="topleft">
  <transformations hflip="0" vflip="0" rotate="0" preferuntransformed="1"/>
- <image source="monk_walk.png" trans="000000" width="623" height="631"/>
+ <image source="../../Resources/Animation/monk_walk.png" trans="000000" width="623" height="631"/>
  <tile id="0" type="ani_zombie_idle_s">
   <animation>
    <frame tileid="0" duration="70"/>

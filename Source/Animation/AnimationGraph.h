@@ -1,78 +1,54 @@
-/*
-Olympe Engine V2 2025
-Animation System - Animation Graph (State Machine)
-
-Purpose:
-- Define state machine structure for animations
-- Handle state transitions based on parameters
-- Evaluate conditions for automatic state changes
-*/
-
 #pragma once
 
 #include "AnimationTypes.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <memory>
 
 namespace OlympeAnimation
 {
-    // Forward declaration
-    class AnimationBank;
-
-    // ========================================================================
-    // Condition - Evaluates a parameter against a value
-    // ========================================================================
-    struct Condition
-    {
-        std::string parameter;           // Parameter name to check
-        ComparisonOperator op;           // Comparison operator
-        ParameterValue value;            // Value to compare against
-
-        Condition() : op(ComparisonOperator::Equal) {}
-    };
-
-    // ========================================================================
-    // Transition - Defines a transition between two states
-    // ========================================================================
-    struct Transition
-    {
-        std::string fromState;           // Source state (or "ANY" for any state)
-        std::string toState;             // Target state
-        float transitionTime = 0.1f;     // Blend duration in seconds
-        int priority = 0;                // Higher priority transitions win first
-        std::vector<Condition> conditions; // Conditions that must be met
-
-        Transition() = default;
-    };
-
-    // ========================================================================
-    // AnimationState - Single state in the animation graph
-    // ========================================================================
-    struct AnimationState
-    {
-        std::string name;                // State name (e.g., "Idle", "Walk")
-        std::string animationName;       // Animation to play in this state
-        BlendMode blendMode = BlendMode::Override;
-        int priority = 0;                // Higher priority = more important
-
-        AnimationState() = default;
-    };
-
-    // ========================================================================
-    // AnimationGraph - State machine for animation control
-    // ========================================================================
     class AnimationGraph
     {
     public:
+        struct DirectionClip
+        {
+            std::string direction;
+            std::string clip;
+        };
+
+        struct State
+        {
+            std::string name;
+            std::string defaultClip;
+            std::vector<DirectionClip> directionClips;
+            std::vector<std::string> events;
+            float blendTime = 0.1f;
+            bool loop = true;
+            int priority = 0;
+        };
+
+        struct Transition
+        {
+            std::string fromState;
+            std::string toState;
+            std::string condition;
+            float duration = 0.1f;
+            int priority = 0;
+            bool interruptible = true;
+        };
+
         AnimationGraph() = default;
         ~AnimationGraph() = default;
 
-        // Load animation graph from JSON file
         bool LoadFromFile(const std::string& filePath);
+        bool ParseJSON(const std::string& jsonContent);
 
-        // Parameter management
+        void SetCurrentState(const std::string& stateName);
+        const std::string& GetCurrentState() const { return m_currentState; }
+
+        void SetDirection(const std::string& direction) { m_direction = direction; }
+        const std::string& GetDirection() const { return m_direction; }
+
         void SetParameter(const std::string& name, bool value);
         void SetParameter(const std::string& name, float value);
         void SetParameter(const std::string& name, int value);
@@ -83,49 +59,27 @@ namespace OlympeAnimation
         int GetParameterInt(const std::string& name, int defaultValue = 0) const;
         std::string GetParameterString(const std::string& name, const std::string& defaultValue = "") const;
 
-        // State management
-        void SetCurrentState(const std::string& stateName);
-        const std::string& GetCurrentState() const { return m_currentState; }
-        
-        // Get animation name for current state
-        std::string GetCurrentAnimationName() const;
-
-        // Update state machine (checks for transitions)
-        // Returns true if state changed
         bool Update(float deltaTime);
-
-        // Get graph name
         const std::string& GetGraphName() const { return m_graphName; }
-
-        // Get animation bank path
-        const std::string& GetAnimationBankPath() const { return m_animationBankPath; }
-
-        // Check if graph is valid
+        const std::string& GetDefaultState() const { return m_defaultState; }
         bool IsValid() const { return m_isValid; }
+        std::string GetCurrentAnimationName() const;
+        std::string ResolveClip(const std::string& stateName, const std::string& direction) const;
+        const State* GetState(const std::string& stateName) const;
 
     private:
         std::string m_graphName;
         std::string m_description;
-        std::string m_animationBankPath;
-        std::string m_currentState;
         std::string m_defaultState = "Idle";
+        std::string m_currentState = "Idle";
+        std::string m_direction = "S";
         bool m_isValid = false;
 
         std::unordered_map<std::string, ParameterValue> m_parameters;
-        std::unordered_map<std::string, AnimationState> m_states;
+        std::unordered_map<std::string, State> m_states;
         std::vector<Transition> m_transitions;
 
-        // Helper: Parse JSON
-        bool ParseJSON(const std::string& jsonContent);
-
-        // Helper: Evaluate a single condition
-        bool EvaluateCondition(const Condition& condition) const;
-
-        // Helper: Evaluate all conditions for a transition
         bool EvaluateTransition(const Transition& transition) const;
-
-        // Helper: Find valid transition from current state
-        const Transition* FindValidTransition() const;
     };
 
 } // namespace OlympeAnimation

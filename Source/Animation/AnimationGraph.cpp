@@ -1,8 +1,3 @@
-/*
-Olympe Engine V2 2025
-Animation System - Animation Graph Implementation
-*/
-
 #include "AnimationGraph.h"
 #include "../json_helper.h"
 #include "../system/system_utils.h"
@@ -12,9 +7,28 @@ using json = nlohmann::json;
 
 namespace OlympeAnimation
 {
-    // ========================================================================
-    // AnimationGraph Implementation
-    // ========================================================================
+    namespace
+    {
+        static std::string LowerCopy(std::string value)
+        {
+            std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            return value;
+        }
+
+        static std::string NormalizeDirection(const std::string& direction)
+        {
+            const std::string v = LowerCopy(direction);
+            if (v == "n") return "N";
+            if (v == "ne") return "NE";
+            if (v == "e") return "E";
+            if (v == "se") return "SE";
+            if (v == "s") return "S";
+            if (v == "sw") return "SW";
+            if (v == "w") return "W";
+            if (v == "nw") return "NW";
+            return "S";
+        }
+    }
 
     bool AnimationGraph::LoadFromFile(const std::string& filePath)
     {
@@ -24,7 +38,6 @@ namespace OlympeAnimation
             SYSTEM_LOG << "AnimationGraph: Failed to load file: " << filePath << "\n";
             return false;
         }
-
         return ParseJSON(j.dump());
     }
 
@@ -33,310 +46,127 @@ namespace OlympeAnimation
         try
         {
             json j = json::parse(jsonContent);
-
-            // Parse basic info
-            m_graphName = JsonHelper::GetString(j, "graphName", "unknown");
+            m_graphName = JsonHelper::GetString(j, "name", JsonHelper::GetString(j, "graphName", "unknown"));
             m_description = JsonHelper::GetString(j, "description", "");
-            m_animationBankPath = JsonHelper::GetString(j, "animationBankPath", "");
-            if (m_animationBankPath.empty())
-                m_animationBankPath = JsonHelper::GetString(j, "animationBankRef", "");
-            if (m_animationBankPath.empty())
-                m_animationBankPath = JsonHelper::GetString(j, "bankRef", "");
             m_defaultState = JsonHelper::GetString(j, "defaultState", "Idle");
             m_currentState = m_defaultState;
 
-            // Parse parameters
-            if (j.contains("parameters") && j["parameters"].is_array())
-            {
-                for (const auto& paramJson : j["parameters"])
-                {
-                    std::string name = JsonHelper::GetString(paramJson, "name", "");
-                    std::string typeStr = JsonHelper::GetString(paramJson, "type", "float");
-
-                    ParameterValue value;
-                    if (typeStr == "bool")
-                    {
-                        value.type = ParameterType::Bool;
-                        value.boolValue = JsonHelper::GetBool(paramJson, "defaultValue", false);
-                    }
-                    else if (typeStr == "float")
-                    {
-                        value.type = ParameterType::Float;
-                        value.floatValue = JsonHelper::GetFloat(paramJson, "defaultValue", 0.0f);
-                    }
-                    else if (typeStr == "int")
-                    {
-                        value.type = ParameterType::Int;
-                        value.intValue = JsonHelper::GetInt(paramJson, "defaultValue", 0);
-                    }
-                    else if (typeStr == "string")
-                    {
-                        value.type = ParameterType::String;
-                        value.stringValue = JsonHelper::GetString(paramJson, "defaultValue", "");
-                    }
-
-                    m_parameters[name] = value;
-                }
-            }
-
-            // Parse states
             if (j.contains("states") && j["states"].is_array())
             {
                 for (const auto& stateJson : j["states"])
                 {
-                    AnimationState state;
+                    State state;
                     state.name = JsonHelper::GetString(stateJson, "name", "");
-                    state.animationName = JsonHelper::GetString(stateJson, "animationName", "");
+                    state.defaultClip = JsonHelper::GetString(stateJson, "defaultClip", "");
+                    state.blendTime = JsonHelper::GetFloat(stateJson, "blendTime", 0.1f);
+                    state.loop = JsonHelper::GetBool(stateJson, "loop", true);
                     state.priority = JsonHelper::GetInt(stateJson, "priority", 0);
-
-                    std::string blendModeStr = JsonHelper::GetString(stateJson, "blendMode", "override");
-                    if (blendModeStr == "additive")
-                        state.blendMode = BlendMode::Additive;
-                    else if (blendModeStr == "blend")
-                        state.blendMode = BlendMode::Blend;
-                    else
-                        state.blendMode = BlendMode::Override;
-
+                    if (stateJson.contains("directionClips") && stateJson["directionClips"].is_array())
+                    {
+                        for (const auto& clipJson : stateJson["directionClips"])
+                        {
+                            DirectionClip clip;
+                            clip.direction = NormalizeDirection(JsonHelper::GetString(clipJson, "direction", "S"));
+                            clip.clip = JsonHelper::GetString(clipJson, "clip", "");
+                            state.directionClips.push_back(clip);
+                        }
+                    }
+                    if (stateJson.contains("events") && stateJson["events"].is_array())
+                    {
+                        for (const auto& evt : stateJson["events"])
+                        {
+                            if (evt.is_string())
+                                state.events.push_back(evt.get<std::string>());
+                        }
+                    }
                     m_states[state.name] = state;
                 }
             }
 
-            // Parse transitions
             if (j.contains("transitions") && j["transitions"].is_array())
             {
                 for (const auto& transJson : j["transitions"])
                 {
-                    Transition trans;
-                    trans.fromState = JsonHelper::GetString(transJson, "from", "");
-                    trans.toState = JsonHelper::GetString(transJson, "to", "");
-                    trans.transitionTime = JsonHelper::GetFloat(transJson, "transitionTime", 0.1f);
-                    trans.priority = JsonHelper::GetInt(transJson, "priority", 0);
-
-                    // Parse conditions
-                    if (transJson.contains("conditions") && transJson["conditions"].is_array())
-                    {
-                        for (const auto& condJson : transJson["conditions"])
-                        {
-                            Condition cond;
-                            cond.parameter = JsonHelper::GetString(condJson, "parameter", "");
-                            
-                            // Parse operator
-                            std::string opStr = JsonHelper::GetString(condJson, "operator", "==");
-                            if (opStr == "==") cond.op = ComparisonOperator::Equal;
-                            else if (opStr == "!=") cond.op = ComparisonOperator::NotEqual;
-                            else if (opStr == ">") cond.op = ComparisonOperator::Greater;
-                            else if (opStr == ">=") cond.op = ComparisonOperator::GreaterOrEqual;
-                            else if (opStr == "<") cond.op = ComparisonOperator::Less;
-                            else if (opStr == "<=") cond.op = ComparisonOperator::LessOrEqual;
-
-                            // Parse value based on type
-                            if (condJson.contains("value"))
-                            {
-                                if (condJson["value"].is_boolean())
-                                {
-                                    cond.value = ParameterValue(condJson["value"].get<bool>());
-                                }
-                                else if (condJson["value"].is_number_float())
-                                {
-                                    cond.value = ParameterValue(condJson["value"].get<float>());
-                                }
-                                else if (condJson["value"].is_number_integer())
-                                {
-                                    cond.value = ParameterValue(condJson["value"].get<int>());
-                                }
-                                else if (condJson["value"].is_string())
-                                {
-                                    cond.value = ParameterValue(condJson["value"].get<std::string>());
-                                }
-                            }
-
-                            trans.conditions.push_back(cond);
-                        }
-                    }
-
-                    m_transitions.push_back(trans);
+                    Transition transition;
+                    transition.fromState = JsonHelper::GetString(transJson, "from", "");
+                    transition.toState = JsonHelper::GetString(transJson, "to", "");
+                    transition.condition = JsonHelper::GetString(transJson, "condition", "");
+                    transition.duration = JsonHelper::GetFloat(transJson, "duration", 0.1f);
+                    transition.priority = JsonHelper::GetInt(transJson, "priority", 0);
+                    transition.interruptible = JsonHelper::GetBool(transJson, "interruptible", true);
+                    m_transitions.push_back(transition);
                 }
             }
 
-            m_isValid = true;
-            SYSTEM_LOG << "AnimationGraph: Successfully loaded '" << m_graphName 
-                      << "' with " << m_states.size() << " states and " 
-                      << m_transitions.size() << " transitions\n";
+            m_isValid = !m_states.empty();
             return true;
         }
-        catch (const std::exception& e)
+        catch (...)
         {
-            SYSTEM_LOG << "AnimationGraph: Error parsing JSON: " << e.what() << "\n";
             return false;
         }
     }
 
-    void AnimationGraph::SetParameter(const std::string& name, bool value)
-    {
-        m_parameters[name] = ParameterValue(value);
-    }
-
-    void AnimationGraph::SetParameter(const std::string& name, float value)
-    {
-        m_parameters[name] = ParameterValue(value);
-    }
-
-    void AnimationGraph::SetParameter(const std::string& name, int value)
-    {
-        m_parameters[name] = ParameterValue(value);
-    }
-
-    void AnimationGraph::SetParameter(const std::string& name, const std::string& value)
-    {
-        m_parameters[name] = ParameterValue(value);
-    }
-
-    bool AnimationGraph::GetParameterBool(const std::string& name, bool defaultValue) const
-    {
-        auto it = m_parameters.find(name);
-        if (it != m_parameters.end() && it->second.type == ParameterType::Bool)
-            return it->second.boolValue;
-        return defaultValue;
-    }
-
-    float AnimationGraph::GetParameterFloat(const std::string& name, float defaultValue) const
-    {
-        auto it = m_parameters.find(name);
-        if (it != m_parameters.end() && it->second.type == ParameterType::Float)
-            return it->second.floatValue;
-        return defaultValue;
-    }
-
-    int AnimationGraph::GetParameterInt(const std::string& name, int defaultValue) const
-    {
-        auto it = m_parameters.find(name);
-        if (it != m_parameters.end() && it->second.type == ParameterType::Int)
-            return it->second.intValue;
-        return defaultValue;
-    }
-
-    std::string AnimationGraph::GetParameterString(const std::string& name, const std::string& defaultValue) const
-    {
-        auto it = m_parameters.find(name);
-        if (it != m_parameters.end() && it->second.type == ParameterType::String)
-            return it->second.stringValue;
-        return defaultValue;
-    }
-
-    void AnimationGraph::SetCurrentState(const std::string& stateName)
-    {
-        if (m_states.find(stateName) != m_states.end())
-        {
-            m_currentState = stateName;
-        }
-    }
-
-    std::string AnimationGraph::GetCurrentAnimationName() const
-    {
-        auto it = m_states.find(m_currentState);
-        if (it != m_states.end())
-            return it->second.animationName;
-        return "";
-    }
+    void AnimationGraph::SetCurrentState(const std::string& stateName) { if (m_states.find(stateName) != m_states.end()) m_currentState = stateName; }
+    void AnimationGraph::SetParameter(const std::string& name, bool value) { m_parameters[name] = ParameterValue(value); }
+    void AnimationGraph::SetParameter(const std::string& name, float value) { m_parameters[name] = ParameterValue(value); }
+    void AnimationGraph::SetParameter(const std::string& name, int value) { m_parameters[name] = ParameterValue(value); }
+    void AnimationGraph::SetParameter(const std::string& name, const std::string& value) { m_parameters[name] = ParameterValue(value); }
+    bool AnimationGraph::GetParameterBool(const std::string& name, bool defaultValue) const { const auto it = m_parameters.find(name); return (it != m_parameters.end() && it->second.type == ParameterType::Bool) ? it->second.boolValue : defaultValue; }
+    float AnimationGraph::GetParameterFloat(const std::string& name, float defaultValue) const { const auto it = m_parameters.find(name); return (it != m_parameters.end() && it->second.type == ParameterType::Float) ? it->second.floatValue : defaultValue; }
+    int AnimationGraph::GetParameterInt(const std::string& name, int defaultValue) const { const auto it = m_parameters.find(name); return (it != m_parameters.end() && it->second.type == ParameterType::Int) ? it->second.intValue : defaultValue; }
+    std::string AnimationGraph::GetParameterString(const std::string& name, const std::string& defaultValue) const { const auto it = m_parameters.find(name); return (it != m_parameters.end() && it->second.type == ParameterType::String) ? it->second.stringValue : defaultValue; }
 
     bool AnimationGraph::Update(float deltaTime)
     {
         (void)deltaTime;
-        const Transition* validTransition = FindValidTransition();
-        if (validTransition)
+        const Transition* best = nullptr;
+        for (const auto& transition : m_transitions)
         {
-            m_currentState = validTransition->toState;
+            if (transition.fromState != m_currentState && transition.fromState != "ANY")
+                continue;
+            if (!EvaluateTransition(transition))
+                continue;
+            if (!best || transition.priority > best->priority)
+                best = &transition;
+        }
+        if (best)
+        {
+            m_currentState = best->toState;
             return true;
         }
         return false;
     }
 
-    bool AnimationGraph::EvaluateCondition(const Condition& condition) const
+    std::string AnimationGraph::GetCurrentAnimationName() const
     {
-        auto it = m_parameters.find(condition.parameter);
-        if (it == m_parameters.end())
-            return false;
+        return ResolveClip(m_currentState, m_direction);
+    }
 
-        const ParameterValue& paramValue = it->second;
-        const ParameterValue& condValue = condition.value;
-
-        // Type must match
-        if (paramValue.type != condValue.type)
-            return false;
-
-        switch (paramValue.type)
+    std::string AnimationGraph::ResolveClip(const std::string& stateName, const std::string& direction) const
+    {
+        const State* state = GetState(stateName);
+        if (!state) return "";
+        const std::string normalizedDirection = NormalizeDirection(direction);
+        for (const auto& clip : state->directionClips)
         {
-        case ParameterType::Bool:
-            if (condition.op == ComparisonOperator::Equal)
-                return paramValue.boolValue == condValue.boolValue;
-            else if (condition.op == ComparisonOperator::NotEqual)
-                return paramValue.boolValue != condValue.boolValue;
-            break;
-
-        case ParameterType::Float:
-            switch (condition.op)
-            {
-            case ComparisonOperator::Equal: return paramValue.floatValue == condValue.floatValue;
-            case ComparisonOperator::NotEqual: return paramValue.floatValue != condValue.floatValue;
-            case ComparisonOperator::Greater: return paramValue.floatValue > condValue.floatValue;
-            case ComparisonOperator::GreaterOrEqual: return paramValue.floatValue >= condValue.floatValue;
-            case ComparisonOperator::Less: return paramValue.floatValue < condValue.floatValue;
-            case ComparisonOperator::LessOrEqual: return paramValue.floatValue <= condValue.floatValue;
-            }
-            break;
-
-        case ParameterType::Int:
-            switch (condition.op)
-            {
-            case ComparisonOperator::Equal: return paramValue.intValue == condValue.intValue;
-            case ComparisonOperator::NotEqual: return paramValue.intValue != condValue.intValue;
-            case ComparisonOperator::Greater: return paramValue.intValue > condValue.intValue;
-            case ComparisonOperator::GreaterOrEqual: return paramValue.intValue >= condValue.intValue;
-            case ComparisonOperator::Less: return paramValue.intValue < condValue.intValue;
-            case ComparisonOperator::LessOrEqual: return paramValue.intValue <= condValue.intValue;
-            }
-            break;
-
-        case ParameterType::String:
-            if (condition.op == ComparisonOperator::Equal)
-                return paramValue.stringValue == condValue.stringValue;
-            else if (condition.op == ComparisonOperator::NotEqual)
-                return paramValue.stringValue != condValue.stringValue;
-            break;
+            if (clip.direction == normalizedDirection && !clip.clip.empty())
+                return clip.clip;
         }
+        return state->defaultClip;
+    }
 
-        return false;
+    const AnimationGraph::State* AnimationGraph::GetState(const std::string& stateName) const
+    {
+        const auto it = m_states.find(stateName);
+        return it != m_states.end() ? &it->second : nullptr;
     }
 
     bool AnimationGraph::EvaluateTransition(const Transition& transition) const
     {
-        // All conditions must be true
-        for (const auto& condition : transition.conditions)
-        {
-            if (!EvaluateCondition(condition))
-                return false;
-        }
+        if (transition.condition.empty())
+            return true;
         return true;
-    }
-
-    const Transition* AnimationGraph::FindValidTransition() const
-    {
-        const Transition* bestTransition = nullptr;
-        for (const auto& trans : m_transitions)
-        {
-            const bool matchesState = (trans.fromState == "ANY" || trans.fromState == m_currentState);
-            if (!matchesState)
-                continue;
-
-            if (!EvaluateTransition(trans))
-                continue;
-
-            if (!bestTransition || trans.priority > bestTransition->priority)
-            {
-                bestTransition = &trans;
-            }
-        }
-        return bestTransition;
     }
 
 } // namespace OlympeAnimation
