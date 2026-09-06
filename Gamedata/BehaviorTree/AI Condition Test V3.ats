@@ -624,8 +624,8 @@
         }
       },
       "position": {
-        "x": 540,
-        "y": -16
+        "x": 529,
+        "y": -20
       },
       "taskType": "log_message",
       "type": "AtomicTask"
