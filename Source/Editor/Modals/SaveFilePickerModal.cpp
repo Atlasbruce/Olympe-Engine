@@ -112,7 +112,8 @@ void SaveFilePickerModal::Render()
         ImGui::OpenPopup(title.c_str());
     }
     bool open = m_isOpen;
-    if (ImGui::BeginPopupModal(title.c_str(), &open, ImGuiWindowFlags_AlwaysAutoResize))
+    std::string modalId = title + "##savefilepicker";
+    if (ImGui::BeginPopupModal(modalId.c_str(), &open, ImGuiWindowFlags_AlwaysAutoResize))
     {
         // Description
         ImGui::TextColored(ImVec4(0.8f, 0.95f, 1.0f, 1.0f), "%s", GetDescriptionText().c_str());

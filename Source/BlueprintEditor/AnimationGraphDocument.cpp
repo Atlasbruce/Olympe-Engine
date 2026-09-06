@@ -8,6 +8,8 @@
 #include <windows.h>
 #endif
 
+#include "../TiledLevelLoader/include/TilesetParser.h"
+
 using json = nlohmann::json;
 
 namespace Olympe {
@@ -18,11 +20,22 @@ namespace {
         std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
         return value;
     }
+
+    static bool PathExists(const std::string& path)
+    {
+#ifdef _WIN32
+        return GetFileAttributesA(path.c_str()) != INVALID_FILE_ATTRIBUTES;
+#else
+        std::ifstream file(path.c_str());
+        return file.good();
+#endif
+    }
 }
 
 AnimationGraphDocument::AnimationGraphDocument()
     : m_isDirty(false)
     , m_renderer(nullptr)
+    , m_suppressDirtyNotifications(false)
     , m_nextNodeId(1)
 {
     Clear();
@@ -49,14 +62,32 @@ void AnimationGraphDocument::Clear()
     m_data = BuildJson();
 }
 
+std::vector<std::string> AnimationGraphDocument::GetSourceNames() const
+{
+    std::vector<std::string> names;
+    for (size_t i = 0; i < m_sources.size(); ++i)
+    {
+        names.push_back(m_sources[i].sourceName);
+    }
+    return names;
+}
+
+std::vector<std::string> AnimationGraphDocument::GetSourceClipNames(size_t index) const
+{
+    if (index >= m_sources.size())
+    {
+        return std::vector<std::string>();
+    }
+    return m_sources[index].clips;
+}
+
 void AnimationGraphDocument::SetName(const std::string& name) { m_name = name.empty() ? "Untitled Animation Graph" : name; m_isDirty = true; m_data = BuildJson(); }
 void AnimationGraphDocument::SetDescription(const std::string& description) { m_description = description; m_isDirty = true; m_data = BuildJson(); }
 void AnimationGraphDocument::SetDefaultState(const std::string& stateName) { if (!stateName.empty()) { m_defaultState = stateName; m_isDirty = true; m_data = BuildJson(); } }
 
 void AnimationGraphDocument::AddSource(const std::string& filePath)
 {
-    if (filePath.empty()) return;
-    for (size_t i = 0; i < m_sources.size(); ++i) if (m_sources[i].filePath == filePath) return;
+    if (filePath.empty() || HasSource(filePath)) return;
     ImportTSXSource(filePath, nullptr);
 }
 
@@ -85,6 +116,31 @@ bool AnimationGraphDocument::AddState(const std::string& stateName)
     state.directionClips.resize(kDirectionCount);
     for (size_t i = 0; i < kDirectionCount; ++i) state.directionClips[i].direction = DirectionToString(static_cast<Direction>(i));
     m_states.push_back(state);
+    m_isDirty = true;
+    m_data = BuildJson();
+    return true;
+}
+
+bool AnimationGraphDocument::AddStateFromClip(const std::string& stateName, const std::string& clipName)
+{
+    if (!AddState(stateName))
+    {
+        return false;
+    }
+    StateDefinition* state = GetState(stateName);
+    if (!state)
+    {
+        return false;
+    }
+    state->defaultClip = clipName;
+    state->x = static_cast<double>(m_nextNodeId * 160);
+    state->y = static_cast<double>(m_nextNodeId * 80);
+    ++m_nextNodeId;
+    for (size_t i = 0; i < kDirectionCount; ++i)
+    {
+        state->directionClips[i].direction = DirectionToString(static_cast<Direction>(i));
+        state->directionClips[i].clip = clipName;
+    }
     m_isDirty = true;
     m_data = BuildJson();
     return true;
@@ -122,6 +178,17 @@ bool AnimationGraphDocument::AddStateEvent(const std::string& stateName, const s
 bool AnimationGraphDocument::RemoveStateEvent(const std::string& stateName, const std::string& eventName) { StateDefinition* s = GetState(stateName); if (!s) return false; std::vector<std::string>::iterator it = std::remove(s->events.begin(), s->events.end(), eventName); if (it == s->events.end()) return false; s->events.erase(it, s->events.end()); m_isDirty = true; m_data = BuildJson(); return true; }
 bool AnimationGraphDocument::AddTransition(const std::string& fromState, const std::string& toState, const std::string& condition, double duration) { if (fromState.empty() || toState.empty() || FindStateIndex(fromState) < 0 || FindStateIndex(toState) < 0) return false; TransitionDefinition t; t.fromState = fromState; t.toState = toState; t.condition = condition; t.duration = duration; m_transitions.push_back(t); m_isDirty = true; m_data = BuildJson(); return true; }
 bool AnimationGraphDocument::RemoveTransition(size_t index) { if (index >= m_transitions.size()) return false; m_transitions.erase(m_transitions.begin() + index); m_isDirty = true; m_data = BuildJson(); return true; }
+
+bool AnimationGraphDocument::HasSource(const std::string& filePath) const
+{
+    const std::string normalized = NormalizePath(filePath);
+    for (size_t i = 0; i < m_sources.size(); ++i)
+    {
+        if (m_sources[i].filePath == normalized)
+            return true;
+    }
+    return false;
+}
 
 int AnimationGraphDocument::FindStateIndex(const std::string& stateName) const { for (size_t i = 0; i < m_states.size(); ++i) if (m_states[i].name == stateName) return static_cast<int>(i); return -1; }
 std::string AnimationGraphDocument::GetStateNameAt(size_t index) const { return index < m_states.size() ? m_states[index].name : ""; }
@@ -259,15 +326,93 @@ std::string AnimationGraphDocument::ExtractClipNameFromTsx(const json& root, con
 
 bool AnimationGraphDocument::ImportTSXSource(const std::string& filePath, std::vector<std::string>* errors)
 {
+    return ImportTSXFile(filePath, errors);
+}
+
+bool AnimationGraphDocument::ImportTSXFile(const std::string& filePath, std::vector<std::string>* errors)
+{
     const std::string normalized = NormalizePath(filePath);
-    json root;
-    if (!JsonHelper::LoadJsonFromFile(normalized, root)) { if (errors) errors->push_back("Cannot read TSX source: " + filePath); return false; }
-    if (!root.is_object()) { if (errors) errors->push_back("TSX source is not a JSON object: " + filePath); return false; }
-    SourceDefinition source; source.filePath = normalized; source.sourceName = ExtractClipNameFromTsx(root, filePath);
-    if (root.contains("clips") && root["clips"].is_array()) for (const auto& clipJson : root["clips"]) { if (clipJson.is_string()) source.clips.push_back(clipJson.get<std::string>()); else if (clipJson.is_object()) source.clips.push_back(JsonHelper::GetString(clipJson, "name", "")); }
-    source.clips.erase(std::remove_if(source.clips.begin(), source.clips.end(), [](const std::string& clip) { return clip.empty(); }), source.clips.end());
-    if (source.clips.empty()) { if (errors) errors->push_back("TSX source does not contain any clips: " + filePath); return false; }
-    m_sources.push_back(source); RebuildAvailableClips(); m_isDirty = true; m_data = BuildJson(); return true;
+    if (normalized.empty())
+    {
+        if (errors) errors->push_back("Cannot parse TSX source: empty path");
+        return false;
+    }
+    if (HasSource(normalized))
+    {
+        return true;
+    }
+    Olympe::Tiled::TilesetParser parser;
+    Olympe::Tiled::TiledTileset tileset;
+
+    std::string resolvedPath = normalized;
+    if (!PathExists(resolvedPath))
+    {
+        if (PathExists(filePath))
+        {
+            resolvedPath = filePath;
+        }
+        else
+        {
+            std::string cwdPath = std::string(".\\") + filePath;
+            if (PathExists(cwdPath))
+            {
+                resolvedPath = cwdPath;
+            }
+        }
+    }
+
+    if (!parser.ParseFile(resolvedPath, tileset))
+    {
+        SYSTEM_LOG << "[AnimationGraphDocument] TSX parse failed for '" << resolvedPath << "' (original='" << filePath << "')\n";
+        if (errors) errors->push_back("Cannot parse TSX source: " + filePath);
+        return false;
+    }
+
+    if (tileset.name.empty())
+    {
+        std::string baseName = normalized;
+        size_t slash = baseName.find_last_of("/\\");
+        if (slash != std::string::npos)
+        {
+            baseName = baseName.substr(slash + 1);
+        }
+        size_t dot = baseName.find_last_of('.');
+        if (dot != std::string::npos)
+        {
+            baseName = baseName.substr(0, dot);
+        }
+        tileset.name = baseName;
+    }
+
+    if (tileset.tiles.empty())
+    {
+        // Some TSX files are image-based banks with tilecount only; synthesize clip entries.
+        if (tileset.tilecount > 0)
+        {
+            for (int i = 0; i < tileset.tilecount; ++i)
+            {
+                tileset.tiles.push_back(Olympe::Tiled::TiledTile());
+                tileset.tiles.back().id = i;
+            }
+        }
+    }
+
+    if (tileset.tiles.empty())
+    {
+        if (errors) errors->push_back("Cannot parse TSX source: " + filePath);
+        return false;
+    }
+
+    SourceDefinition source;
+    source.filePath = resolvedPath;
+    source.sourceName = tileset.name.empty() ? ExtractClipNameFromTsx(json::object(), filePath) : tileset.name;
+
+    source.clips.push_back(source.sourceName);
+    m_sources.push_back(source);
+    RebuildAvailableClips();
+    m_isDirty = true;
+    m_data = BuildJson();
+    return true;
 }
 
 bool AnimationGraphDocument::ImportTSXDirectory(const std::string& directoryPath, std::vector<std::string>* errors)

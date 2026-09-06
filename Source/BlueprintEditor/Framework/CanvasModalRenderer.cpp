@@ -190,6 +190,14 @@ void CanvasModalRenderer::OpenAnimationGraphFilePickerModal(const std::string& i
     m_cachedAnimationGraphSelection = "";
 }
 
+void CanvasModalRenderer::OpenAnimationGraphTsxPickerModal(const std::string& initialPath)
+{
+    m_animationGraphTsxModal.SetAllowMultiSelection(true);
+    m_animationGraphTsxModal.Open(initialPath);
+    m_animationGraphTsxConfirmed = false;
+    m_cachedAnimationGraphTsxSelection = "";
+}
+
 void CanvasModalRenderer::RenderAnimationGraphFilePickerModal()
 {
     m_animationGraphModal.Render();
@@ -200,9 +208,24 @@ void CanvasModalRenderer::RenderAnimationGraphFilePickerModal()
     }
 }
 
+void CanvasModalRenderer::RenderAnimationGraphTsxPickerModal()
+{
+    m_animationGraphTsxModal.Render();
+    if (!m_animationGraphTsxConfirmed && m_animationGraphTsxModal.IsConfirmed())
+    {
+        m_animationGraphTsxConfirmed = true;
+        m_cachedAnimationGraphTsxSelection = m_animationGraphTsxModal.GetSelectedFile();
+    }
+}
+
 bool CanvasModalRenderer::IsAnimationGraphModalConfirmed() const
 {
     return m_animationGraphConfirmed;
+}
+
+bool CanvasModalRenderer::IsAnimationGraphTsxModalConfirmed() const
+{
+    return m_animationGraphTsxConfirmed;
 }
 
 std::string CanvasModalRenderer::GetSelectedAnimationGraphFile() const
@@ -210,9 +233,24 @@ std::string CanvasModalRenderer::GetSelectedAnimationGraphFile() const
     return m_cachedAnimationGraphSelection;
 }
 
+std::string CanvasModalRenderer::GetSelectedAnimationGraphTsxFile() const
+{
+    return m_cachedAnimationGraphTsxSelection;
+}
+
+std::vector<std::string> CanvasModalRenderer::GetSelectedAnimationGraphTsxFiles() const
+{
+    return m_animationGraphTsxModal.GetSelectedFiles();
+}
+
 bool CanvasModalRenderer::IsAnimationGraphModalOpen() const
 {
     return m_animationGraphModal.IsOpen();
+}
+
+bool CanvasModalRenderer::IsAnimationGraphTsxModalOpen() const
+{
+    return m_animationGraphTsxModal.IsOpen();
 }
 
 void CanvasModalRenderer::CloseAnimationGraphModal()
@@ -220,6 +258,13 @@ void CanvasModalRenderer::CloseAnimationGraphModal()
     m_animationGraphModal.Close();
     m_animationGraphConfirmed = false;
     m_cachedAnimationGraphSelection = "";
+}
+
+void CanvasModalRenderer::CloseAnimationGraphTsxModal()
+{
+    m_animationGraphTsxModal.Close();
+    m_animationGraphTsxConfirmed = false;
+    m_cachedAnimationGraphTsxSelection = "";
 }
 
 // ============================================================================

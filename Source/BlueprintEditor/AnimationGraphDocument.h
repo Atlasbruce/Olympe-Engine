@@ -87,10 +87,14 @@ public:
 
     void AddSource(const std::string& filePath);
     void RemoveSource(size_t index);
+    bool HasSource(const std::string& filePath) const;
     const std::vector<SourceDefinition>& GetSources() const { return m_sources; }
+    std::vector<std::string> GetSourceNames() const;
+    std::vector<std::string> GetSourceClipNames(size_t index) const;
 
     std::string MakeUniqueStateName(const std::string& baseName) const;
     bool AddState(const std::string& stateName);
+    bool AddStateFromClip(const std::string& stateName, const std::string& clipName);
     bool RenameState(const std::string& oldName, const std::string& newName);
     bool RemoveState(const std::string& stateName);
     bool SetStatePosition(const std::string& stateName, double x, double y);
@@ -118,6 +122,7 @@ public:
 
     bool ImportTSXSource(const std::string& filePath, std::vector<std::string>* errors = nullptr);
     bool ImportTSXDirectory(const std::string& directoryPath, std::vector<std::string>* errors = nullptr);
+    bool ImportTSXFile(const std::string& filePath, std::vector<std::string>* errors = nullptr);
     std::vector<std::string> ValidateImportedSources() const;
     std::vector<std::string> GetAllKnownClips() const;
 
@@ -141,6 +146,7 @@ private:
     std::vector<StateDefinition> m_states;
     std::vector<TransitionDefinition> m_transitions;
     std::vector<std::string> m_availableClips;
+    bool m_suppressDirtyNotifications;
     int m_nextNodeId;
 };
 

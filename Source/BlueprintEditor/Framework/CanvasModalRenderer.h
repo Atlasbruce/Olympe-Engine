@@ -147,11 +147,18 @@ public:
     void CloseAnimationBankModal();
 
     void OpenAnimationGraphFilePickerModal(const std::string& initialPath);
+    void OpenAnimationGraphTsxPickerModal(const std::string& initialPath);
     void RenderAnimationGraphFilePickerModal();
+    void RenderAnimationGraphTsxPickerModal();
     bool IsAnimationGraphModalConfirmed() const;
+    bool IsAnimationGraphTsxModalConfirmed() const;
     std::string GetSelectedAnimationGraphFile() const;
+    std::string GetSelectedAnimationGraphTsxFile() const;
+    std::vector<std::string> GetSelectedAnimationGraphTsxFiles() const;
     bool IsAnimationGraphModalOpen() const;
+    bool IsAnimationGraphTsxModalOpen() const;
     void CloseAnimationGraphModal();
+    void CloseAnimationGraphTsxModal();
 
     // ========================================================================
     // SaveAs File Picker Modal
@@ -221,6 +228,7 @@ private:
     FilePickerModal m_behaviorTreeModal{FilePickerType::BehaviorTree};
     FilePickerModal m_animationBankModal{FilePickerType::AnimationBank};
     FilePickerModal m_animationGraphModal{FilePickerType::AnimationGraph};
+    FilePickerModal m_animationGraphTsxModal{FilePickerType::AnimationGraphTsx};
 
     /**
      * @brief Instance of Save file picker modal.
@@ -255,6 +263,8 @@ private:
     bool m_animationBankConfirmed = false;
     std::string m_cachedAnimationGraphSelection;
     bool m_animationGraphConfirmed = false;
+    std::string m_cachedAnimationGraphTsxSelection;
+    bool m_animationGraphTsxConfirmed = false;
 
     /**
      * @brief Last confirmed selection from Save modal.

@@ -16,11 +16,14 @@ AnimationGraphRenderer::AnimationGraphRenderer()
     , m_minimapPosition(1)
     , m_selectedStateIndex(-1)
     , m_selectedTransitionIndex(-1)
+    , m_selectedSourceIndex(-1)
+    , m_showTsxImportModal(false)
 {
     m_stateNameBuffer[0] = 0;
     m_animationNameBuffer[0] = 0;
     m_transitionFromBuffer[0] = 0;
     m_transitionToBuffer[0] = 0;
+    m_tsxImportPathBuffer[0] = 0;
     EnsureDocument();
 }
 
@@ -79,9 +82,34 @@ void AnimationGraphRenderer::RenderToolbar()
     if (ImGui::Button("Save As"))
         CanvasModalRenderer::Get().OpenSaveFilePickerModal("./Gamedata/Animation/", m_document ? m_document->GetName() : "Untitled", Olympe::SaveFileType::AnimationGraph);
     ImGui::SameLine();
-    ImGui::Button("Verify");
+    if (ImGui::Button("Verify"))
+    {
+        VerifyGraph();
+    }
     ImGui::SameLine();
-    ImGui::Button("Run");
+    if (ImGui::Button("Run"))
+    {
+        RunGraph();
+    }
+}
+
+void AnimationGraphRenderer::VerifyGraph()
+{
+    if (!m_document)
+    {
+        return;
+    }
+    std::vector<std::string> issues = m_document->ValidateBinding();
+    SYSTEM_LOG << "[AnimationGraphRenderer] VerifyGraph: " << issues.size() << " issue(s)\n";
+    for (size_t i = 0; i < issues.size(); ++i)
+    {
+        SYSTEM_LOG << "[AnimationGraphRenderer] - " << issues[i] << "\n";
+    }
+}
+
+void AnimationGraphRenderer::RunGraph()
+{
+    SYSTEM_LOG << "[AnimationGraphRenderer] RunGraph requested\n";
 }
 
 void AnimationGraphRenderer::RenderMainPanel()
@@ -91,37 +119,69 @@ void AnimationGraphRenderer::RenderMainPanel()
     if (totalWidth <= 0.0f) totalWidth = 800.0f;
     if (totalHeight <= 0.0f) totalHeight = 600.0f;
 
-    float topRowHeight = totalHeight * 0.70f;
-    float bottomRowHeight = totalHeight - topRowHeight;
-    float leftWidth = totalWidth * 0.70f;
+    static float s_splitX = 0.72f;
+    static float s_splitY = 0.70f;
+    static float s_splitMin = 0.20f;
+    static float s_splitMax = 0.80f;
+
+    float leftWidth = totalWidth * s_splitX;
     float rightWidth = totalWidth - leftWidth;
+    float topHeight = totalHeight * s_splitY;
+    float bottomHeight = totalHeight - topHeight;
+    const float splitterThickness = 6.0f;
 
-    ImGui::BeginChild("AnimationGraph_MainRow", ImVec2(0, topRowHeight), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+    ImGui::BeginChild("AnimationGraph_GridRoot", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     {
-        ImGui::BeginChild("AnimationGraph_CanvasZone", ImVec2(leftWidth, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-        RenderCanvasPanel();
+        ImGui::BeginChild("AnimationGraph_TopRow", ImVec2(0, topHeight), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        {
+            ImGui::BeginChild("AnimationGraph_CanvasZone", ImVec2(leftWidth, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+            RenderCanvasPanel();
+            ImGui::EndChild();
+
+            ImGui::SameLine(0.0f, splitterThickness);
+            ImGui::InvisibleButton("##AnimationGraphHorizontalSplitter", ImVec2(splitterThickness, topHeight));
+            if (ImGui::IsItemActive())
+            {
+                s_splitX += ImGui::GetIO().MouseDelta.x / totalWidth;
+                if (s_splitX < s_splitMin) s_splitX = s_splitMin;
+                if (s_splitX > s_splitMax) s_splitX = s_splitMax;
+            }
+
+            ImGui::SameLine(0.0f, splitterThickness);
+            ImGui::BeginChild("AnimationGraph_RightTopZone", ImVec2(0, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+            RenderRightPanelTabs();
+            ImGui::EndChild();
+        }
         ImGui::EndChild();
 
-        ImGui::SameLine();
+        ImGui::InvisibleButton("##AnimationGraphVerticalSplitter", ImVec2(totalWidth, splitterThickness));
+        if (ImGui::IsItemActive())
+        {
+            s_splitY += ImGui::GetIO().MouseDelta.y / totalHeight;
+            if (s_splitY < s_splitMin) s_splitY = s_splitMin;
+            if (s_splitY > s_splitMax) s_splitY = s_splitMax;
+        }
 
-        ImGui::BeginChild("AnimationGraph_SequenceurZone", ImVec2(0, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-        RenderEventSequencerPanel();
-        ImGui::EndChild();
-    }
-    ImGui::EndChild();
+        ImGui::BeginChild("AnimationGraph_BottomRow", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        {
+            ImGui::BeginChild("AnimationGraph_SequenceurZone", ImVec2(leftWidth, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+            RenderEventSequencerPanel();
+            ImGui::EndChild();
 
-    ImGui::Spacing();
+            ImGui::SameLine(0.0f, splitterThickness);
+            ImGui::InvisibleButton("##AnimationGraphBottomHorizontalSplitter", ImVec2(splitterThickness, bottomHeight));
+            if (ImGui::IsItemActive())
+            {
+                s_splitX += ImGui::GetIO().MouseDelta.x / totalWidth;
+                if (s_splitX < s_splitMin) s_splitX = s_splitMin;
+                if (s_splitX > s_splitMax) s_splitX = s_splitMax;
+            }
 
-    ImGui::BeginChild("AnimationGraph_BottomRow", ImVec2(0, bottomRowHeight), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-    {
-        ImGui::BeginChild("AnimationGraph_RendererZone", ImVec2(leftWidth, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-        RenderAnimationPreviewPanel();
-        ImGui::EndChild();
-
-        ImGui::SameLine();
-
-        ImGui::BeginChild("AnimationGraph_RightPanel", ImVec2(0, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-        RenderRightPanelTabs();
+            ImGui::SameLine(0.0f, splitterThickness);
+            ImGui::BeginChild("AnimationGraph_RendererZone", ImVec2(0, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+            RenderAnimationPreviewPanel();
+            ImGui::EndChild();
+        }
         ImGui::EndChild();
     }
     ImGui::EndChild();
@@ -134,24 +194,139 @@ void AnimationGraphRenderer::RenderRightPanelTabs()
     {
         if (ImGui::BeginTabItem("Properties"))
         {
-            ImGui::Text("Path: %s", m_currentPath.empty() ? "(unsaved)" : m_currentPath.c_str());
-            ImGui::Text("Default state: %s", m_document->GetDefaultState().c_str());
-            ImGui::Separator();
-            ImGui::Text("TSX Sources: %d", data.contains("sources") ? (int)data["sources"].size() : 0);
-            ImGui::Text("States: %d", data.contains("states") ? (int)data["states"].size() : 0);
-            ImGui::Text("Transitions: %d", data.contains("transitions") ? (int)data["transitions"].size() : 0);
-            ImGui::Text("Events: %d", data.contains("states") ? (int)data["states"].size() : 0);
+            RenderPropertiesTab();
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Nodes"))
         {
-            ImGui::TextDisabled("Animation state node palette");
-            ImGui::Separator();
-            ImGui::TextWrapped("This zone will host the draggable node palette for animation states.");
-            ImGui::TextWrapped("Phase 1 will wire TSX loading and CRUD into Properties.");
+            RenderNodesTab();
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
+    }
+}
+void AnimationGraphRenderer::RenderPropertiesTab()
+{
+    const std::vector<AnimationGraphDocument::SourceDefinition>& sources = m_document->GetSources();
+    int deleteSourceIndex = -1;
+    ImGui::Text("Path: %s", m_currentPath.empty() ? "(unsaved)" : m_currentPath.c_str());
+    ImGui::Text("Default state: %s", m_document->GetDefaultState().c_str());
+    ImGui::Separator();
+    ImGui::Text("TSX Sources: %d", (int)sources.size());
+
+    if (ImGui::Button("Load TSX"))
+    {
+        CanvasModalRenderer::Get().OpenAnimationGraphTsxPickerModal("./Gamedata/Animation");
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Reload All TSX"))
+    {
+        std::vector<std::string> sourcePaths;
+        for (size_t i = 0; i < sources.size(); ++i)
+        {
+            sourcePaths.push_back(sources[i].filePath);
+        }
+        if (m_document)
+        {
+            m_document->Clear();
+            for (size_t i = 0; i < sourcePaths.size(); ++i)
+            {
+                m_document->ImportTSXSource(sourcePaths[i], 0);
+            }
+        }
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Imported TSX");
+    for (size_t i = 0; i < sources.size(); ++i)
+    {
+        const AnimationGraphDocument::SourceDefinition& source = sources[i];
+        bool selected = (m_selectedSourceIndex == static_cast<int>(i));
+        if (ImGui::Selectable(source.sourceName.c_str(), selected))
+        {
+            m_selectedSourceIndex = static_cast<int>(i);
+        }
+        if (ImGui::BeginPopupContextItem())
+        {
+            if (ImGui::MenuItem("Delete Entry"))
+            {
+                deleteSourceIndex = static_cast<int>(i);
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+        ImGui::TextDisabled("%s", source.filePath.c_str());
+        ImGui::TextDisabled("Clips: %d", (int)source.clips.size());
+    }
+
+    CanvasModalRenderer::Get().RenderAnimationGraphTsxPickerModal();
+    if (CanvasModalRenderer::Get().IsAnimationGraphTsxModalConfirmed())
+    {
+        std::vector<std::string> selectedFiles = CanvasModalRenderer::Get().GetSelectedAnimationGraphTsxFiles();
+        if (selectedFiles.empty())
+        {
+            std::string selected = CanvasModalRenderer::Get().GetSelectedAnimationGraphTsxFile();
+            if (!selected.empty())
+                selectedFiles.push_back(selected);
+        }
+
+        if (m_document)
+        {
+            std::vector<std::string> errors;
+            for (size_t i = 0; i < selectedFiles.size(); ++i)
+            {
+                m_document->ImportTSXSource(selectedFiles[i], &errors);
+            }
+        }
+        CanvasModalRenderer::Get().CloseAnimationGraphTsxModal();
+    }
+
+    if (deleteSourceIndex >= 0)
+    {
+        m_document->RemoveSource(static_cast<size_t>(deleteSourceIndex));
+        if (m_selectedSourceIndex == deleteSourceIndex)
+        {
+            m_selectedSourceIndex = -1;
+        }
+        else if (m_selectedSourceIndex > deleteSourceIndex)
+        {
+            --m_selectedSourceIndex;
+        }
+    }
+}
+void AnimationGraphRenderer::RenderNodesTab()
+{
+    ImGui::TextDisabled("Animation state node palette");
+    ImGui::Separator();
+    ImGui::TextWrapped("This zone will host the draggable node palette for animation states.");
+    ImGui::TextWrapped("Each imported TSX creates one state node entry.");
+    ImGui::Separator();
+
+    if (!m_document)
+    {
+        ImGui::TextDisabled("(no document)");
+        return;
+    }
+
+    const std::vector<AnimationGraphDocument::SourceDefinition>& sources = m_document->GetSources();
+    for (size_t i = 0; i < sources.size(); ++i)
+    {
+        const AnimationGraphDocument::SourceDefinition& source = sources[i];
+        ImGui::PushID(static_cast<int>(i));
+        if (ImGui::CollapsingHeader(source.sourceName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::TextDisabled("%s", source.filePath.c_str());
+            ImGui::Text("State node: %s", source.sourceName.c_str());
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+            {
+                const char* sourcePayload = source.sourceName.c_str();
+                ImGui::SetDragDropPayload("ANIMATION_GRAPH_STATE", sourcePayload, static_cast<int>(source.sourceName.size() + 1));
+                ImGui::Text("%s", source.sourceName.c_str());
+                ImGui::EndDragDropSource();
+            }
+        }
+        ImGui::PopID();
     }
 }
 void AnimationGraphRenderer::RenderCanvasPanel()
@@ -166,27 +341,45 @@ void AnimationGraphRenderer::RenderEventSequencerPanel()
     ImGui::Text("Event Sequencer");
     ImGui::Separator();
     ImGui::TextDisabled("State events and sequencing controls will live here.");
+    ImGui::TextDisabled("This panel sits below the canvas in the mockup.");
 }
 void AnimationGraphRenderer::RenderAnimationPreviewPanel()
 {
     ImGui::Text("Animation Renderer");
     ImGui::Separator();
     ImGui::TextDisabled("Runtime preview and resolved clip playback will live here.");
+    ImGui::TextDisabled("This panel sits below the properties area in the mockup.");
 }
 void AnimationGraphRenderer::RenderTransitionEditorPanel() {}
 void AnimationGraphRenderer::RenderGraphCanvas()
 {
-    ImGui::TextDisabled("Graph canvas placeholder");
+    if (!m_document)
+    {
+        ImGui::TextDisabled("No Animation Graph document");
+        return;
+    }
+
+    ImGui::TextDisabled("Drop a TSX clip here to create a state");
+    ImGui::Separator();
+    ImGui::Text("Known clips: %d", (int)m_document->GetAllKnownClips().size());
+    ImGui::Text("Imported TSX: %d", (int)m_document->GetSources().size());
+    ImGui::TextDisabled("Canvas rendering will list states once the document renderer is wired.");
 }
-void AnimationGraphRenderer::Render() { RenderToolbar(); RenderMainPanel(); }
+void AnimationGraphRenderer::Render()
+{
+    RenderToolbar();
+    RenderMainPanel();
+    if (m_framework)
+    {
+        m_framework->RenderModals();
+    }
+}
 bool AnimationGraphRenderer::IsDirty() const { return m_document && m_document->IsDirty(); }
 std::string AnimationGraphRenderer::GetGraphType() const { return "AnimationGraph"; }
 std::string AnimationGraphRenderer::GetCurrentPath() const { return m_currentPath; }
 void AnimationGraphRenderer::SetMinimapSize(float size) { m_minimapSize = size; }
 int AnimationGraphRenderer::GetMinimapPosition() const { return m_minimapPosition; }
 void AnimationGraphRenderer::SetMinimapPosition(int pos) { m_minimapPosition = pos; }
-void AnimationGraphRenderer::VerifyGraph() {}
-void AnimationGraphRenderer::RunGraph() {}
 void AnimationGraphRenderer::RenderFrameworkModals() { if (m_framework) m_framework->RenderModals(); }
 
 } // namespace Olympe

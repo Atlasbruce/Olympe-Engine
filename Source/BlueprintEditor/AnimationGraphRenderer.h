@@ -54,6 +54,8 @@ private:
     void RenderToolbar();
     void RenderMainPanel();
     void RenderRightPanelTabs();
+    void RenderPropertiesTab();
+    void RenderNodesTab();
     void RenderCanvasPanel();
     void RenderEventSequencerPanel();
     void RenderAnimationPreviewPanel();
@@ -73,6 +75,9 @@ private:
     int m_minimapPosition;
     int m_selectedStateIndex;
     int m_selectedTransitionIndex;
+    int m_selectedSourceIndex;
+    bool m_showTsxImportModal;
+    char m_tsxImportPathBuffer[512];
     std::unique_ptr<AnimationGraphFrameworkDocument> m_frameworkDocument;
     std::unique_ptr<CanvasFramework> m_framework;
     std::unique_ptr<CustomCanvasEditor> m_canvasEditor;

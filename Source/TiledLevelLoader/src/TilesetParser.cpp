@@ -49,14 +49,15 @@ namespace Tiled {
     bool TilesetParser::ParseTSX(const std::string& filepath, TiledTileset& tileset)
     {
         tinyxml2::XMLDocument doc;
-        if (doc.LoadFile(filepath.c_str()) != tinyxml2::XML_SUCCESS) {
-            SYSTEM_LOG << "TilesetParser: Failed to load TSX file: " << filepath << std::endl;
+        tinyxml2::XMLError loadResult = doc.LoadFile(filepath.c_str());
+        if (loadResult != tinyxml2::XML_SUCCESS) {
+            SYSTEM_LOG << "TilesetParser: Failed to load TSX file: " << filepath << " (error=" << static_cast<int>(loadResult) << ")" << std::endl;
             return false;
         }
 
         tinyxml2::XMLElement* tsElement = doc.FirstChildElement("tileset");
         if (!tsElement) {
-            SYSTEM_LOG << "TilesetParser: No <tileset> element in " << filepath << std::endl;
+            SYSTEM_LOG << "TilesetParser: No <tileset> element in " << filepath << " (root='" << (doc.RootElement() ? doc.RootElement()->Name() : "null") << "')" << std::endl;
             return false;
         }
 
@@ -110,9 +111,7 @@ namespace Tiled {
             tile.id = tileElement->IntAttribute("id", 0);
             
             const char* typeAttr = tileElement->Attribute("type");
-            if (typeAttr) {
-                tile.type = typeAttr;
-            }
+            if (typeAttr) { tile.type = typeAttr; }
 
             // Parse tile image (for collection tilesets)
             tinyxml2::XMLElement* tileImageElement = tileElement->FirstChildElement("image");

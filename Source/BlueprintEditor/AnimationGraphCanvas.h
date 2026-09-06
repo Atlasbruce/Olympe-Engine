@@ -17,9 +17,11 @@ public:
     void Initialize(AnimationGraphDocument* document);
     void Render() override;
     void QueueClipDrop(const std::string& clipName, float screenX, float screenY);
+    void QueueStateDrop(const std::string& stateName, const std::string& clipName, float screenX, float screenY);
 
 private:
     bool AcceptAnimationClipDropAtScreenPos(const std::string& clipName, float screenX, float screenY);
+    bool AcceptAnimationStateDropAtScreenPos(const std::string& stateName, const std::string& clipName, float screenX, float screenY);
     bool FinishTransitionDragAtScreenPos(float screenX, float screenY);
     void UpdateSelectionAtScreenPos(float screenX, float screenY);
     void RenderContextMenu();
@@ -31,6 +33,7 @@ private:
     std::string m_pendingDropClip;
     float m_pendingDropX = 0.0f;
     float m_pendingDropY = 0.0f;
+    std::string m_pendingDropState;
 
     // Transition drag state (inherited from PrefabCanvas as needed)
     bool m_hasPendingTransitionDrag = false;

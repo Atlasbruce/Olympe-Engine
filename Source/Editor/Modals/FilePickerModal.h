@@ -28,6 +28,7 @@ enum class FilePickerType
     SubGraph,      ///< .ats files in ./Gamedata/VisualScript and ./Blueprint
     EntityPrefab,  ///< .prefab.json files in ./Gamedata/EntityPrefab
     AnimationBank, ///< .tsx / bank json files for animation banks
+    AnimationGraphTsx, ///< .tsx files for Animation Graph TSX sources
     AnimationGraph, ///< .ani.runtime.json animation graph exports
     Audio,         ///< Future: .ogg, .wav files
     Tileset        ///< Future: .tsj tileset files
@@ -103,6 +104,9 @@ public:
      * Only use GetSelectedFile() if this returns true.
      */
     bool IsConfirmed() const { return m_confirmed; }
+    bool IsMultiSelectionEnabled() const { return m_allowMultiSelection; }
+    void SetAllowMultiSelection(bool allow) { m_allowMultiSelection = allow; }
+    void ClearSelection();
 
     /**
      * @brief Returns the selected file path (only valid if IsConfirmed() is true).
@@ -112,6 +116,7 @@ public:
      *   - SubGraph: "Blueprints/MyBlueprint.ats"
      */
     const std::string& GetSelectedFile() const { return m_selectedFile; }
+    const std::vector<std::string>& GetSelectedFiles() const { return m_selectedFiles; }
 
     /**
      * @brief Returns the file type this modal handles.
@@ -128,6 +133,7 @@ private:
     bool m_isOpen = false;                  ///< Is modal currently visible
     bool m_confirmed = false;               ///< Did user click Select
     std::string m_selectedFile = "";        ///< Full path to selected file
+    std::vector<std::string> m_selectedFiles; ///< Full paths for multi-selection
     std::string m_currentPath = "";         ///< Current directory being browsed
 
     // ====================================================================
@@ -137,6 +143,7 @@ private:
     std::vector<std::string> m_fileList;    ///< Files found in current directory
     std::vector<std::string> m_folderList;  ///< Folders in current directory
     int m_selectedIndex = -1;               ///< Currently highlighted file (-1 = none)
+    bool m_allowMultiSelection = false;      ///< Allow ctrl-click multi-selection
 
     // ====================================================================
     // UI State
@@ -160,6 +167,7 @@ private:
      * @brief Returns the file pattern for this file type (e.g., "*.bt.json").
      */
     std::string GetFilePattern() const;
+    std::vector<std::string> GetFilePatterns() const;
 
     /**
      * @brief Returns the modal title for this file type (e.g., "Select BehaviorTree File").
@@ -211,6 +219,7 @@ private:
      * @return Vector of matching filenames (case-insensitive substring matching)
      */
     std::vector<std::string> GetFilteredFiles() const;
+    void ToggleSelectedFile(const std::string& filePath);
 
 };
 
