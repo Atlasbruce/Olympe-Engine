@@ -1,5 +1,6 @@
 #include "GraphEditorBase.h"
 #include "CanvasFramework.h"
+#include "../Utilities/CanvasHitTesting.h"
 #include "../../third_party/imgui/imgui.h"
 #include <iostream>
 #include <cstring>
@@ -176,6 +177,37 @@ void GraphEditorBase::SelectNodesInRectangle(const ImVec2& rectStart, const ImVe
     (void)rectStart;
     (void)rectEnd;
     // Default: no action (subclass responsible for actual selection)
+}
+
+void GraphEditorBase::ApplyRectangleSelection(
+    const ImVec2& rectStart,
+    const ImVec2& rectEnd,
+    const std::vector<GraphNodeScreenBounds>& nodeBounds,
+    bool addToSelection)
+{
+    const ImVec2 selectionMin(
+        std::min(rectStart.x, rectEnd.x),
+        std::min(rectStart.y, rectEnd.y));
+    const ImVec2 selectionMax(
+        std::max(rectStart.x, rectEnd.x),
+        std::max(rectStart.y, rectEnd.y));
+
+    std::vector<int> selection = addToSelection
+        ? m_selectedNodeIds
+        : std::vector<int>();
+
+    for (const GraphNodeScreenBounds& bounds : nodeBounds) {
+        if (!CanvasHitTesting::IntersectsRectangle(
+                selectionMin, selectionMax, bounds.min, bounds.max)) {
+            continue;
+        }
+
+        if (std::find(selection.begin(), selection.end(), bounds.nodeId) == selection.end()) {
+            selection.push_back(bounds.nodeId);
+        }
+    }
+
+    SetSelectedNodeIds(selection);
 }
 
 void GraphEditorBase::MoveSelectedNodes(float deltaX, float deltaY)

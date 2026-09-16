@@ -95,6 +95,7 @@ public:
 
     // Feature #2: Rectangle selection (Phase 4 Step 5)
     bool m_isSelectingRectangle;    // Currently drawing selection rectangle
+    bool m_addToRectangleSelection; // Preserve existing selection when Ctrl-dragging
     ImVec2 m_selectionRectStart;    // Rectangle start point
     ImVec2 m_selectionRectEnd;      // Rectangle end point
 

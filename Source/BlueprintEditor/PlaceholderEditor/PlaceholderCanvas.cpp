@@ -29,6 +29,7 @@ PlaceholderCanvas::PlaceholderCanvas()
       m_dragConnectionFromNodeId(-1),
       m_dragConnectionPreviewEnd(ImVec2(0.0f, 0.0f)),
       m_isSelectingRectangle(false),
+      m_addToRectangleSelection(false),
       m_selectionRectStart(ImVec2(0.0f, 0.0f)),
       m_selectionRectEnd(ImVec2(0.0f, 0.0f)),
       m_hoveredNodeId(-1),            // Phase 76: No hovered node initially
@@ -317,6 +318,7 @@ void PlaceholderCanvas::HandleNodeInteraction()
                 m_renderer->DeselectAll();
             }
             m_isSelectingRectangle = true;
+            m_addToRectangleSelection = ctrlPressed;
             m_selectionRectStart = mousePos;
             m_selectionRectEnd = mousePos;
             } else {
@@ -702,37 +704,28 @@ void PlaceholderCanvas::RenderConnectionPreviewLine()
 
 void PlaceholderCanvas::SelectNodesInRectangle()
 {
-    // Feature #2: AABB intersection test to select nodes inside rectangle
     if (!m_document || !m_renderer) return;
 
-    ImVec2 minPos(std::min(m_selectionRectStart.x, m_selectionRectEnd.x),
-                  std::min(m_selectionRectStart.y, m_selectionRectEnd.y));
-    ImVec2 maxPos(std::max(m_selectionRectStart.x, m_selectionRectEnd.x),
-                  std::max(m_selectionRectStart.y, m_selectionRectEnd.y));
-
-    std::vector<int> selectedNodeIds;
-
-    // Find all nodes inside rectangle (AABB intersection test)
+    std::vector<GraphNodeScreenBounds> nodeBounds;
     const auto& nodes = m_document->GetAllNodes();
-    int selectedCount = 0;
+    nodeBounds.reserve(nodes.size());
 
     for (const auto& node : nodes) {
-        ImVec2 nodeScreenPos = CanvasToScreen(ImVec2(node.posX, node.posY));
+        const ImVec2 nodeScreenPos = CanvasToScreen(ImVec2(node.posX, node.posY));
         const float canvasZoom = GetCanvasZoom();
-        ImVec2 nodeScreenEnd = ImVec2(nodeScreenPos.x + node.width * canvasZoom,
-                                      nodeScreenPos.y + node.height * canvasZoom);
-
-        // AABB intersection test
-        if (!(nodeScreenEnd.x < minPos.x || nodeScreenPos.x > maxPos.x ||
-              nodeScreenEnd.y < minPos.y || nodeScreenPos.y > maxPos.y)) {
-            selectedNodeIds.push_back(node.nodeId);
-            selectedCount++;
-            std::cout << "[PlaceholderCanvas] Node " << node.nodeId << " selected via rectangle\n";
-        }
+        const ImVec2 nodeScreenEnd(
+            nodeScreenPos.x + node.width * canvasZoom,
+            nodeScreenPos.y + node.height * canvasZoom);
+        nodeBounds.push_back({ node.nodeId, nodeScreenPos, nodeScreenEnd });
     }
 
-    m_renderer->SetSelectedNodeIds(selectedNodeIds);
-    std::cout << "[PlaceholderCanvas] Rectangle selection: " << selectedCount << " nodes selected\n";
+    m_renderer->ApplyRectangleSelection(
+        m_selectionRectStart,
+        m_selectionRectEnd,
+        nodeBounds,
+        m_addToRectangleSelection);
+    std::cout << "[PlaceholderCanvas] Rectangle selection: "
+              << m_renderer->GetSelectedNodeCount() << " nodes selected\n";
 }
 
 void PlaceholderCanvas::RenderMinimap()

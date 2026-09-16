@@ -8,6 +8,13 @@
 
 namespace Olympe {
 
+struct GraphNodeScreenBounds
+{
+    int nodeId;
+    ImVec2 min;
+    ImVec2 max;
+};
+
 /**
  * @class GraphEditorBase
  * @brief Abstract base class providing ~80% common functionality for all graph editors.
@@ -91,6 +98,13 @@ public:
 
     /** Rectangle selection from drag - subclass should populate m_selectionRectStart/End */
     virtual void SelectNodesInRectangle(const ImVec2& rectStart, const ImVec2& rectEnd);
+
+    /** Apply generic rectangle selection to graph-specific node bounds */
+    void ApplyRectangleSelection(
+        const ImVec2& rectStart,
+        const ImVec2& rectEnd,
+        const std::vector<GraphNodeScreenBounds>& nodeBounds,
+        bool addToSelection = false);
 
     /** Delete all selected nodes - delegates to subclass */
     virtual void DeleteSelectedNodes();

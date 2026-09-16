@@ -24,5 +24,15 @@ namespace Olympe
             const float deltaY = point.y - center.y;
             return deltaX * deltaX + deltaY * deltaY <= radius * radius;
         }
+
+        inline bool IntersectsRectangle(
+            const ImVec2& firstMin,
+            const ImVec2& firstMax,
+            const ImVec2& secondMin,
+            const ImVec2& secondMax)
+        {
+            return !(firstMax.x < secondMin.x || firstMin.x > secondMax.x ||
+                     firstMax.y < secondMin.y || firstMin.y > secondMax.y);
+        }
     }
 }
