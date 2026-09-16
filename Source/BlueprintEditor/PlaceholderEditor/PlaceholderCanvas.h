@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include "../../third_party/imgui/imgui.h"
 #include "../Utilities/CanvasMinimapRenderer.h"
+#include "../Utilities/ICanvasEditor.h"
 
 namespace Olympe {
 
@@ -73,15 +74,17 @@ public:
 
         /// Phase 64: Toolbar integration - Reset pan/zoom
         void ResetPanZoom() {
-            m_canvasOffset = ImVec2(0.0f, 0.0f);
-            m_canvasZoom = 1.0f;
+            if (m_canvasEditor) {
+                m_canvasEditor->SetPan(ImVec2(0.0f, 0.0f));
+                m_canvasEditor->SetZoom(1.0f);
+            }
         }
 
         /// Phase 64: Get pan offset for canvas positioning
-        ImVec2 GetCanvasOffset() const { return m_canvasOffset; }
+        ImVec2 GetCanvasOffset() const { return m_canvasEditor ? m_canvasEditor->GetPan() : ImVec2(0.0f, 0.0f); }
 
         /// Phase 64: Get zoom level
-        float GetCanvasZoom() const { return m_canvasZoom; }
+        float GetCanvasZoom() const { return m_canvasEditor ? m_canvasEditor->GetZoom() : 1.0f; }
 
         /// Phase 68 NEW: Accept drag-drop of node type at screen position
         /// Called from renderer's drag-drop overlay
@@ -94,8 +97,7 @@ public:
     private:
         PlaceholderGraphDocument* m_document;
         PlaceholderGraphRenderer* m_renderer;  // Phase 63.2: Reference to update base class selection
-        ImVec2 m_canvasOffset;      // Pan offset
-        float m_canvasZoom;         // Zoom level (0.1x - 3.0x)
+        std::unique_ptr<ICanvasEditor> m_canvasEditor; // Canonical pan/zoom/transform authority
         int m_selectedNodeId;       // Currently selected node (-1 for none)
          bool m_isDraggingNode;      // Currently dragging a node
              bool m_gridVisible = true;  // Phase 64: Grid visibility toggle
@@ -137,7 +139,6 @@ public:
     void RenderMinimap();             // Phase 52+: Minimap overlay rendering
 
     // Input handling
-    void HandlePanZoomInput();
     void HandleNodeInteraction();
     void SelectNodesInRectangle();    // Feature #2: AABB intersection test
     void HandleDragDropInput();       // Phase 64.1: Drag-drop node creation

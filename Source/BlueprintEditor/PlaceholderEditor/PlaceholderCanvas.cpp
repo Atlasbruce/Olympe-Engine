@@ -1,4 +1,5 @@
 #include "PlaceholderCanvas.h"
+#include "../Utilities/CustomCanvasEditor.h"
 #include "PlaceholderGraphDocument.h"
 #include "PlaceholderGraphRenderer.h"  // Phase 63.2: For updating selection in base class
 #include "../../third_party/imgui/imgui.h"
@@ -21,8 +22,7 @@ namespace Olympe {
 PlaceholderCanvas::PlaceholderCanvas()
     : m_document(nullptr),
       m_renderer(nullptr),  // Phase 63.2: Initialize renderer reference
-      m_canvasOffset(ImVec2(0.0f, 0.0f)),
-      m_canvasZoom(1.0f),
+      m_canvasEditor(std::make_unique<CustomCanvasEditor>("PlaceholderCanvasView", ImVec2(0.0f, 0.0f), ImVec2(0.0f, 0.0f), 1.0f, 0.1f, 3.0f)),
       m_selectedNodeId(-1),
       m_isDraggingNode(false),
       m_isDraggingConnection(false),  // Phase 64: Connection drag tracking
@@ -57,8 +57,13 @@ void PlaceholderCanvas::Render()
         return;
     }
 
-    // Input handling (pan, zoom, selection)
-    HandlePanZoomInput();
+    const ImVec2 canvasScreenPos = ImGui::GetCursorScreenPos();
+    const ImVec2 canvasSize = ImGui::GetContentRegionAvail();
+    m_canvasEditor->SetCanvasScreenPos(canvasScreenPos);
+    m_canvasEditor->SetCanvasSize(canvasSize);
+
+    // ICanvasEditor is the single authority for pan, zoom and transforms.
+    m_canvasEditor->BeginRender();
     HandleNodeInteraction();
     HandleDragDropInput();  // Phase 64.1: Drag-drop node creation and connections
 
@@ -70,6 +75,7 @@ void PlaceholderCanvas::Render()
         RenderConnectionPreviewLine(); // Phase 64.2: Connection drag preview
         RenderContextMenu();
         RenderMinimap();             // Phase 52+: Minimap overlay on top
+        m_canvasEditor->EndRender();
     }
 
 void PlaceholderCanvas::RenderGrid()
@@ -90,7 +96,7 @@ void PlaceholderCanvas::RenderGrid()
     ImVec2 canvasSize = ImGui::GetContentRegionAvail();
 
     // Grid parameters (Phase 5 standardization)
-    const float gridSpacing = 24.0f * m_canvasZoom;
+    const float gridSpacing = 24.0f * GetCanvasZoom();
     const ImU32 gridColor = IM_COL32(63, 63, 71, 255);      // #3F3F47FF
     const ImU32 bgColor = IM_COL32(38, 38, 47, 255);        // #26262FFF
 
@@ -98,8 +104,9 @@ void PlaceholderCanvas::RenderGrid()
     drawList->AddRectFilled(canvasPos, ImVec2(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y), bgColor);
 
     // Draw grid
-    float startX = fmodf(m_canvasOffset.x * m_canvasZoom, gridSpacing);
-    float startY = fmodf(m_canvasOffset.y * m_canvasZoom, gridSpacing);
+    const ImVec2 canvasOffset = GetCanvasOffset();
+    float startX = fmodf(canvasOffset.x, gridSpacing);
+    float startY = fmodf(canvasOffset.y, gridSpacing);
 
     for (float x = startX; x < canvasSize.x; x += gridSpacing) {
         drawList->AddLine(
@@ -148,7 +155,8 @@ void PlaceholderCanvas::RenderNodeBox(const PlaceholderNode& node, bool isSelect
 
     // Transform node canvas coordinates to screen coordinates
     ImVec2 nodeScreenPos = CanvasToScreen(ImVec2(node.posX, node.posY));
-    ImVec2 nodeSize(node.width * m_canvasZoom, node.height * m_canvasZoom);
+    const float canvasZoom = GetCanvasZoom();
+    ImVec2 nodeSize(node.width * canvasZoom, node.height * canvasZoom);
     ImVec2 nodeScreenEnd = ImVec2(nodeScreenPos.x + nodeSize.x, nodeScreenPos.y + nodeSize.y);
 
     // Node color based on type
@@ -203,7 +211,7 @@ void PlaceholderCanvas::RenderNodeBox(const PlaceholderNode& node, bool isSelect
     );
 
     // Phase 64.2: Draw input/output ports (for connection UI)
-    const float portRadius = 5.0f * m_canvasZoom;
+    const float portRadius = 5.0f * canvasZoom;
     const ImU32 portColor = IM_COL32(255, 255, 0, 255);  // Yellow
 
     // Input port (left side, middle)
@@ -253,43 +261,6 @@ ImU32 PlaceholderCanvas::GetNodeColorForType(PlaceholderNodeType type)
         case PlaceholderNodeType::Green:   return IM_COL32(100, 255, 150, 255);  // Light green
         case PlaceholderNodeType::Magenta: return IM_COL32(255, 100, 200, 255);  // Light magenta
         default:                           return IM_COL32(128, 128, 128, 255);  // Gray
-    }
-}
-
-void PlaceholderCanvas::HandlePanZoomInput()
-{
-    ImGuiIO& io = ImGui::GetIO();
-    ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-    ImVec2 canvasSize = ImGui::GetContentRegionAvail();
-    ImVec2 mousePos = io.MousePos;
-
-    // Check if mouse is over canvas
-    bool isMouseOverCanvas = (mousePos.x >= canvasPos.x && mousePos.x < canvasPos.x + canvasSize.x &&
-                              mousePos.y >= canvasPos.y && mousePos.y < canvasPos.y + canvasSize.y);
-
-    if (!isMouseOverCanvas) return;
-
-    // Pan with middle mouse button
-    if (ImGui::IsMouseDown(2)) {  // Middle mouse button
-        ImVec2 delta = io.MouseDelta;
-        m_canvasOffset.x += delta.x / m_canvasZoom;
-        m_canvasOffset.y += delta.y / m_canvasZoom;
-    }
-
-    // Zoom with scroll wheel
-    if (io.MouseWheel != 0.0f) {
-        float zoomFactor = io.MouseWheel > 0.0f ? 1.1f : 0.909f;
-        float oldZoom = m_canvasZoom;
-        m_canvasZoom *= zoomFactor;
-        // Clamp zoom to 0.1x - 3.0x range
-        if (m_canvasZoom < 0.1f) m_canvasZoom = 0.1f;
-        if (m_canvasZoom > 3.0f) m_canvasZoom = 3.0f;
-
-        // Zoom centered on mouse cursor
-        ImVec2 mouseCanvasBefore = ScreenToCanvas(mousePos);
-        ImVec2 mouseCanvasAfter = ScreenToCanvas(mousePos);
-        m_canvasOffset.x += (mouseCanvasBefore.x - mouseCanvasAfter.x);
-        m_canvasOffset.y += (mouseCanvasBefore.y - mouseCanvasAfter.y);
     }
 }
 
@@ -347,10 +318,11 @@ void PlaceholderCanvas::HandleNodeInteraction()
             PlaceholderNode* node = m_document->GetNode(nodeAtPos);
             if (node) {
                 ImVec2 nodeScreenPos = CanvasToScreen(ImVec2(node->posX, node->posY));
-                ImVec2 nodeScreenEnd = ImVec2(nodeScreenPos.x + node->width * m_canvasZoom,
-                                              nodeScreenPos.y + node->height * m_canvasZoom);
+                const float canvasZoom = GetCanvasZoom();
+                ImVec2 nodeScreenEnd = ImVec2(nodeScreenPos.x + node->width * canvasZoom,
+                                              nodeScreenPos.y + node->height * canvasZoom);
 
-                const float portRadius = 5.0f * m_canvasZoom;
+                const float portRadius = 5.0f * canvasZoom;
 
                 // Input port (left side)
                 ImVec2 inputPortPos = ImVec2(nodeScreenPos.x, (nodeScreenPos.y + nodeScreenEnd.y) * 0.5f);
@@ -453,7 +425,8 @@ void PlaceholderCanvas::HandleNodeInteraction()
             // Use pure mouse delta converted to canvas space
             if (io.MouseDelta.x != 0.0f || io.MouseDelta.y != 0.0f) {
                 // Convert screen mouse delta to canvas delta (account for zoom)
-                ImVec2 canvasDelta = ImVec2(io.MouseDelta.x / m_canvasZoom, io.MouseDelta.y / m_canvasZoom);
+                const float canvasZoom = GetCanvasZoom();
+                ImVec2 canvasDelta = ImVec2(io.MouseDelta.x / canvasZoom, io.MouseDelta.y / canvasZoom);
 
                 // Accumulate delta
                 m_accumulatedDragDelta.x += canvasDelta.x;
@@ -494,10 +467,11 @@ void PlaceholderCanvas::HandleNodeInteraction()
                 PlaceholderNode* targetNode = m_document->GetNode(nodeAtMouse);
                 if (targetNode) {
                     ImVec2 nodeScreenPos = CanvasToScreen(ImVec2(targetNode->posX, targetNode->posY));
-                    ImVec2 nodeScreenEnd = ImVec2(nodeScreenPos.x + targetNode->width * m_canvasZoom,
-                                                  nodeScreenPos.y + targetNode->height * m_canvasZoom);
+                    const float canvasZoom = GetCanvasZoom();
+                    ImVec2 nodeScreenEnd = ImVec2(nodeScreenPos.x + targetNode->width * canvasZoom,
+                                                  nodeScreenPos.y + targetNode->height * canvasZoom);
 
-                    const float portRadius = 5.0f * m_canvasZoom;
+                    const float portRadius = 5.0f * canvasZoom;
                     ImVec2 inputPortPos = ImVec2(nodeScreenPos.x, (nodeScreenPos.y + nodeScreenEnd.y) * 0.5f);
                     float dx = mousePos.x - inputPortPos.x;
                     float dy = mousePos.y - inputPortPos.y;
@@ -568,8 +542,7 @@ void PlaceholderCanvas::RenderContextMenu()
         }
         if (ImGui::MenuItem("Reset View")) {
             // Reset pan and zoom
-            m_canvasOffset = ImVec2(0.0f, 0.0f);
-            m_canvasZoom = 1.0f;
+            ResetPanZoom();
             std::cout << "[PlaceholderCanvas] View reset\n";
         }
         ImGui::EndPopup();
@@ -595,8 +568,9 @@ bool PlaceholderCanvas::IsPointInNodeBounds(int nodeId, const ImVec2& screen)
     if (!node) return false;
 
     ImVec2 nodeScreenPos = CanvasToScreen(ImVec2(node->posX, node->posY));
-    ImVec2 nodeScreenEnd = ImVec2(nodeScreenPos.x + node->width * m_canvasZoom,
-                                  nodeScreenPos.y + node->height * m_canvasZoom);
+    const float canvasZoom = GetCanvasZoom();
+    ImVec2 nodeScreenEnd = ImVec2(nodeScreenPos.x + node->width * canvasZoom,
+                                  nodeScreenPos.y + node->height * canvasZoom);
 
     return (screen.x >= nodeScreenPos.x && screen.x <= nodeScreenEnd.x &&
             screen.y >= nodeScreenPos.y && screen.y <= nodeScreenEnd.y);
@@ -666,17 +640,12 @@ float PlaceholderCanvas::GetDistanceToConnection(const PlaceholderConnection& co
 
 ImVec2 PlaceholderCanvas::ScreenToCanvas(const ImVec2& screen)
 {
-    ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-    ImVec2 screenRelative(screen.x - canvasPos.x, screen.y - canvasPos.y);
-    return ImVec2((screenRelative.x - m_canvasOffset.x * m_canvasZoom) / m_canvasZoom,
-                   (screenRelative.y - m_canvasOffset.y * m_canvasZoom) / m_canvasZoom);
+    return m_canvasEditor->ScreenToCanvas(screen);
 }
 
 ImVec2 PlaceholderCanvas::CanvasToScreen(const ImVec2& canvas)
 {
-    ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-    return ImVec2(canvasPos.x + (canvas.x + m_canvasOffset.x) * m_canvasZoom,
-                   canvasPos.y + (canvas.y + m_canvasOffset.y) * m_canvasZoom);
+    return m_canvasEditor->CanvasToScreen(canvas);
 }
 
 void PlaceholderCanvas::RenderSelectionRectangle()
@@ -847,8 +816,9 @@ void PlaceholderCanvas::SelectNodesInRectangle()
 
     for (const auto& node : nodes) {
         ImVec2 nodeScreenPos = CanvasToScreen(ImVec2(node.posX, node.posY));
-        ImVec2 nodeScreenEnd = ImVec2(nodeScreenPos.x + node.width * m_canvasZoom,
-                                      nodeScreenPos.y + node.height * m_canvasZoom);
+        const float canvasZoom = GetCanvasZoom();
+        ImVec2 nodeScreenEnd = ImVec2(nodeScreenPos.x + node.width * canvasZoom,
+                                      nodeScreenPos.y + node.height * canvasZoom);
 
         // AABB intersection test
         if (!(nodeScreenEnd.x < minPos.x || nodeScreenPos.x > maxPos.x ||
@@ -934,13 +904,11 @@ void PlaceholderCanvas::AcceptNodeDropAtCanvasPosition(PlaceholderNodeType nodeT
 {
     if (!m_document) return;
 
-    // Direct coordinate transformation: screen → canvas
-    // Using provided canvasScreenMin and canvasZoom instead of relying on ImGui context
-    ImVec2 screenRelative(screenPos.x - canvasScreenMin.x, screenPos.y - canvasScreenMin.y);
-    ImVec2 canvasPos(
-        (screenRelative.x - m_canvasOffset.x * canvasZoom) / canvasZoom,
-        (screenRelative.y - m_canvasOffset.y * canvasZoom) / canvasZoom
-    );
+    // The overlay runs after EndChild; keep using the captured canvas origin, while
+    // delegating the actual transform to the canonical canvas editor.
+    m_canvasEditor->SetCanvasScreenPos(canvasScreenMin);
+    (void)canvasZoom;
+    ImVec2 canvasPos = m_canvasEditor->ScreenToCanvas(screenPos);
 
     // Create node at drop position
     HandleNodeCreatedFromPalette(nodeType, canvasPos);
