@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
 #include "../../third_party/imgui/imgui.h"
 #include "../Utilities/ICanvasEditor.h"
 
@@ -88,14 +87,6 @@ public:
         PlaceholderGraphRenderer* m_renderer;  // Phase 63.2: Reference to update base class selection
         std::unique_ptr<ICanvasEditor> m_canvasEditor; // Canonical pan/zoom/transform authority
          bool m_isDraggingNode;      // Currently dragging a node
-
-         // Phase 64.4 STEP 6: Multi-node drag tracking
-          // Maps nodeID → (startX, startY) position when drag begins
-          // Allows all selected nodes to move together with identical delta
-          std::unordered_map<int, std::pair<float, float>> m_nodeDragStartPositions;
-
-         // Phase 66: Accumulated drag delta (for proper multi-node drag)
-         ImVec2 m_accumulatedDragDelta;
 
         // Phase 64: Connection drag-drop tracking
     bool m_isDraggingConnection;  // Currently dragging from a port

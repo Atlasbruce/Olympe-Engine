@@ -340,20 +340,6 @@ void PlaceholderCanvas::HandleNodeInteraction()
                        }
                    }
                    m_isDraggingNode = true;
-
-                   // Phase 66 FIX: Initialize accumulated delta at start of drag
-                   m_accumulatedDragDelta = ImVec2(0.0f, 0.0f);
-
-                   // Phase 64.4 STEP 7: Record ALL selected node start positions for group drag
-                   m_nodeDragStartPositions.clear();
-                   std::vector<int> selectedNodeIds = m_renderer->GetSelectedNodeIds();
-                   for (size_t i = 0; i < selectedNodeIds.size(); ++i) {
-                       int nodeId = selectedNodeIds[i];
-                       PlaceholderNode* node = m_document->GetNode(nodeId);
-                       if (node) {
-                           m_nodeDragStartPositions[nodeId] = std::make_pair(node->posX, node->posY);
-                    }
-               }
         }
     }
 
@@ -365,34 +351,9 @@ void PlaceholderCanvas::HandleNodeInteraction()
         } else if (m_isDraggingConnection) {
             // Update connection preview end point
             m_dragConnectionPreviewEnd = mousePos;
-        } else if (m_isDraggingNode && !m_nodeDragStartPositions.empty()) {
-            // Phase 66 FIX: Properly accumulate drag delta from start position
-            // Use pure mouse delta converted to canvas space
+        } else if (m_isDraggingNode) {
             if (io.MouseDelta.x != 0.0f || io.MouseDelta.y != 0.0f) {
-                // Convert screen mouse delta to canvas delta (account for zoom)
-                const float canvasZoom = GetCanvasZoom();
-                ImVec2 canvasDelta = ImVec2(io.MouseDelta.x / canvasZoom, io.MouseDelta.y / canvasZoom);
-
-                // Accumulate delta
-                m_accumulatedDragDelta.x += canvasDelta.x;
-                m_accumulatedDragDelta.y += canvasDelta.y;
-
-                // Apply accumulated delta to ALL selected nodes from their START positions
-                for (auto it = m_nodeDragStartPositions.begin(); it != m_nodeDragStartPositions.end(); ++it) {
-                    int nodeId = it->first;
-                    std::pair<float, float> startPos = it->second;
-
-                    PlaceholderNode* node = m_document->GetNode(nodeId);
-                    if (node) {
-                        // Move from START position by accumulated delta
-                        m_document->SetNodePosition(
-                            nodeId,
-                            startPos.first + m_accumulatedDragDelta.x,
-                            startPos.second + m_accumulatedDragDelta.y
-                        );
-                    }
-                }
-                m_document->OnDocumentModified();
+                m_renderer->ApplyNodeDragDelta(io.MouseDelta, GetCanvasZoom());
             }
         }
     } else {

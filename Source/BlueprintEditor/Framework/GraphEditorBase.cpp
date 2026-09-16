@@ -187,6 +187,14 @@ void GraphEditorBase::MoveSelectedNodes(float deltaX, float deltaY)
     }
 }
 
+void GraphEditorBase::ApplyNodeDragDelta(const ImVec2& screenDelta, float canvasZoom)
+{
+    if (canvasZoom <= 0.0f || m_selectedNodeIds.empty())
+        return;
+
+    MoveSelectedNodes(screenDelta.x / canvasZoom, screenDelta.y / canvasZoom);
+}
+
 void GraphEditorBase::UpdateSelectedNodesProperty(const std::string& propName, const std::string& propValue)
 {
     // Phase 3: Batch property update - base implementation

@@ -96,6 +96,7 @@ public:
     virtual void DeleteSelectedNodes();
 
     /** Batch operations - subclass overrides for actual implementation */
+    void ApplyNodeDragDelta(const ImVec2& screenDelta, float canvasZoom);
     virtual void MoveSelectedNodes(float deltaX, float deltaY);
     virtual void UpdateSelectedNodesProperty(const std::string& propName, const std::string& propValue);
 
