@@ -3,7 +3,6 @@
 #include <memory>
 #include <unordered_map>
 #include "../../third_party/imgui/imgui.h"
-#include "../Utilities/CanvasMinimapRenderer.h"
 #include "../Utilities/ICanvasEditor.h"
 
 namespace Olympe {
@@ -48,29 +47,25 @@ public:
     /// Set selected node
     void SetSelectedNodeId(int nodeId) { m_selectedNodeId = nodeId; }
 
-    /// Get minimap renderer for rendering minimap overlay
-    CanvasMinimapRenderer* GetMinimapRenderer() { return m_minimapRenderer.get(); }
-
     /// Set minimap visibility
-    void SetMinimapVisible(bool visible) { 
-        if (m_minimapRenderer) m_minimapRenderer->SetVisible(visible);
+    void SetMinimapVisible(bool visible) {
+        if (m_canvasEditor) m_canvasEditor->SetMinimapVisible(visible);
     }
 
     /// Set minimap size (0.05 - 0.5 ratio)
     void SetMinimapSize(float size) {
-        if (m_minimapRenderer) m_minimapRenderer->SetSize(size);
+        if (m_canvasEditor) m_canvasEditor->SetMinimapSize(size);
     }
 
-         /// Set minimap position (0=TopLeft, 1=TopRight, 2=BottomLeft, 3=BottomRight)
+        /// Set minimap position (0=TopLeft, 1=TopRight, 2=BottomLeft, 3=BottomRight)
         void SetMinimapPosition(int position) {
-            if (m_minimapRenderer) {
-                MinimapPosition pos = static_cast<MinimapPosition>(position);
-                m_minimapRenderer->SetPosition(pos);
-            }
+            if (m_canvasEditor) m_canvasEditor->SetMinimapPosition(position);
         }
 
-        /// Phase 64: Toolbar integration - Grid visibility
-        void SetGridVisible(bool visible) { m_gridVisible = visible; }
+        /// Toolbar integration - grid visibility is owned by the canvas editor.
+        void SetGridVisible(bool visible) {
+            if (m_canvasEditor) m_canvasEditor->SetGridVisible(visible);
+        }
 
         /// Phase 64: Toolbar integration - Reset pan/zoom
         void ResetPanZoom() {
@@ -100,7 +95,6 @@ public:
         std::unique_ptr<ICanvasEditor> m_canvasEditor; // Canonical pan/zoom/transform authority
         int m_selectedNodeId;       // Currently selected node (-1 for none)
          bool m_isDraggingNode;      // Currently dragging a node
-             bool m_gridVisible = true;  // Phase 64: Grid visibility toggle
 
          // Phase 64.4 STEP 6: Multi-node drag tracking
           // Maps nodeID → (startX, startY) position when drag begins
@@ -119,9 +113,6 @@ public:
     bool m_isSelectingRectangle;    // Currently drawing selection rectangle
     ImVec2 m_selectionRectStart;    // Rectangle start point
     ImVec2 m_selectionRectEnd;      // Rectangle end point
-
-    // Phase 52+: Minimap rendering support
-    std::unique_ptr<CanvasMinimapRenderer> m_minimapRenderer;
 
     // Phase 76: Hover and context menu state tracking
     int m_hoveredNodeId;            // Currently hovered node (-1 for none)

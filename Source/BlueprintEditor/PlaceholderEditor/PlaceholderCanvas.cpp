@@ -31,7 +31,6 @@ PlaceholderCanvas::PlaceholderCanvas()
       m_isSelectingRectangle(false),
       m_selectionRectStart(ImVec2(0.0f, 0.0f)),
       m_selectionRectEnd(ImVec2(0.0f, 0.0f)),
-      m_minimapRenderer(std::make_unique<CanvasMinimapRenderer>()),
       m_hoveredNodeId(-1),            // Phase 76: No hovered node initially
       m_hoveredConnectionId(-1),      // Phase 76: No hovered connection initially
       m_contextNodeId(-1),            // Phase 76: No context menu initially
@@ -80,49 +79,25 @@ void PlaceholderCanvas::Render()
 
 void PlaceholderCanvas::RenderGrid()
 {
-    // Phase 64: Check grid visibility before rendering
-    if (!m_gridVisible) {
-        // Draw background only, no grid lines
-        ImDrawList* drawList = ImGui::GetWindowDrawList();
-        ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-        ImVec2 canvasSize = ImGui::GetContentRegionAvail();
-        const ImU32 bgColor = IM_COL32(38, 38, 47, 255);        // #26262FFF
-        drawList->AddRectFilled(canvasPos, ImVec2(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y), bgColor);
+    if (!m_canvasEditor)
         return;
+
+    CanvasGridRenderer::GridConfig config = m_canvasEditor->GetGridConfig();
+
+    // CanvasGridRenderer computes its phase from canvasPos + offset. Preserve
+    // Placeholder's canvas-relative grid origin without changing other users.
+    config.offsetX -= config.canvasPos.x;
+    config.offsetY -= config.canvasPos.y;
+
+    // The canvas background remains visible when the grid is disabled.
+    // CanvasGridRenderer stays the sole owner of both background and line drawing.
+    if (!m_canvasEditor->IsGridVisible())
+    {
+        config.majorLineColor.w = 0.0f;
+        config.minorLineColor.w = 0.0f;
     }
 
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
-    ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-    ImVec2 canvasSize = ImGui::GetContentRegionAvail();
-
-    // Grid parameters (Phase 5 standardization)
-    const float gridSpacing = 24.0f * GetCanvasZoom();
-    const ImU32 gridColor = IM_COL32(63, 63, 71, 255);      // #3F3F47FF
-    const ImU32 bgColor = IM_COL32(38, 38, 47, 255);        // #26262FFF
-
-    // Draw background
-    drawList->AddRectFilled(canvasPos, ImVec2(canvasPos.x + canvasSize.x, canvasPos.y + canvasSize.y), bgColor);
-
-    // Draw grid
-    const ImVec2 canvasOffset = GetCanvasOffset();
-    float startX = fmodf(canvasOffset.x, gridSpacing);
-    float startY = fmodf(canvasOffset.y, gridSpacing);
-
-    for (float x = startX; x < canvasSize.x; x += gridSpacing) {
-        drawList->AddLine(
-            ImVec2(canvasPos.x + x, canvasPos.y),
-            ImVec2(canvasPos.x + x, canvasPos.y + canvasSize.y),
-            gridColor
-        );
-    }
-
-    for (float y = startY; y < canvasSize.y; y += gridSpacing) {
-        drawList->AddLine(
-            ImVec2(canvasPos.x, canvasPos.y + y),
-            ImVec2(canvasPos.x + canvasSize.x, canvasPos.y + y),
-            gridColor
-        );
-    }
+    CanvasGridRenderer::RenderGrid(config);
 }
 
 void PlaceholderCanvas::RenderNodes()
@@ -840,8 +815,8 @@ void PlaceholderCanvas::SelectNodesInRectangle()
 
 void PlaceholderCanvas::RenderMinimap()
 {
-    // Phase 52+: Render minimap overlay
-    if (!m_minimapRenderer) return;
+    if (!m_canvasEditor || !m_canvasEditor->IsMinimapVisible())
+        return;
 
     // Update minimap data from current canvas state
     const auto& nodes = m_document->GetAllNodes();
@@ -867,23 +842,21 @@ void PlaceholderCanvas::RenderMinimap()
         minimapNodes.push_back(std::make_tuple(node.nodeId, node.posX, node.posY, static_cast<float>(node.width), static_cast<float>(node.height)));
     }
 
-    // Update minimap with node data (pass bounds as separate parameters)
-    m_minimapRenderer->UpdateNodes(minimapNodes, minBounds.x, maxBounds.x, minBounds.y, maxBounds.y);
+    m_canvasEditor->UpdateMinimapNodes(
+        minimapNodes,
+        minBounds.x, maxBounds.x, minBounds.y, maxBounds.y);
 
-    // Update minimap viewport based on current pan/zoom
-    ImVec2 viewportMin = ScreenToCanvas(ImVec2(0.0f, 0.0f));
-    ImVec2 viewportMax = ScreenToCanvas(ImGui::GetContentRegionAvail());
+    // ICanvasEditor owns the canvas origin, size and view transform, so it is
+    // also the single authority for the visible canvas-space bounds.
+    ImVec2 viewportMin;
+    ImVec2 viewportMax;
+    m_canvasEditor->GetCanvasVisibleBounds(viewportMin, viewportMax);
 
-    // UpdateViewport needs 8 parameters: viewMinX, viewMaxX, viewMinY, viewMaxY, graphMinX, graphMaxX, graphMinY, graphMaxY
-    m_minimapRenderer->UpdateViewport(
+    m_canvasEditor->UpdateMinimapViewport(
         viewportMin.x, viewportMax.x, viewportMin.y, viewportMax.y,
-        minBounds.x, maxBounds.x, minBounds.y, maxBounds.y
-    );
+        minBounds.x, maxBounds.x, minBounds.y, maxBounds.y);
 
-    // Render minimap overlay at screen coordinates
-    ImVec2 canvasScreenPos = ImGui::GetCursorScreenPos();
-    ImVec2 regionAvail = ImGui::GetContentRegionAvail();
-    m_minimapRenderer->RenderCustom(canvasScreenPos, regionAvail);
+    m_canvasEditor->RenderMinimap();
 }
 
 // Phase 68 NEW: Accept drag-drop node creation from palette overlay
