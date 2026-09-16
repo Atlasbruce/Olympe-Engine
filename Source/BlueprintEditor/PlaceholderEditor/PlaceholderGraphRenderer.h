@@ -76,9 +76,6 @@ public:
     /// Phase 4 Step 4: Render tabbed right panel (Components | Properties)
     void RenderRightPanelTabs();
 
-    /// Phase 64: Sync canvas selection with base class selection
-    void SyncCanvasSelectionWithBase();
-
     // ========== PlaceholderGraphRenderer specific ==========
     
     /// Get underlying document
@@ -86,38 +83,6 @@ public:
 
     /// Create new placeholder graph
     void CreateNewGraph();
-
-    /// Phase 64: Check if node is selected in base class m_selectedNodeIds vector
-    bool IsNodeSelected(int nodeId) const {
-        for (int id : m_selectedNodeIds) {
-            if (id == nodeId) return true;
-        }
-        return false;
-    }
-
-    /// Phase 64: Get the selected node IDs vector for debugging
-    const std::vector<int>& GetSelectedNodeIds() const {
-        return m_selectedNodeIds;
-    }
-
-    /// Phase 64: Update base class m_selectedNodeIds vector directly
-    void SetSelectedNodeIds(const std::vector<int>& nodeIds) {
-        m_selectedNodeIds = nodeIds;
-    }
-
-    /// Phase 64: Clear all selections
-    void ClearSelectedNodes() {
-        m_selectedNodeIds.clear();
-    }
-
-    /// Phase 64: Add single node to selection
-    void AddSelectedNode(int nodeId) {
-        // Avoid duplicates
-        for (int id : m_selectedNodeIds) {
-            if (id == nodeId) return;
-        }
-        m_selectedNodeIds.push_back(nodeId);
-    }
 
     /// Phase 69: Execute save operation with given filepath
     bool ExecuteSave(const std::string& filePath);

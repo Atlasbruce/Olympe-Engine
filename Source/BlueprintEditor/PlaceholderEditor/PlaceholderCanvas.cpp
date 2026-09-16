@@ -23,7 +23,6 @@ PlaceholderCanvas::PlaceholderCanvas()
     : m_document(nullptr),
       m_renderer(nullptr),  // Phase 63.2: Initialize renderer reference
       m_canvasEditor(std::make_unique<CustomCanvasEditor>("PlaceholderCanvasView", ImVec2(0.0f, 0.0f), ImVec2(0.0f, 0.0f), 1.0f, 0.1f, 3.0f)),
-      m_selectedNodeId(-1),
       m_isDraggingNode(false),
       m_isDraggingConnection(false),  // Phase 64: Connection drag tracking
       m_dragConnectionFromNodeId(-1),
@@ -107,8 +106,7 @@ void PlaceholderCanvas::RenderNodes()
     const auto& nodes = m_document->GetAllNodes();
 
     for (const auto& node : nodes) {
-        // Phase 64: Check both single selection AND base class multi-select vector
-        bool isSelected = (node.nodeId == m_selectedNodeId) || m_renderer->IsNodeSelected(node.nodeId);
+        const bool isSelected = m_renderer->IsNodeSelected(node.nodeId);
         RenderNodeBox(node, isSelected);
     }
 }
@@ -281,7 +279,6 @@ void PlaceholderCanvas::HandleNodeInteraction()
 
     // Phase 63.1 FIX: Get keyboard modifiers for multi-select
     bool ctrlPressed = io.KeyCtrl;
-    bool shiftPressed = io.KeyShift;
 
     // Feature #2: Rectangle selection detection
     // Start rectangle selection on left-click in empty space
@@ -325,8 +322,7 @@ void PlaceholderCanvas::HandleNodeInteraction()
         if (nodeAtPos < 0) {  // Empty space, not on a node
             // Phase 63.1: Clear selection on empty space click (unless Ctrl held for multi-select)
             if (!ctrlPressed) {
-                m_selectedNodeId = -1;
-                m_renderer->ClearSelectedNodes();  // Sync to base class
+                m_renderer->DeselectAll();
             }
             m_isSelectingRectangle = true;
             m_selectionRectStart = mousePos;
@@ -335,23 +331,7 @@ void PlaceholderCanvas::HandleNodeInteraction()
                // Phase 63.1: Handle multi-select with Ctrl+Click
                m_isSelectingRectangle = false;
                if (ctrlPressed) {
-                   // Toggle selection on Ctrl+Click - Phase 65 FIX: properly sync with base class
-                   std::vector<int> currentSelection = m_renderer->GetSelectedNodeIds();
-
-                   // Check if node already in selection
-                   auto it = std::find(currentSelection.begin(), currentSelection.end(), nodeAtPos);
-
-                   if (it != currentSelection.end()) {
-                       // Remove from selection
-                       currentSelection.erase(it);
-                   } else {
-                       // Add to selection
-                       currentSelection.push_back(nodeAtPos);
-                   }
-
-                   // Sync entire updated list to base class
-                   m_renderer->SetSelectedNodeIds(currentSelection);
-                   m_selectedNodeId = nodeAtPos;  // Keep last clicked node
+                   m_renderer->SelectMultipleNodes(nodeAtPos, true, false);
                    } else {
                        // Single select on regular click - Phase 67 FIX: Preserve multi-selection on drag
                        // Only reset selection if clicking on a NON-selected node
@@ -360,12 +340,10 @@ void PlaceholderCanvas::HandleNodeInteraction()
 
                        if (it == currentSelection.end()) {
                            // Node not in selection - replace selection with this node
-                           m_selectedNodeId = nodeAtPos;
-                           m_renderer->SetSelectedNodeIds({nodeAtPos});
+                           m_renderer->SelectMultipleNodes(nodeAtPos, false, false);
                            std::cout << "[PlaceholderCanvas] Selection changed to nodeId: " << nodeAtPos << std::endl;
                        } else {
-                           // Node already selected - keep multi-selection, just update "last clicked" reference
-                           m_selectedNodeId = nodeAtPos;
+                           // Node already selected - keep multi-selection for group drag.
                            std::cout << "[PlaceholderCanvas] Node " << nodeAtPos << " already selected, preserving multi-selection for drag" << std::endl;
                        }
                    }
@@ -479,10 +457,12 @@ void PlaceholderCanvas::RenderContextMenu()
     if (ImGui::BeginPopup("##node_context_menu")) {
         if (m_contextNodeId >= 0 && m_document) {
             if (ImGui::MenuItem("Delete Node")) {
-                m_document->DeleteNode(m_contextNodeId);
-                m_selectedNodeId = -1;
+                const int deletedNodeId = m_contextNodeId;
+                m_document->DeleteNode(deletedNodeId);
+                if (m_renderer->IsNodeSelected(deletedNodeId))
+                    m_renderer->SelectMultipleNodes(deletedNodeId, true, false);
                 m_contextNodeId = -1;
-                std::cout << "[PlaceholderCanvas] Node " << m_contextNodeId << " deleted via context menu\n";
+                std::cout << "[PlaceholderCanvas] Node " << deletedNodeId << " deleted via context menu\n";
                 m_document->OnDocumentModified();
             }
             if (ImGui::MenuItem("Properties")) {
@@ -715,7 +695,8 @@ void PlaceholderCanvas::HandleNodeCreatedFromPalette(PlaceholderNodeType type, c
     int nodeId = m_document->CreateNode(type, title, dropPos.x, dropPos.y);
     if (nodeId >= 0) {
         // Select the newly created node
-        m_selectedNodeId = nodeId;
+        if (m_renderer)
+            m_renderer->SelectMultipleNodes(nodeId, false, false);
         m_document->OnDocumentModified();
         std::cout << "[Phase 64.1] Created node " << nodeId << " at position (" 
                   << dropPos.x << ", " << dropPos.y << ")\n";
@@ -781,9 +762,7 @@ void PlaceholderCanvas::SelectNodesInRectangle()
     ImVec2 maxPos(std::max(m_selectionRectStart.x, m_selectionRectEnd.x),
                   std::max(m_selectionRectStart.y, m_selectionRectEnd.y));
 
-    // Phase 64: Clear base class selection and collect rectangle-selected nodes
-    m_renderer->ClearSelectedNodes();  // Clear base class m_selectedNodeIds
-    std::vector<int> selectedNodeIds;  // Collect nodes for this rectangle
+    std::vector<int> selectedNodeIds;
 
     // Find all nodes inside rectangle (AABB intersection test)
     const auto& nodes = m_document->GetAllNodes();
@@ -798,17 +777,12 @@ void PlaceholderCanvas::SelectNodesInRectangle()
         // AABB intersection test
         if (!(nodeScreenEnd.x < minPos.x || nodeScreenPos.x > maxPos.x ||
               nodeScreenEnd.y < minPos.y || nodeScreenPos.y > maxPos.y)) {
-            // Node is inside rectangle - add to both canvas and base class
-            selectedNodeIds.push_back(node.nodeId);  // Collect for base class
+            selectedNodeIds.push_back(node.nodeId);
             selectedCount++;
             std::cout << "[PlaceholderCanvas] Node " << node.nodeId << " selected via rectangle\n";
         }
     }
 
-    // Phase 64: Sync all selected nodes to base class
-    // Phase 64.3 FIX: DON'T sync to m_selectedNodeId (it's for single-node dragging only)
-    // Only update the base class renderer's multi-select vector
-    m_selectedNodeId = -1;  // Clear single-node selection for multi-select mode
     m_renderer->SetSelectedNodeIds(selectedNodeIds);
     std::cout << "[PlaceholderCanvas] Rectangle selection: " << selectedCount << " nodes selected\n";
 }

@@ -184,9 +184,6 @@ void PlaceholderGraphRenderer::RenderGraphContent()
     if (!canvas)
         return;
 
-    // Phase 64: Sync canvas selection with base class
-    SyncCanvasSelectionWithBase();
-
     // ---- TYPE-SPECIFIC TOOLBAR ----
     // Verify, Run Graph, Minimap, Size controls
     RenderTypeSpecificToolbar();
@@ -636,24 +633,6 @@ void PlaceholderGraphRenderer::SelectNodesInRectangle(const ImVec2& rectStart, c
         if (!(rectEnd.x < nodeMin.x || rectStart.x > nodeMax.x ||
               rectEnd.y < nodeMin.y || rectStart.y > nodeMax.y)) {
             m_selectedNodeIds.push_back(nodeId);
-        }
-    }
-}
-
-void PlaceholderGraphRenderer::SyncCanvasSelectionWithBase()
-{
-    // Phase 64: Synchronize canvas single selection with base class vector selection
-    // Get selected node from canvas
-    PlaceholderCanvas* canvas = GetCanvasPtr();
-    if (canvas) {
-        int canvasSelectedNodeId = canvas->GetSelectedNodeId();
-        if (canvasSelectedNodeId >= 0) {
-            // Update base class selected nodes
-            m_selectedNodeIds.clear();
-            m_selectedNodeIds.push_back(canvasSelectedNodeId);
-        } else if (!m_selectedNodeIds.empty() && m_selectedNodeIds.size() == 1) {
-            // If base class has single selection but canvas doesn't, update canvas
-            canvas->SetSelectedNodeId(m_selectedNodeIds[0]);
         }
     }
 }

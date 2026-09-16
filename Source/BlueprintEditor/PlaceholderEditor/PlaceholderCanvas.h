@@ -41,12 +41,6 @@ public:
     /// Main render call (called each frame)
     void Render();
 
-    /// Get selected node ID (-1 if none)
-    int GetSelectedNodeId() const { return m_selectedNodeId; }
-
-    /// Set selected node
-    void SetSelectedNodeId(int nodeId) { m_selectedNodeId = nodeId; }
-
     /// Set minimap visibility
     void SetMinimapVisible(bool visible) {
         if (m_canvasEditor) m_canvasEditor->SetMinimapVisible(visible);
@@ -93,7 +87,6 @@ public:
         PlaceholderGraphDocument* m_document;
         PlaceholderGraphRenderer* m_renderer;  // Phase 63.2: Reference to update base class selection
         std::unique_ptr<ICanvasEditor> m_canvasEditor; // Canonical pan/zoom/transform authority
-        int m_selectedNodeId;       // Currently selected node (-1 for none)
          bool m_isDraggingNode;      // Currently dragging a node
 
          // Phase 64.4 STEP 6: Multi-node drag tracking
