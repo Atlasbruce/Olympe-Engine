@@ -1,5 +1,6 @@
 #include "PlaceholderCanvas.h"
 #include "../Utilities/CustomCanvasEditor.h"
+#include "../Utilities/CanvasHitTesting.h"
 #include "PlaceholderGraphDocument.h"
 #include "PlaceholderGraphRenderer.h"  // Phase 63.2: For updating selection in base class
 #include "../../third_party/imgui/imgui.h"
@@ -296,20 +297,11 @@ void PlaceholderCanvas::HandleNodeInteraction()
 
                 const float portRadius = 5.0f * canvasZoom;
 
-                // Input port (left side)
-                ImVec2 inputPortPos = ImVec2(nodeScreenPos.x, (nodeScreenPos.y + nodeScreenEnd.y) * 0.5f);
-                float dx = mousePos.x - inputPortPos.x;
-                float dy = mousePos.y - inputPortPos.y;
-                float distToInputPort = sqrt(dx * dx + dy * dy);
-
                 // Output port (right side)
                 ImVec2 outputPortPos = ImVec2(nodeScreenEnd.x, (nodeScreenPos.y + nodeScreenEnd.y) * 0.5f);
-                dx = mousePos.x - outputPortPos.x;
-                dy = mousePos.y - outputPortPos.y;
-                float distToOutputPort = sqrt(dx * dx + dy * dy);
 
                 // If close to output port, start connection drag
-                if (distToOutputPort <= portRadius) {
+                if (CanvasHitTesting::ContainsPointInCircle(mousePos, outputPortPos, portRadius)) {
                     m_isDraggingConnection = true;
                     m_dragConnectionFromNodeId = nodeAtPos;
                     m_dragConnectionPreviewEnd = mousePos;
@@ -426,12 +418,8 @@ void PlaceholderCanvas::HandleNodeInteraction()
 
                     const float portRadius = 5.0f * canvasZoom;
                     ImVec2 inputPortPos = ImVec2(nodeScreenPos.x, (nodeScreenPos.y + nodeScreenEnd.y) * 0.5f);
-                    float dx = mousePos.x - inputPortPos.x;
-                    float dy = mousePos.y - inputPortPos.y;
-                    float distToInputPort = sqrt(dx * dx + dy * dy);
-
                     // If close to input port, create connection
-                    if (distToInputPort <= portRadius) {
+                    if (CanvasHitTesting::ContainsPointInCircle(mousePos, inputPortPos, portRadius)) {
                         m_document->CreateConnection(m_dragConnectionFromNodeId, nodeAtMouse);
                         m_document->OnDocumentModified();
                         std::cout << "[PlaceholderCanvas] Created connection from node " << m_dragConnectionFromNodeId 
@@ -527,8 +515,7 @@ bool PlaceholderCanvas::IsPointInNodeBounds(int nodeId, const ImVec2& screen)
     ImVec2 nodeScreenEnd = ImVec2(nodeScreenPos.x + node->width * canvasZoom,
                                   nodeScreenPos.y + node->height * canvasZoom);
 
-    return (screen.x >= nodeScreenPos.x && screen.x <= nodeScreenEnd.x &&
-            screen.y >= nodeScreenPos.y && screen.y <= nodeScreenEnd.y);
+    return CanvasHitTesting::ContainsPoint(screen, nodeScreenPos, nodeScreenEnd);
 }
 
 // Phase 76: Connection hit detection

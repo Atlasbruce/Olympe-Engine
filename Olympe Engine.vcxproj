@@ -396,6 +396,7 @@
     <ClInclude Include="Source\BlueprintEditor\TemplateManager.h" />
     <ClInclude Include="Source\BlueprintEditor\UndoRedoStack.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasGridRenderer.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasHitTesting.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CustomCanvasEditor.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\ICanvasEditor.h" />
