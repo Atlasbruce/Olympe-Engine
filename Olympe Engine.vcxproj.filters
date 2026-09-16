@@ -521,6 +521,7 @@
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\ComponentPalettePanel.h" />
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasGridRenderer.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasBezier.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasHitTesting.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\ICanvasEditor.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.h" />

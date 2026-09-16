@@ -136,7 +136,7 @@ public:
     // Node rendering helpers
     ImU32 GetNodeColorForType(PlaceholderNodeType type);
     void RenderNodeBox(const PlaceholderNode& node, bool isSelected);
-    void RenderConnectionLine(const PlaceholderConnection& conn);
+    void RenderConnectionLine(const PlaceholderConnection& conn, int connectionIndex);
 };
 
 } // namespace Olympe

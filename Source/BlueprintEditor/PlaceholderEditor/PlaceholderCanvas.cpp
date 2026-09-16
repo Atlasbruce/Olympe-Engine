@@ -1,5 +1,6 @@
 #include "PlaceholderCanvas.h"
 #include "../Utilities/CustomCanvasEditor.h"
+#include "../Utilities/CanvasBezier.h"
 #include "../Utilities/CanvasHitTesting.h"
 #include "PlaceholderGraphDocument.h"
 #include "PlaceholderGraphRenderer.h"  // Phase 63.2: For updating selection in base class
@@ -117,8 +118,8 @@ void PlaceholderCanvas::RenderConnections()
     if (!m_document) return;
 
     const auto& connections = m_document->GetAllConnections();
-    for (const auto& conn : connections) {
-        RenderConnectionLine(conn);
+    for (size_t index = 0; index < connections.size(); ++index) {
+        RenderConnectionLine(connections[index], static_cast<int>(index));
     }
 }
 
@@ -197,7 +198,7 @@ void PlaceholderCanvas::RenderNodeBox(const PlaceholderNode& node, bool isSelect
     drawList->AddCircleFilled(outputPortPos, portRadius, portColor);
 }
 
-void PlaceholderCanvas::RenderConnectionLine(const PlaceholderConnection& conn)
+void PlaceholderCanvas::RenderConnectionLine(const PlaceholderConnection& conn, int connectionIndex)
 {
     if (!m_document) return;
 
@@ -212,20 +213,14 @@ void PlaceholderCanvas::RenderConnectionLine(const PlaceholderConnection& conn)
     ImVec2 fromPos = CanvasToScreen(ImVec2(fromNode->posX + fromNode->width, fromNode->posY + fromNode->height / 2.0f));
     ImVec2 toPos = CanvasToScreen(ImVec2(toNode->posX, toNode->posY + toNode->height / 2.0f));
 
-    // Bezier control points (40% of horizontal distance)
-    float controlPointOffset = (toPos.x - fromPos.x) * 0.4f;
-    ImVec2 cp1(fromPos.x + controlPointOffset, fromPos.y);
-    ImVec2 cp2(toPos.x - controlPointOffset, toPos.y);
+    const CanvasBezier::CubicCurve curve = CanvasBezier::MakeHorizontalCurve(fromPos, toPos);
 
     // Phase 76: Check if this connection is hovered (using index in connections array)
-    bool isHovered = (m_hoveredConnectionId == 0);  // Updated when GetConnectionAtScreenPos() determines index
+    const bool isHovered = (m_hoveredConnectionId == connectionIndex);
     ImU32 lineColor = isHovered ? IM_COL32(255, 255, 0, 255) : IM_COL32(255, 255, 0, 255);  // Yellow always
     float lineWidth = isHovered ? 3.0f : 2.0f;
 
-    // Draw Bezier curve using path rendering
-    drawList->PathLineTo(fromPos);
-    drawList->PathBezierCubicCurveTo(cp1, cp2, toPos, 32);
-    drawList->PathStroke(lineColor, false, lineWidth);
+    CanvasBezier::Render(drawList, curve, lineColor, lineWidth);
 }
 
 ImU32 PlaceholderCanvas::GetNodeColorForType(PlaceholderNodeType type)
@@ -508,38 +503,8 @@ float PlaceholderCanvas::GetDistanceToConnection(const PlaceholderConnection& co
     ImVec2 fromPos = CanvasToScreen(ImVec2(fromNode->posX + fromNode->width, fromNode->posY + fromNode->height / 2.0f));
     ImVec2 toPos = CanvasToScreen(ImVec2(toNode->posX, toNode->posY + toNode->height / 2.0f));
 
-    // Bezier control points
-    float controlPointOffset = (toPos.x - fromPos.x) * 0.4f;
-    ImVec2 cp1(fromPos.x + controlPointOffset, fromPos.y);
-    ImVec2 cp2(toPos.x - controlPointOffset, toPos.y);
-
-    // Sample Bezier curve at multiple points to find closest distance
-    float minDistance = std::numeric_limits<float>::max();
-    const int samples = 32;  // Match render curve samples
-
-    for (int i = 0; i <= samples; ++i) {
-        float t = static_cast<float>(i) / samples;
-
-        // Cubic Bezier formula: B(t) = (1-t)³P0 + 3(1-t)²tP1 + 3(1-t)t²P2 + t³P3
-        float mt = 1.0f - t;
-        float mt2 = mt * mt;
-        float mt3 = mt2 * mt;
-        float t2 = t * t;
-        float t3 = t2 * t;
-
-        ImVec2 curvePoint(
-            mt3 * fromPos.x + 3.0f * mt2 * t * cp1.x + 3.0f * mt * t2 * cp2.x + t3 * toPos.x,
-            mt3 * fromPos.y + 3.0f * mt2 * t * cp1.y + 3.0f * mt * t2 * cp2.y + t3 * toPos.y
-        );
-
-        float dx = screenPos.x - curvePoint.x;
-        float dy = screenPos.y - curvePoint.y;
-        float distance = sqrt(dx * dx + dy * dy);
-
-        minDistance = std::min(minDistance, distance);
-    }
-
-    return minDistance;
+    return CanvasBezier::DistanceToCurve(
+        CanvasBezier::MakeHorizontalCurve(fromPos, toPos), screenPos);
 }
 
 ImVec2 PlaceholderCanvas::ScreenToCanvas(const ImVec2& screen)
@@ -635,15 +600,11 @@ void PlaceholderCanvas::RenderConnectionPreviewLine()
     ImVec2 fromPos = CanvasToScreen(ImVec2(fromNode->posX + fromNode->width, fromNode->posY + fromNode->height / 2.0f));
     ImVec2 toPos = m_dragConnectionPreviewEnd;
 
-    // Bezier control points (40% of horizontal distance)
-    float controlPointOffset = (toPos.x - fromPos.x) * 0.4f;
-    ImVec2 cp1(fromPos.x + controlPointOffset, fromPos.y);
-    ImVec2 cp2(toPos.x - controlPointOffset, toPos.y);
-
-    // Draw yellow preview line (Bezier curve)
-    drawList->PathLineTo(fromPos);
-    drawList->PathBezierCubicCurveTo(cp1, cp2, toPos, 32);
-    drawList->PathStroke(IM_COL32(255, 255, 0, 255), false, 2.0f);
+    CanvasBezier::Render(
+        drawList,
+        CanvasBezier::MakeHorizontalCurve(fromPos, toPos),
+        IM_COL32(255, 255, 0, 255),
+        2.0f);
 }
 
 void PlaceholderCanvas::SelectNodesInRectangle()
