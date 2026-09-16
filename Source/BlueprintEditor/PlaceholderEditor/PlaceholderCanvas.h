@@ -74,13 +74,12 @@ public:
         /// Phase 64: Get zoom level
         float GetCanvasZoom() const { return m_canvasEditor ? m_canvasEditor->GetZoom() : 1.0f; }
 
+        /// Canonical view-transform provider for framework interaction helpers.
+        const ICanvasEditor& GetCanvasEditor() const { return *m_canvasEditor; }
+
         /// Phase 68 NEW: Accept drag-drop of node type at screen position
         /// Called from renderer's drag-drop overlay
         void AcceptNodeDropAtScreenPosition(PlaceholderNodeType nodeType, float screenX, float screenY);
-
-        /// Phase 68 FIX: Accept drag-drop with pre-calculated canvas position
-        /// Called from renderer's drag-drop overlay with canvas screen region info
-        void AcceptNodeDropAtCanvasPosition(PlaceholderNodeType nodeType, ImVec2 screenPos, ImVec2 canvasScreenMin, float canvasZoom);
 
     private:
         PlaceholderGraphDocument* m_document;
@@ -117,7 +116,6 @@ public:
     // Input handling
     void HandleNodeInteraction();
     void SelectNodesInRectangle();    // Feature #2: AABB intersection test
-    void HandleDragDropInput();       // Phase 64.1: Drag-drop node creation
 
     // Coordinate transformation (Phase 29 patterns)
     ImVec2 ScreenToCanvas(const ImVec2& screen);

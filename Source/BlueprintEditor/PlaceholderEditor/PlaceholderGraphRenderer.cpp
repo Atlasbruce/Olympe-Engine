@@ -1,5 +1,6 @@
 #include "PlaceholderGraphRenderer.h"
 #include "PlaceholderCanvas.h"
+#include "../Framework/BlueprintDropRouting.h"
 #include "../../system/system_utils.h"
 #include <iostream>
 #include <stdexcept>
@@ -221,16 +222,23 @@ void PlaceholderGraphRenderer::RenderGraphContent()
     ImGui::PushClipRect(canvasRegionMin, canvasRegionMax, false);
     ImGui::Dummy(ImVec2(canvasAreaWidth, canvasRegionMax.y - canvasRegionMin.y));
 
-    // Accept drag-drop payload for node instantiation from palette
+    // The overlay owns the ImGui drop target; the framework converts the drop
+    // position through the canvas' canonical view transform.
     if (ImGui::BeginDragDropTarget())
     {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("PLACEHOLDER_NODE_TYPE"))
+        BlueprintDropContext dropContext;
+        dropContext.graphType = GetGraphType();
+        if (const ImGuiPayload* payload = AcceptBlueprintDropPayload(
+                "PLACEHOLDER_NODE_TYPE", canvas->GetCanvasEditor(), dropContext))
         {
-            int nodeTypeValue = *static_cast<const int*>(payload->Data);
-            PlaceholderNodeType nodeType = static_cast<PlaceholderNodeType>(nodeTypeValue);
-            ImVec2 mousePos = ImGui::GetMousePos();
-            // Phase 68 FIX: Pass canvas region info directly to avoid context issues
-            canvas->AcceptNodeDropAtCanvasPosition(nodeType, mousePos, canvasRegionMin, canvas->GetCanvasZoom());
+            if (payload->Data && payload->DataSize == sizeof(int)) {
+                const int nodeTypeValue = *static_cast<const int*>(payload->Data);
+                LogBlueprintDropReceived(dropContext);
+                canvas->AcceptNodeDropAtScreenPosition(
+                    static_cast<PlaceholderNodeType>(nodeTypeValue),
+                    dropContext.screenX,
+                    dropContext.screenY);
+            }
         }
         ImGui::EndDragDropTarget();
     }

@@ -65,7 +65,6 @@ void PlaceholderCanvas::Render()
     // ICanvasEditor is the single authority for pan, zoom and transforms.
     m_canvasEditor->BeginRender();
     HandleNodeInteraction();
-    HandleDragDropInput();  // Phase 64.1: Drag-drop node creation and connections
 
         // Rendering in order: grid → connections → nodes → selection rectangle → preview line → context menu → minimap
         RenderGrid();
@@ -574,61 +573,6 @@ void PlaceholderCanvas::RenderSelectionRectangle()
     drawList->AddRect(minPos, maxPos, IM_COL32(100, 150, 255, 255), 0.0f, 15, 2.0f);
 }
 
-// Phase 64.1: Handle drag-drop for node creation
-void PlaceholderCanvas::HandleDragDropInput()
-{
-    ImGuiIO& io = ImGui::GetIO();
-    ImVec2 canvasPos = ImGui::GetCursorScreenPos();
-    ImVec2 canvasSize = ImGui::GetContentRegionAvail();
-    ImVec2 mousePos = io.MousePos;
-
-    // Check if mouse is over canvas
-    bool isMouseOverCanvas = (mousePos.x >= canvasPos.x && mousePos.x < canvasPos.x + canvasSize.x &&
-                              mousePos.y >= canvasPos.y && mousePos.y < canvasPos.y + canvasSize.y);
-
-    if (!isMouseOverCanvas) return;
-
-    // Phase 64.2: Handle connection drag (port-to-port)
-    if (m_isDraggingConnection) {
-        m_dragConnectionPreviewEnd = ImVec2(mousePos.x, mousePos.y);
-    }
-
-    // Setup drag-drop target for node creation (Phase 64: Diagnostic logging)
-    if (ImGui::BeginDragDropTarget())
-    {
-        std::cout << "[PlaceholderCanvas::HandleDragDropInput] BeginDragDropTarget entered\n";
-
-        // Check if payload is being delivered
-        if (const ImGuiPayload* payload = ImGui::GetDragDropPayload())
-        {
-            std::cout << "[PlaceholderCanvas::HandleDragDropInput] Payload detected, type: " 
-                      << (payload ? payload->DataType : "nullptr") << "\n";
-
-            if (payload->IsDataType("PLACEHOLDER_NODE_TYPE"))
-            {
-                std::cout << "[PlaceholderCanvas] ✓ Payload hover detected, type: PLACEHOLDER_NODE_TYPE\n";
-
-                if (ImGui::AcceptDragDropPayload("PLACEHOLDER_NODE_TYPE"))
-                {
-                    // Get node type from payload
-                    int nodeTypeValue = *static_cast<const int*>(payload->Data);
-                    PlaceholderNodeType nodeType = static_cast<PlaceholderNodeType>(nodeTypeValue);
-
-                    // Convert screen position to canvas position
-                    ImVec2 canvasDropPos = ScreenToCanvas(mousePos);
-
-                    // Create node at drop position
-                    HandleNodeCreatedFromPalette(nodeType, canvasDropPos);
-
-                    std::cout << "[PlaceholderCanvas] ✓✓✓ DROP ACCEPTED! Node type " << nodeTypeValue 
-                              << " created at canvas pos (" << canvasDropPos.x << ", " << canvasDropPos.y << ")\n";
-                }
-            }
-        }
-        ImGui::EndDragDropTarget();
-    }
-}
-
 // Phase 64.1: Create node when dropped from palette
 void PlaceholderCanvas::HandleNodeCreatedFromPalette(PlaceholderNodeType type, const ImVec2& dropPos)
 {
@@ -782,21 +726,6 @@ void PlaceholderCanvas::AcceptNodeDropAtScreenPosition(PlaceholderNodeType nodeT
     // Convert screen position to canvas position
     ImVec2 screenPos(screenX, screenY);
     ImVec2 canvasPos = ScreenToCanvas(screenPos);
-
-    // Create node at drop position
-    HandleNodeCreatedFromPalette(nodeType, canvasPos);
-}
-
-// Phase 68 FIX: Accept drag-drop with canvas region info passed from overlay
-void PlaceholderCanvas::AcceptNodeDropAtCanvasPosition(PlaceholderNodeType nodeType, ImVec2 screenPos, ImVec2 canvasScreenMin, float canvasZoom)
-{
-    if (!m_document) return;
-
-    // The overlay runs after EndChild; keep using the captured canvas origin, while
-    // delegating the actual transform to the canonical canvas editor.
-    m_canvasEditor->SetCanvasScreenPos(canvasScreenMin);
-    (void)canvasZoom;
-    ImVec2 canvasPos = m_canvasEditor->ScreenToCanvas(screenPos);
 
     // Create node at drop position
     HandleNodeCreatedFromPalette(nodeType, canvasPos);

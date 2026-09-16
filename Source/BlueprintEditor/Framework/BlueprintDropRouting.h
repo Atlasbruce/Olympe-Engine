@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../system/system_utils.h"
+#include "../Utilities/ICanvasEditor.h"
 #include <string>
 
 namespace Olympe {
@@ -12,6 +13,8 @@ struct BlueprintDropContext
     std::string payloadValue;
     float screenX = 0.0f;
     float screenY = 0.0f;
+    float canvasX = 0.0f;
+    float canvasY = 0.0f;
 };
 
 struct BlueprintDropResult
@@ -19,6 +22,26 @@ struct BlueprintDropResult
     bool handled = false;
     std::string createdNodeId;
 };
+
+inline const ImGuiPayload* AcceptBlueprintDropPayload(
+    const char* expectedPayloadType,
+    const ICanvasEditor& canvasEditor,
+    BlueprintDropContext& context)
+{
+    const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(expectedPayloadType);
+    if (!payload) {
+        return nullptr;
+    }
+
+    const ImVec2 screenPos = ImGui::GetMousePos();
+    const ImVec2 canvasPos = canvasEditor.ScreenToCanvas(screenPos);
+    context.payloadType = expectedPayloadType;
+    context.screenX = screenPos.x;
+    context.screenY = screenPos.y;
+    context.canvasX = canvasPos.x;
+    context.canvasY = canvasPos.y;
+    return payload;
+}
 
 inline void LogBlueprintDropBegin(const BlueprintDropContext& ctx)
 {
