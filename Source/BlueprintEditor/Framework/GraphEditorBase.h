@@ -155,7 +155,7 @@ protected:
     // --- Protected: Common Utilities ---
 
     virtual void RenderCommonToolbar();  // Phase 53: Made virtual for subclass override
-    void HandlePanZoomInput();
+    virtual void HandlePanZoomInput();
     void UpdateSelection(ImVec2 mousePos, bool ctrlPressed, bool shiftPressed);
     void RenderSelectionRectangle();
     void RenderContextMenu();

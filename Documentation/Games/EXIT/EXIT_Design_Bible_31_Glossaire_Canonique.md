@@ -88,6 +88,16 @@
 | Garde de solvabilité | Vérification préalable garantissant qu'une intervention préserve au moins une voie de résolution. |
 | Trace d'événements de jeu | Chronologie factuelle et significative de l'expérience, source du débrief clinique. |
 
+## Ajouts CANON DR-08
+
+| Terme | Définition canonique |
+|---|---|
+| Exposé | Information, besoin ou contenu explicitement rendu accessible dans le Monde. |
+| Interne | Connaissance, état ou contenu non directement accessible à autrui. |
+| Affirmation | Information attribuée à une source décrivant ce qu'elle déclare, distincte de la vérité du Monde. |
+| Déclaration | Communication signalant la possession d'une information sans nécessairement en révéler le contenu. |
+| Accord social | Attente sociale mémorisable née d'une proposition et acceptation ; ni contrat du Monde ni condition de quête. |
+
 **WIP explicite :** les variables éventuelles de fiabilité et de fraîcheur d'une connaissance, ainsi que leurs formules, ne sont pas définies.
 
 Les définitions détaillées et les confusions à éviter figurent dans l'audit et les sections 11, 14, 20 et 21.

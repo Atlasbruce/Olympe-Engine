@@ -21,6 +21,14 @@ Une décision validée doit indiquer sa date, son statut, sa raison, son impact 
 | DR-05 | 19 septembre 2026 | Modèle psycho-émotionnel minimal et social consolidé par Nicolas + ChatGPT. | 🟢 CANON |
 | DR-06 | 20 septembre 2026 | Modèle de décision subjectif et friction décisionnelle validés. | 🟢 CANON |
 | DR-07 | 20 septembre 2026 | Contrat d'échec, relance, Observers et débrief validés. | 🟢 CANON |
+| DR-08 (01-05) | 21 septembre 2026 | Vertical slice de référence, accès subjectif et communication validés. | 🟢 CANON |
+
+## DR-08 — décisions validées
+
+| ID | Décision | Statut |
+|---|---|---|
+| DR08-01 à DR08-04 | Accès subjectif, slice, état initial et topologie. | 🟢 CANON |
+| DR08-05 D01 à D08 | Exposé/interne, transitions, concurrence, communication, affirmations et accords sociaux. | 🟢 CANON |
 
 ## DR-07 — décisions validées
 

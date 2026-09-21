@@ -248,3 +248,7 @@ Le dialogue n'est pas seulement du texte : il expose une intention, une demande,
 ## Propagation DR-06
 
 **🟢 CANON :** relation, confiance, rappel d'expérience et valeurs morales peuvent converger ou entrer en conflit dans l'appréciation d'une option. Aucun ne prescrit seul entraide, vengeance, acceptation ou refus.
+
+## Propagation DR-08
+
+**🟢 CANON :** une proposition acceptée crée une attente sociale et une expérience mémorisable, non une règle du Monde ni une condition de quête. Une promesse non tenue ne prouve pas automatiquement une intention de trahir ; l'interprétation reste subjective et fondée sur les informations accessibles.

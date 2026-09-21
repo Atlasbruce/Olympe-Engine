@@ -35,3 +35,7 @@ Le joueur doit pouvoir explorer, observer, prendre, utiliser, donner, demander e
 ## Propagation DR-04
 
 **🟢 CANON :** joueur et NPC partagent les mêmes capacités systémiques fondamentales. Les éléments interactifs portent une grammaire commune : nature, fonction, actions possibles, cibles compatibles, combinaisons et effets. Les différences de comportement proviennent du contexte, de l'état, de la position, de l'inventaire, des connaissances et des décisions, non d'une connaissance arbitrairement différente des règles.
+
+## Propagation DR-08
+
+**🟢 CANON :** perçu ≠ compris ≠ interactif. Les besoins spécifiques d'une instance sont découverts par observation/lecture ; une ressource ciblée par un plan n'est jamais réservée. L'action effectivement appliquée au Monde autoritatif départage les plans concurrents et déclenche la réévaluation des autres.

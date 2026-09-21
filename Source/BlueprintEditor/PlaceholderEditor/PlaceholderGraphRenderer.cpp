@@ -631,31 +631,6 @@ void PlaceholderGraphRenderer::HandleTypeSpecificShortcuts()
     // (common shortcuts handled by GraphEditorBase)
 }
 
-void PlaceholderGraphRenderer::SelectNodesInRectangle(const ImVec2& rectStart, const ImVec2& rectEnd)
-{
-    // Phase 3: AABB hit detection for nodes in rectangle
-    PlaceholderGraphDocument* doc = GetDoc();
-    if (!doc) return;
-
-    m_selectedNodeIds.clear();  // Clear previous selection
-
-    // Get all nodes from document
-    for (int nodeId = 1; nodeId <= doc->GetNodeCount(); nodeId++) {
-        PlaceholderNode* node = doc->GetNode(nodeId);
-        if (!node) continue;
-
-        // AABB intersection test
-        ImVec2 nodeMin(node->posX, node->posY);
-        ImVec2 nodeMax(node->posX + node->width, node->posY + node->height);
-
-        // Check if node overlaps with selection rectangle
-        if (!(rectEnd.x < nodeMin.x || rectStart.x > nodeMax.x ||
-              rectEnd.y < nodeMin.y || rectStart.y > nodeMax.y)) {
-            m_selectedNodeIds.push_back(nodeId);
-        }
-    }
-}
-
 void PlaceholderGraphRenderer::SelectAll()
 {
     PlaceholderGraphDocument* doc = GetDoc();

@@ -36,6 +36,9 @@
 | DB-28 | Définir modèle décisionnel des Observers et vote du public. | Moyenne | Observers | 🟡 |
 | DB-29 | Définir valeurs des timers, régulation au restart et UI de mort/restart/reload. | Moyenne | UI, tests | 🟡 |
 | DB-30 | Étudier convergence future trace d'événements / trace de décision. | Basse | Debrief | 🔵 |
+| DB-31 | Régler les portées de perception, lecture, interaction et communication du slice. | Moyenne | Tests slice | 🟡 |
+| DB-32 | Définir les actes de communication et représentation technique d'une proposition/accord. | Moyenne | Dialogue, social | 🟡 |
+| DB-33 | Évaluer la nécessité d'un moteur général d'inférence. | Basse | Tests agents | 🟡 |
 
 ## Candidat issu de DR-01
 

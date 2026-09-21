@@ -51,3 +51,7 @@ connaissance conserve une proposition, sa source, sa fraîcheur, son degré de v
 ## Propagation DR-04
 
 **🟢 CANON :** l'inventaire physique est un état factuel et autoritatif de possession. Les systèmes IA peuvent en conserver une représentation opérationnelle dans le tableau noir, sans créer une connaissance subjective avec fiabilité pour chaque objet porté. Inventaire physique, mémoire et connaissance sont distincts.
+
+## Propagation DR-08
+
+**🟢 CANON :** un inventaire physique porté peut devenir exposé par fouille d'un inconscient ou autour d'un corps mort ; une connaissance ne devient jamais un loot physique. Dans le slice : pièce et clé sont consommées, batterie allouée/récupérable, code transmissible/non consommé.

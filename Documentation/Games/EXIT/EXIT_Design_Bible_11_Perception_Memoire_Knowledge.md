@@ -255,3 +255,7 @@ La consolidation est `CREATE / IGNORE / VERSION` sur une connaissance `CURRENT` 
 ## Propagation DR-06
 
 **🟢 CANON :** la mémoire doit proposer des associations structurées — NPC, lieu, objet, événement, interaction, besoin, but, situation, relation et importance émotionnelle — permettant un rappel contextuel sans balayage exhaustif. Ce rappel alimente une appréciation ; il ne décide pas l'action.
+
+## Propagation DR-08
+
+**🟢 CANON :** entendre, mémoriser, croire et répondre sont distincts. Une déclaration est une information sourcée concernant ce qu'un agent affirme ; elle ne modifie pas la vérité du Monde. Déclarer posséder une information ne divulgue pas son contenu. Répéter une même affirmation par la même source ne renforce pas automatiquement sa fiabilité.

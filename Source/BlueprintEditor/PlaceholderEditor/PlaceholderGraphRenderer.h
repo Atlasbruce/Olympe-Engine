@@ -62,9 +62,6 @@ public:
     /// Handle type-specific keyboard shortcuts
     virtual void HandleTypeSpecificShortcuts() override;
 
-    /// Phase 3: Rectangle selection with AABB hit detection
-    virtual void SelectNodesInRectangle(const ImVec2& rectStart, const ImVec2& rectEnd) override;
-
     /// Select every Placeholder node through GraphEditorBase's canonical selection state.
     virtual void SelectAll() override;
 
@@ -119,6 +116,9 @@ private:
     // Helper accessors for type safety
     PlaceholderGraphDocument* GetDoc() const { return static_cast<PlaceholderGraphDocument*>(m_document); }
     PlaceholderCanvas* GetCanvasPtr() const { return static_cast<PlaceholderCanvas*>(m_canvas); }
+
+    // CustomCanvasEditor is the sole pan/zoom authority for Placeholder.
+    virtual void HandlePanZoomInput() override {}
 
     // Owned objects (Unique to this subclass)
     std::unique_ptr<PlaceholderGraphDocument> m_ownedDocument; // Actual owner of document

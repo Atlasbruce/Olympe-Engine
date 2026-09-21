@@ -1,4 +1,6 @@
 # EXIT Design Bible
+
+> **Référence DR-08 :** voir `EXIT_DESIGN_REVIEW_DR08_VERTICAL_SLICE.md` pour le vertical slice validé à trois participants et ses règles spécifiques.
 ## 29 - Situations exemples et niveau de référence
 
 **Statut :** 🔵 PROPOSITION  
@@ -25,4 +27,3 @@
 - NPC autonome avec but propre.
 - Aide contextuelle et relation directionnelle.
 - Alternative non sociale et continuité anti-softlock.
-
