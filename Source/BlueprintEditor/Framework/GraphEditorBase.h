@@ -87,8 +87,14 @@ public:
     int GetFirstSelectedNodeId() const { return m_selectedNodeIds.empty() ? -1 : m_selectedNodeIds[0]; }
     int GetSelectedNodeCount() const { return static_cast<int>(m_selectedNodeIds.size()); }
     bool HasSelection() const { return !m_selectedNodeIds.empty(); }
-    void SelectAll();
+    virtual void SelectAll();
     void DeselectAll();
+
+    /** Undo/redo hooks implemented by graph types that provide command history. */
+    virtual bool Undo() { return false; }
+    virtual bool Redo() { return false; }
+    virtual bool CanUndo() const { return false; }
+    virtual bool CanRedo() const { return false; }
 
     /** Multi-selection with Ctrl+Click support */
     void SelectMultipleNodes(int nodeId, bool ctrlPressed = false, bool shiftPressed = false);

@@ -26,17 +26,12 @@ PlaceholderCanvas::PlaceholderCanvas()
       m_renderer(nullptr),  // Phase 63.2: Initialize renderer reference
       m_canvasEditor(std::make_unique<CustomCanvasEditor>("PlaceholderCanvasView", ImVec2(0.0f, 0.0f), ImVec2(0.0f, 0.0f), 1.0f, 0.1f, 3.0f)),
       m_isDraggingNode(false),
-      m_isDraggingConnection(false),  // Phase 64: Connection drag tracking
-      m_dragConnectionFromNodeId(-1),
-      m_dragConnectionPreviewEnd(ImVec2(0.0f, 0.0f)),
       m_isSelectingRectangle(false),
       m_addToRectangleSelection(false),
       m_selectionRectStart(ImVec2(0.0f, 0.0f)),
       m_selectionRectEnd(ImVec2(0.0f, 0.0f)),
       m_hoveredNodeId(-1),            // Phase 76: No hovered node initially
-      m_hoveredConnectionId(-1),      // Phase 76: No hovered connection initially
-      m_contextNodeId(-1),            // Phase 76: No context menu initially
-      m_contextConnectionId(-1)       // Phase 76: No connection context menu initially
+      m_hoveredConnectionId(-1)       // Phase 76: No hovered connection initially
 {
 }
 
@@ -248,6 +243,9 @@ void PlaceholderCanvas::HandleNodeInteraction()
         // Reset hover state when mouse leaves canvas
         m_hoveredNodeId = -1;
         m_hoveredConnectionId = -1;
+        if (m_linkDrag.IsActive() && !ImGui::IsMouseDown(0)) {
+            m_linkDrag.Cancel();
+        }
         return;
     }
 
@@ -255,22 +253,9 @@ void PlaceholderCanvas::HandleNodeInteraction()
     m_hoveredNodeId = GetNodeAtScreenPos(mousePos);
     m_hoveredConnectionId = GetConnectionAtScreenPos(mousePos);
 
-    // Phase 76: Handle right-click (context menu dispatch in input phase)
+    // Route the right-click to the single highest-priority canvas target.
     if (ImGui::IsMouseClicked(1)) {  // Right mouse button
-        if (m_hoveredNodeId >= 0) {
-            // Right-click on node
-            m_contextNodeId = m_hoveredNodeId;
-            ImGui::OpenPopup("##node_context_menu");
-            std::cout << "[PlaceholderCanvas] Right-click on node " << m_hoveredNodeId << " - opening context menu\n";
-        } else if (m_hoveredConnectionId >= 0) {
-            // Right-click on connection
-            m_contextConnectionId = m_hoveredConnectionId;
-            ImGui::OpenPopup("##connection_context_menu");
-            std::cout << "[PlaceholderCanvas] Right-click on connection " << m_hoveredConnectionId << " - opening context menu\n";
-        } else {
-            // Right-click on empty canvas
-            ImGui::OpenPopup("##canvas_context_menu");
-        }
+        m_contextMenu.OpenForHitTest(m_hoveredNodeId, m_hoveredConnectionId);
     }
 
     // Phase 63.1 FIX: Get keyboard modifiers for multi-select
@@ -297,9 +282,7 @@ void PlaceholderCanvas::HandleNodeInteraction()
 
                 // If close to output port, start connection drag
                 if (CanvasHitTesting::ContainsPointInCircle(mousePos, outputPortPos, portRadius)) {
-                    m_isDraggingConnection = true;
-                    m_dragConnectionFromNodeId = nodeAtPos;
-                    m_dragConnectionPreviewEnd = mousePos;
+                    m_linkDrag.Begin(nodeAtPos, mousePos);
                     std::cout << "[PlaceholderCanvas] Started connection drag from node " << nodeAtPos << "\n";
                     return;
                 }
@@ -344,9 +327,8 @@ void PlaceholderCanvas::HandleNodeInteraction()
         if (m_isSelectingRectangle) {
             // Update rectangle end point
             m_selectionRectEnd = mousePos;
-        } else if (m_isDraggingConnection) {
-            // Update connection preview end point
-            m_dragConnectionPreviewEnd = mousePos;
+        } else if (m_linkDrag.IsActive()) {
+            m_linkDrag.UpdatePreviewEnd(mousePos);
         } else if (m_isDraggingNode) {
             if (io.MouseDelta.x != 0.0f || io.MouseDelta.y != 0.0f) {
                 m_renderer->ApplyNodeDragDelta(io.MouseDelta, GetCanvasZoom());
@@ -362,10 +344,11 @@ void PlaceholderCanvas::HandleNodeInteraction()
         }
 
         // Phase 64.2: Handle connection drag release
-        if (m_isDraggingConnection) {
+        if (m_linkDrag.IsActive()) {
+            const int sourceNodeId = m_linkDrag.Complete();
             // Check if releasing on an input port of another node
             int nodeAtMouse = GetNodeAtScreenPos(mousePos);
-            if (nodeAtMouse >= 0 && nodeAtMouse != m_dragConnectionFromNodeId) {
+            if (nodeAtMouse >= 0 && nodeAtMouse != sourceNodeId) {
                 PlaceholderNode* targetNode = m_document->GetNode(nodeAtMouse);
                 if (targetNode) {
                     ImVec2 nodeScreenPos = CanvasToScreen(ImVec2(targetNode->posX, targetNode->posY));
@@ -377,14 +360,10 @@ void PlaceholderCanvas::HandleNodeInteraction()
                     ImVec2 inputPortPos = ImVec2(nodeScreenPos.x, (nodeScreenPos.y + nodeScreenEnd.y) * 0.5f);
                     // If close to input port, create connection
                     if (CanvasHitTesting::ContainsPointInCircle(mousePos, inputPortPos, portRadius)) {
-                        m_document->CreateConnection(m_dragConnectionFromNodeId, nodeAtMouse);
-                        m_document->OnDocumentModified();
-                        std::cout << "[PlaceholderCanvas] Created connection from node " << m_dragConnectionFromNodeId 
-                                  << " to node " << nodeAtMouse << "\n";
+                        HandleConnectionCreated(sourceNodeId, nodeAtMouse);
                     }
                 }
             }
-            m_isDraggingConnection = false;
         }
         m_isDraggingNode = false;
     }
@@ -394,59 +373,55 @@ void PlaceholderCanvas::HandleNodeInteraction()
 
 void PlaceholderCanvas::RenderContextMenu()
 {
-    // Phase 76 FIX: Right-click detection moved to HandleNodeInteraction (input phase)
-    // This method now only renders context menus that were opened in the input phase
-    // via m_contextNodeId, m_contextConnectionId, etc.
-
-    // Render node context menu
-    if (ImGui::BeginPopup("##node_context_menu")) {
-        if (m_contextNodeId >= 0 && m_document) {
-            if (ImGui::MenuItem("Delete Node")) {
-                const int deletedNodeId = m_contextNodeId;
-                m_document->DeleteNode(deletedNodeId);
-                if (m_renderer->IsNodeSelected(deletedNodeId))
-                    m_renderer->SelectMultipleNodes(deletedNodeId, true, false);
-                m_contextNodeId = -1;
-                std::cout << "[PlaceholderCanvas] Node " << deletedNodeId << " deleted via context menu\n";
-                m_document->OnDocumentModified();
-            }
-            if (ImGui::MenuItem("Properties")) {
-                std::cout << "[PlaceholderCanvas] Properties selected for node " << m_contextNodeId << "\n";
-            }
-        }
-        ImGui::EndPopup();
+    if (!m_contextMenu.Begin()) {
+        return;
     }
 
-    // Phase 76: Render connection context menu
-    if (ImGui::BeginPopup("##connection_context_menu")) {
-        if (m_contextConnectionId >= 0 && m_document) {
+    const CanvasContextTargetType targetType = m_contextMenu.GetTargetType();
+    const int targetId = m_contextMenu.GetTargetId();
+
+    if (targetType == CanvasContextTargetType::Node) {
+        if (targetId >= 0 && m_document) {
+            if (ImGui::MenuItem("Delete Node")) {
+                const int deletedNodeId = targetId;
+                if (m_renderer->DeleteNode(deletedNodeId)) {
+                    if (m_renderer->IsNodeSelected(deletedNodeId))
+                        m_renderer->SelectMultipleNodes(deletedNodeId, true, false);
+                    m_contextMenu.Clear();
+                    std::cout << "[PlaceholderCanvas] Node " << deletedNodeId << " deleted via context menu\n";
+                }
+            }
+            if (ImGui::MenuItem("Properties")) {
+                std::cout << "[PlaceholderCanvas] Properties selected for node " << targetId << "\n";
+            }
+        }
+    } else if (targetType == CanvasContextTargetType::Link) {
+        if (targetId >= 0 && m_document) {
             if (ImGui::MenuItem("Delete Connection")) {
                 const auto& connections = m_document->GetAllConnections();
-                if (m_contextConnectionId < static_cast<int>(connections.size())) {
-                    const PlaceholderConnection& conn = connections[m_contextConnectionId];
-                    m_document->DeleteConnection(conn.fromNodeId, conn.toNodeId);
-                    m_contextConnectionId = -1;
-                    std::cout << "[PlaceholderCanvas] Connection deleted via context menu\n";
-                    m_document->OnDocumentModified();
+                if (targetId < static_cast<int>(connections.size())) {
+                    const PlaceholderConnection& conn = connections[targetId];
+                    if (m_renderer->DeleteConnection(
+                            conn.fromNodeId, conn.toNodeId, conn.fromPortIndex, conn.toPortIndex)) {
+                        m_contextMenu.Clear();
+                        std::cout << "[PlaceholderCanvas] Connection deleted via context menu\n";
+                    }
                 }
             }
         }
-        ImGui::EndPopup();
-    }
-
-    // Render canvas context menu
-    if (ImGui::BeginPopup("##canvas_context_menu")) {
+    } else if (targetType == CanvasContextTargetType::Canvas) {
         if (ImGui::MenuItem("Select All")) {
-            // Future: select all nodes
-            std::cout << "[PlaceholderCanvas] Select All clicked\n";
+            m_renderer->SelectAll();
+            std::cout << "[PlaceholderCanvas] Selected all nodes\n";
         }
         if (ImGui::MenuItem("Reset View")) {
             // Reset pan and zoom
             ResetPanZoom();
             std::cout << "[PlaceholderCanvas] View reset\n";
         }
-        ImGui::EndPopup();
     }
+
+    ImGui::EndPopup();
 }
 
 int PlaceholderCanvas::GetNodeAtScreenPos(const ImVec2& screen)
@@ -551,7 +526,9 @@ void PlaceholderCanvas::HandleNodeCreatedFromPalette(PlaceholderNodeType type, c
         case PlaceholderNodeType::Magenta: title = "Magenta Node"; break;
     }
 
-    int nodeId = m_document->CreateNode(type, title, dropPos.x, dropPos.y);
+    const int nodeId = m_renderer
+        ? m_renderer->CreateNodeFromPalette(type, title, dropPos.x, dropPos.y)
+        : -1;
     if (nodeId >= 0) {
         // Select the newly created node
         if (m_renderer)
@@ -574,9 +551,7 @@ void PlaceholderCanvas::HandleConnectionCreated(int fromNodeId, int toNodeId)
     }
 
     // Create connection
-    int connId = m_document->CreateConnection(fromNodeId, toNodeId, 0, 0);
-    if (connId >= 0) {
-        m_document->OnDocumentModified();
+    if (m_renderer && m_renderer->CreateConnection(fromNodeId, toNodeId, 0, 0)) {
         std::cout << "[Phase 64.2] Created connection from node " << fromNodeId 
                   << " to node " << toNodeId << "\n";
     } else {
@@ -588,17 +563,17 @@ void PlaceholderCanvas::HandleConnectionCreated(int fromNodeId, int toNodeId)
 void PlaceholderCanvas::RenderConnectionPreviewLine()
 {
     // Only show preview if dragging from a port
-    if (!m_isDraggingConnection || m_dragConnectionFromNodeId < 0) return;
+    if (!m_linkDrag.IsActive()) return;
 
     ImDrawList* drawList = ImGui::GetWindowDrawList();
 
     // Get source node
-    PlaceholderNode* fromNode = m_document->GetNode(m_dragConnectionFromNodeId);
+    PlaceholderNode* fromNode = m_document->GetNode(m_linkDrag.GetSourceNodeId());
     if (!fromNode) return;
 
     // Calculate connection points
     ImVec2 fromPos = CanvasToScreen(ImVec2(fromNode->posX + fromNode->width, fromNode->posY + fromNode->height / 2.0f));
-    ImVec2 toPos = m_dragConnectionPreviewEnd;
+    const ImVec2 toPos = m_linkDrag.GetPreviewEnd();
 
     CanvasBezier::Render(
         drawList,

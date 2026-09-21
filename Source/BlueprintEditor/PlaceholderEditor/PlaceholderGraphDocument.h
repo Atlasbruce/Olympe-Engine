@@ -90,6 +90,7 @@ public:
 
     // Placeholder-specific node operations
     int CreateNode(PlaceholderNodeType type, const std::string& title, float posX = 0.0f, float posY = 0.0f);
+    bool RestoreNode(const PlaceholderNode& node);
     bool DeleteNode(int nodeId);
     PlaceholderNode* GetNode(int nodeId);
     int GetNodeCount() const { return static_cast<int>(m_nodes.size()); }
@@ -97,6 +98,7 @@ public:
 
     // Connection operations
     int CreateConnection(int fromNodeId, int toNodeId, int fromPort = 0, int toPort = 0);
+    bool RestoreConnection(const PlaceholderConnection& connection);
     bool DeleteConnection(int fromNodeId, int toNodeId);
     const std::vector<PlaceholderConnection>& GetAllConnections() const { return m_connections; }
 

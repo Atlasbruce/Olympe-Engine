@@ -154,6 +154,8 @@
     <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderCanvas.cpp" />
     <ClCompile Include="..\Source\Editor\ConditionPreset\ConditionPresetRegistry.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphDocument.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphCommands.cpp" />
+    <ClCompile Include="..\Source\BlueprintEditor\Commands\CommandHistory.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\Framework\VisualScriptGraphDocument.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\Framework\BehaviorTreeGraphDocument.cpp" />
     <ClCompile Include="..\Source\BlueprintEditor\SubgraphMigrator.cpp" />

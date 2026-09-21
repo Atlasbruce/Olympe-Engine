@@ -102,6 +102,7 @@
     <ClCompile Include="Source\BlueprintEditor\PerformanceProfiler.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderCanvas.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphDocument.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphCommands.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderNodePalette.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderPropertyEditorPanel.cpp" />
@@ -384,6 +385,7 @@
     <ClInclude Include="Source\BlueprintEditor\ParameterEditorRegistry.h" />
     <ClInclude Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderCanvas.h" />
     <ClInclude Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphDocument.h" />
+    <ClInclude Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphCommands.h" />
     <ClInclude Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderNodePalette.h" />
     <ClInclude Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderPropertyEditorPanel.h" />
@@ -397,7 +399,9 @@
     <ClInclude Include="Source\BlueprintEditor\UndoRedoStack.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasGridRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasBezier.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasContextMenu.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasHitTesting.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasLinkDrag.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasMinimapRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CustomCanvasEditor.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\ICanvasEditor.h" />

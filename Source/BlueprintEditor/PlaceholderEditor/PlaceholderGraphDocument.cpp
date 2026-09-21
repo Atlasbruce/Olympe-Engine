@@ -87,6 +87,16 @@ int PlaceholderGraphDocument::CreateNode(PlaceholderNodeType type, const std::st
     return nodeId;
 }
 
+bool PlaceholderGraphDocument::RestoreNode(const PlaceholderNode& node)
+{
+    if (GetNode(node.nodeId)) return false;
+
+    m_nodes.push_back(node);
+    m_nextNodeId = std::max(m_nextNodeId, node.nodeId + 1);
+    m_isDirty = true;
+    return true;
+}
+
 bool PlaceholderGraphDocument::DeleteNode(int nodeId)
 {
     auto it = std::find_if(m_nodes.begin(), m_nodes.end(),
@@ -156,6 +166,15 @@ int PlaceholderGraphDocument::CreateConnection(int fromNodeId, int toNodeId, int
 
     std::cout << "[PlaceholderGraphDocument] Created connection: " << fromNodeId << " -> " << toNodeId << std::endl;
     return static_cast<int>(m_connections.size()) - 1;
+}
+
+bool PlaceholderGraphDocument::RestoreConnection(const PlaceholderConnection& connection)
+{
+    return CreateConnection(
+        connection.fromNodeId,
+        connection.toNodeId,
+        connection.fromPortIndex,
+        connection.toPortIndex) >= 0;
 }
 
 bool PlaceholderGraphDocument::DeleteConnection(int fromNodeId, int toNodeId)

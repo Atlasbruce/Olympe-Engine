@@ -6,6 +6,7 @@
 #include "PlaceholderGraphDocument.h"
 #include "PlaceholderPropertyEditorPanel.h"
 #include "PlaceholderNodePalette.h"  // Phase 64.1: Node palette for drag-drop creation
+#include "../Commands/CommandHistory.h"
 #include "../../PanelManager.h"  // Access to framework panel dimensions
 #include <memory>
 #include <string>
@@ -64,6 +65,14 @@ public:
     /// Phase 3: Rectangle selection with AABB hit detection
     virtual void SelectNodesInRectangle(const ImVec2& rectStart, const ImVec2& rectEnd) override;
 
+    /// Select every Placeholder node through GraphEditorBase's canonical selection state.
+    virtual void SelectAll() override;
+
+    virtual bool Undo() override;
+    virtual bool Redo() override;
+    virtual bool CanUndo() const override;
+    virtual bool CanRedo() const override;
+
     /// Phase 3: Delete selected nodes from document
     virtual void DeleteSelectedNodes() override;
 
@@ -83,6 +92,11 @@ public:
 
     /// Create new placeholder graph
     void CreateNewGraph();
+
+    int CreateNodeFromPalette(PlaceholderNodeType type, const std::string& title, float x, float y);
+    bool CreateConnection(int fromNodeId, int toNodeId, int fromPort = 0, int toPort = 0);
+    bool DeleteNode(int nodeId);
+    bool DeleteConnection(int fromNodeId, int toNodeId, int fromPort = 0, int toPort = 0);
 
     /// Phase 69: Execute save operation with given filepath
     bool ExecuteSave(const std::string& filePath);
@@ -113,6 +127,7 @@ private:
     std::unique_ptr<PlaceholderPropertyEditorPanel> m_propertyEditor;
     std::unique_ptr<CanvasToolbarRenderer> m_toolbar;  // Phase 4 Step 5 Feature #1: Unified toolbar (Save/SaveAs/Browse)
     std::unique_ptr<PlaceholderNodePalette> m_palette;  // Phase 64.1: Node palette for drag-drop creation
+    CommandHistory m_commandHistory;
 
     // Phase 4 Step 5: Layout management - resizable panels
     // Right panel width uses PanelManager::InspectorPanelWidth (framework default: 300px)

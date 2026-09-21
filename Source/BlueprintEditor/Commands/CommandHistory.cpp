@@ -24,6 +24,12 @@ namespace Olympe
         // Clear redo stack (new action invalidates redo history)
         m_redoStack.clear();
 
+        // Consecutive mergeable commands (such as drag updates) share one undo step.
+        if (!m_undoStack.empty() && m_undoStack.back()->CanMergeWith(*command))
+        {
+            return m_undoStack.back()->MergeWith(*command);
+        }
+
         // Add to undo stack
         m_undoStack.push_back(std::move(command));
 

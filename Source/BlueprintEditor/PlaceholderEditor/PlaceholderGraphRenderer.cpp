@@ -1,5 +1,6 @@
 #include "PlaceholderGraphRenderer.h"
 #include "PlaceholderCanvas.h"
+#include "PlaceholderGraphCommands.h"
 #include "../Framework/BlueprintDropRouting.h"
 #include "../../system/system_utils.h"
 #include <iostream>
@@ -68,6 +69,7 @@ bool PlaceholderGraphRenderer::Load(const std::string& filePath)
         m_isLoading = false;
         return false;
     }
+    m_commandHistory.Clear();
 
     // Initialize canvas (Phase 52 pattern: Initialize() must create all dependencies)
     if (!m_ownedCanvas)
@@ -473,6 +475,15 @@ void PlaceholderGraphRenderer::RenderTypeSpecificToolbar()
 {
     // Phase 62 FIX: Removed Minimap checkbox (already in RenderCommonToolbar - was duplicate)
 
+    if (ImGui::Button("Undo##placeholder") && CanUndo()) {
+        Undo();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Redo##placeholder") && CanRedo()) {
+        Redo();
+    }
+    ImGui::SameLine();
+
     // Phase 70: Verify button
     if (ImGui::Button("Verify##placeholder"))
     {
@@ -645,21 +656,85 @@ void PlaceholderGraphRenderer::SelectNodesInRectangle(const ImVec2& rectStart, c
     }
 }
 
+void PlaceholderGraphRenderer::SelectAll()
+{
+    PlaceholderGraphDocument* doc = GetDoc();
+    if (!doc) return;
+
+    std::vector<int> nodeIds;
+    const auto& nodes = doc->GetAllNodes();
+    nodeIds.reserve(nodes.size());
+    for (const PlaceholderNode& node : nodes) {
+        nodeIds.push_back(node.nodeId);
+    }
+    SetSelectedNodeIds(nodeIds);
+}
+
+bool PlaceholderGraphRenderer::Undo()
+{
+    return m_commandHistory.Undo();
+}
+
+bool PlaceholderGraphRenderer::Redo()
+{
+    return m_commandHistory.Redo();
+}
+
+bool PlaceholderGraphRenderer::CanUndo() const
+{
+    return m_commandHistory.CanUndo();
+}
+
+bool PlaceholderGraphRenderer::CanRedo() const
+{
+    return m_commandHistory.CanRedo();
+}
+
+int PlaceholderGraphRenderer::CreateNodeFromPalette(
+    PlaceholderNodeType type, const std::string& title, float x, float y)
+{
+    PlaceholderGraphDocument* doc = GetDoc();
+    if (!doc) return -1;
+
+    std::unique_ptr<CreatePlaceholderNodeCommand> command(
+        new CreatePlaceholderNodeCommand(doc, type, title, x, y));
+    CreatePlaceholderNodeCommand* commandPtr = command.get();
+    if (!m_commandHistory.ExecuteCommand(std::move(command))) return -1;
+    return commandPtr->GetNodeId();
+}
+
+bool PlaceholderGraphRenderer::CreateConnection(int fromNodeId, int toNodeId, int fromPort, int toPort)
+{
+    PlaceholderGraphDocument* doc = GetDoc();
+    return doc && m_commandHistory.ExecuteCommand(GraphCommandPtr(
+        new CreatePlaceholderConnectionCommand(doc, PlaceholderConnection(fromNodeId, toNodeId, fromPort, toPort))));
+}
+
+bool PlaceholderGraphRenderer::DeleteNode(int nodeId)
+{
+    PlaceholderGraphDocument* doc = GetDoc();
+    return doc && m_commandHistory.ExecuteCommand(GraphCommandPtr(
+        new DeletePlaceholderNodesCommand(doc, std::vector<int>(1, nodeId))));
+}
+
+bool PlaceholderGraphRenderer::DeleteConnection(int fromNodeId, int toNodeId, int fromPort, int toPort)
+{
+    PlaceholderGraphDocument* doc = GetDoc();
+    return doc && m_commandHistory.ExecuteCommand(GraphCommandPtr(
+        new DeletePlaceholderConnectionCommand(doc, PlaceholderConnection(fromNodeId, toNodeId, fromPort, toPort))));
+}
+
 void PlaceholderGraphRenderer::DeleteSelectedNodes()
 {
     // Phase 3: Delete all selected nodes from document
     PlaceholderGraphDocument* doc = GetDoc();
     if (!doc || m_selectedNodeIds.empty()) return;
 
-    std::cout << "[PlaceholderGraphRenderer] DeleteSelectedNodes: " << m_selectedNodeIds.size() << " node(s)\n";
-
-    // Delete in reverse order to maintain IDs
-    for (auto it = m_selectedNodeIds.rbegin(); it != m_selectedNodeIds.rend(); ++it) {
-        doc->DeleteNode(*it);
+    const std::vector<int> selectedNodeIds = m_selectedNodeIds;
+    if (m_commandHistory.ExecuteCommand(GraphCommandPtr(
+            new DeletePlaceholderNodesCommand(doc, selectedNodeIds)))) {
+        m_selectedNodeIds.clear();
     }
-
-    m_selectedNodeIds.clear();
-    doc->SetDirty(true);
 }
 
 void PlaceholderGraphRenderer::MoveSelectedNodes(float deltaX, float deltaY)
@@ -668,16 +743,8 @@ void PlaceholderGraphRenderer::MoveSelectedNodes(float deltaX, float deltaY)
     PlaceholderGraphDocument* doc = GetDoc();
     if (!doc || m_selectedNodeIds.empty()) return;
 
-    std::cout << "[PlaceholderGraphRenderer] MoveSelectedNodes: delta=(" << deltaX << ", " << deltaY << ")\n";
-
-    for (int nodeId : m_selectedNodeIds) {
-        PlaceholderNode* node = doc->GetNode(nodeId);
-        if (node) {
-            doc->SetNodePosition(nodeId, node->posX + deltaX, node->posY + deltaY);
-        }
-    }
-
-    doc->SetDirty(true);
+    m_commandHistory.ExecuteCommand(GraphCommandPtr(
+        new MovePlaceholderNodesCommand(doc, m_selectedNodeIds, deltaX, deltaY)));
 }
 
 void PlaceholderGraphRenderer::UpdateSelectedNodesProperty(const std::string& propName, const std::string& propValue)
@@ -752,6 +819,7 @@ void PlaceholderGraphRenderer::UpdateSelectedNodesProperty(const std::string& pr
 void PlaceholderGraphRenderer::CreateNewGraph()
 {
     std::cout << "[PlaceholderGraphRenderer] Creating new graph" << std::endl;
+    m_commandHistory.Clear();
 
     if (!m_ownedDocument)
     {

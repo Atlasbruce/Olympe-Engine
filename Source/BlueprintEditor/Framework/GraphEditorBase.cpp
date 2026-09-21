@@ -436,6 +436,14 @@ void GraphEditorBase::RenderContextMenu()
 
 void GraphEditorBase::HandleCommonShortcuts()
 {
+    // Ctrl+Z / Ctrl+Y: delegate command history to the active graph type.
+    if (m_ctrlPressed && ImGui::IsKeyPressed(ImGuiKey_Z, false)) {
+        Undo();
+    }
+    if (m_ctrlPressed && ImGui::IsKeyPressed(ImGuiKey_Y, false)) {
+        Redo();
+    }
+
     // Ctrl+S: Save
     if (m_ctrlPressed && ImGui::IsKeyPressed(ImGuiKey_S, false)) {
         if (!GetCurrentPath().empty()) {

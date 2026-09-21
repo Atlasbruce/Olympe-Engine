@@ -2,7 +2,9 @@
 
 #include <memory>
 #include "../../third_party/imgui/imgui.h"
+#include "../Utilities/CanvasContextMenu.h"
 #include "../Utilities/ICanvasEditor.h"
+#include "../Utilities/CanvasLinkDrag.h"
 
 namespace Olympe {
 
@@ -87,10 +89,7 @@ public:
         std::unique_ptr<ICanvasEditor> m_canvasEditor; // Canonical pan/zoom/transform authority
          bool m_isDraggingNode;      // Currently dragging a node
 
-        // Phase 64: Connection drag-drop tracking
-    bool m_isDraggingConnection;  // Currently dragging from a port
-    int m_dragConnectionFromNodeId;  // Source node for connection drag
-    ImVec2 m_dragConnectionPreviewEnd;  // End position for preview line
+    CanvasLinkDrag m_linkDrag;
 
     // Feature #2: Rectangle selection (Phase 4 Step 5)
     bool m_isSelectingRectangle;    // Currently drawing selection rectangle
@@ -101,8 +100,7 @@ public:
     // Phase 76: Hover and context menu state tracking
     int m_hoveredNodeId;            // Currently hovered node (-1 for none)
     int m_hoveredConnectionId;      // Currently hovered connection index (-1 for none)
-    int m_contextNodeId;            // Node ID for context menu (-1 for none)
-    int m_contextConnectionId;      // Connection ID for context menu (-1 for none)
+    CanvasContextMenu m_contextMenu;
 
     // Rendering methods
     void RenderGrid();

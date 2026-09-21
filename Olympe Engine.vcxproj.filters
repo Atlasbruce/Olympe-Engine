@@ -254,6 +254,7 @@
     <ClCompile Include="Source\BlueprintEditor\Framework\GraphEditorBase.cpp" />
     <ClCompile Include="Source\BlueprintEditor\Framework\IEditorToolManager.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphDocument.cpp" />
+    <ClCompile Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphCommands.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderCanvas.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphRenderer.cpp" />
     <ClCompile Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderPropertyEditorPanel.cpp" />
@@ -522,7 +523,9 @@
     <ClInclude Include="Source\BlueprintEditor\EntityPrefabEditor\PropertyEditorPanel.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasGridRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasBezier.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasContextMenu.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasHitTesting.h" />
+    <ClInclude Include="Source\BlueprintEditor\Utilities\CanvasLinkDrag.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\ICanvasEditor.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\ImNodesCanvasEditor.h" />
     <ClInclude Include="Source\BlueprintEditor\Utilities\CustomCanvasEditor.h" />
@@ -554,6 +557,7 @@
     <ClInclude Include="Source\BlueprintEditor\Framework\IEditorTool.h" />
     <ClInclude Include="Source\BlueprintEditor\Framework\IEditorToolManager.h" />
     <ClInclude Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphDocument.h" />
+    <ClInclude Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphCommands.h" />
     <ClInclude Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderGraphRenderer.h" />
     <ClInclude Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderCanvas.h" />
     <ClInclude Include="Source\BlueprintEditor\PlaceholderEditor\PlaceholderPropertyEditorPanel.h" />
