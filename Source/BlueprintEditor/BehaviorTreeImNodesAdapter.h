@@ -411,6 +411,44 @@ namespace Olympe
         }
 
         /**
+         * @brief Returns the selected document node ids, never ImNodes UIDs.
+         *
+         * ImNodes owns transient editor UIDs while the graph, commands and
+         * property panels use canonical document IDs.  This is the sole
+         * conversion boundary for BehaviorTree selection.
+         */
+        std::vector<int> GetSelectedCanonicalNodeIds() const
+        {
+            const std::vector<int> selectedUids = GetSelectedNodes();
+            std::vector<int> selectedIds;
+            selectedIds.reserve(selectedUids.size());
+            for (int uid : selectedUids)
+            {
+                const int canonicalId = GetCanonicalNodeIdFromUid(uid);
+                if (canonicalId != -1)
+                    selectedIds.push_back(canonicalId);
+            }
+            return selectedIds;
+        }
+
+        /** Select every document node while preserving the adapter context. */
+        void SelectAllCanonicalNodes()
+        {
+            if (!m_imnodesContext)
+                return;
+
+            ImNodesContext* oldContext = ImNodes::GetCurrentContext();
+            ImNodes::SetCurrentContext(m_imnodesContext);
+            ImNodes::EditorContextSet(m_editorContext);
+            ImNodes::ClearNodeSelection();
+            for (const auto& pair : m_nodeIdToUid)
+                ImNodes::SelectNode(pair.second);
+
+            if (oldContext)
+                ImNodes::SetCurrentContext(oldContext);
+        }
+
+        /**
          * @brief Returns the ID of the currently hovered link, or -1 if none.
          */
         int GetHoveredLink() const

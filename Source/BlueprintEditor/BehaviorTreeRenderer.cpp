@@ -646,12 +646,11 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
 
         // PHASE 78: Sync selection from ImNodes to Property Panel
         // Use GetSelectedNodes to be robust when multiple selection is enabled
-        std::vector<int> selNodes = m_imNodesAdapter->GetSelectedNodes();
+        std::vector<int> selNodes = m_imNodesAdapter->GetSelectedCanonicalNodeIds();
         int selectedNodeId = -1;
         if (!selNodes.empty())
         {
-            // Convert ImNodes uid to canonical NodeId before using with GraphDocument
-            selectedNodeId = m_imNodesAdapter->GetCanonicalNodeIdFromUid(selNodes[0]);
+            selectedNodeId = selNodes[0];
         }
         if (selectedNodeId != m_propertyPanel.m_selectedNodeId)
         {
@@ -787,7 +786,8 @@ void BehaviorTreeRenderer::RenderContextMenu()
 {
     if (!m_imNodesAdapter) return;
 
-    int selectedNodeId = m_imNodesAdapter->GetSelectedNodeId();
+    const std::vector<int> selectedNodeIds = m_imNodesAdapter->GetSelectedCanonicalNodeIds();
+    const int selectedNodeId = selectedNodeIds.empty() ? -1 : selectedNodeIds[0];
 
     // LEGACY RESTORATION: Popup opened explicitly via ImGui::OpenPopup("BT_Canvas_Context_Menu")
     // Use BeginPopup to match the explicit OpenPopup call performed on right-click.
@@ -795,7 +795,10 @@ void BehaviorTreeRenderer::RenderContextMenu()
     {
         // Use cached hovered ids (set at popup open) so we can act on a hovered link
         // even if ImNodes selection changes after HandleContextMenuTrigger returned.
-        int popupNodeId = m_contextHoveredNode != -1 ? m_contextHoveredNode : selectedNodeId;
+        const int popupNodeUid = m_contextHoveredNode;
+        const int popupNodeId = popupNodeUid != -1
+            ? m_imNodesAdapter->GetCanonicalNodeIdFromUid(popupNodeUid)
+            : selectedNodeId;
         int popupLinkId = m_contextHoveredLink;
 
         if (popupNodeId != -1)
@@ -810,15 +813,15 @@ void BehaviorTreeRenderer::RenderContextMenu()
                 if (graphDoc)
                 {
                     // LEGACY RESTORATION: Set root node ID in metadata
-                    graphDoc->metadata["rootNodeId"] = selectedNodeId;
-                    graphDoc->rootNodeId = NodeGraphTypes::NodeId{ static_cast<uint32_t>(selectedNodeId) };
+                    graphDoc->metadata["rootNodeId"] = popupNodeId;
+                    graphDoc->rootNodeId = NodeGraphTypes::NodeId{ static_cast<uint32_t>(popupNodeId) };
                     graphDoc->SetDirty(true);
                 }
             }
 
             // LEGACY RESTORATION: Breakpoint and Node State
             auto* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
-            auto* node = graphDoc ? graphDoc->GetNode(NodeGraphTypes::NodeId{ static_cast<uint32_t>(selectedNodeId) }) : nullptr;
+            auto* node = graphDoc ? graphDoc->GetNode(NodeGraphTypes::NodeId{ static_cast<uint32_t>(popupNodeId) }) : nullptr;
 
             if (node)
             {
@@ -851,16 +854,15 @@ void BehaviorTreeRenderer::RenderContextMenu()
                 NodeGraphTypes::GraphDocument* graphDoc = manager.GetGraph(NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
                 if (graphDoc)
                 {
-                    int canonicalId = m_imNodesAdapter->GetCanonicalNodeIdFromUid(popupNodeId);
-                    SYSTEM_LOG << "[BehaviorTreeRenderer] Delete Node requested popupUid=" << popupNodeId << " canonicalId=" << canonicalId << std::endl;
-                    if (canonicalId != -1)
+                    SYSTEM_LOG << "[BehaviorTreeRenderer] Delete Node requested canonicalId=" << popupNodeId << std::endl;
+                    if (popupNodeId != -1)
                     {
-                        bool ok = graphDoc->DeleteNode(NodeGraphTypes::NodeId{ static_cast<uint32_t>(canonicalId) });
-                        SYSTEM_LOG << "[BehaviorTreeRenderer] DeleteNode result=" << ok << " for canonicalId=" << canonicalId << std::endl;
+                        bool ok = graphDoc->DeleteNode(NodeGraphTypes::NodeId{ static_cast<uint32_t>(popupNodeId) });
+                        SYSTEM_LOG << "[BehaviorTreeRenderer] DeleteNode result=" << ok << " for canonicalId=" << popupNodeId << std::endl;
                     }
                     else
                     {
-                        SYSTEM_LOG << "[BehaviorTreeRenderer] WARNING: DeleteNode failed - could not map popupUid=" << popupNodeId << " to canonical id" << std::endl;
+                        SYSTEM_LOG << "[BehaviorTreeRenderer] WARNING: DeleteNode requested without a canonical node id" << std::endl;
                     }
                     m_propertyPanel.ClearSelection();
                     graphDoc->SetDirty(true);
@@ -898,11 +900,7 @@ void BehaviorTreeRenderer::RenderContextMenu()
                 auto* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
                 if (graphDoc)
                 {
-                for (const auto& node : graphDoc->GetNodes())
-                {
-                    int uid = m_imNodesAdapter->GetUidFromCanonicalNodeId(static_cast<uint32_t>(node.id.value));
-                    if (uid != -1) ImNodes::SelectNode(uid);
-                }
+                m_imNodesAdapter->SelectAllCanonicalNodes();
                 }
             }
             if (ImGui::MenuItem("Reset View"))
@@ -945,7 +943,8 @@ void BehaviorTreeRenderer::RenderRightPanelTabs()
                     // Try to source selection from ImNodes adapter as fallback
                     if (m_imNodesAdapter && m_graphId >= 0)
                     {
-                        int sel = m_imNodesAdapter->GetSelectedNodeId();
+                        const std::vector<int> selectedIds = m_imNodesAdapter->GetSelectedCanonicalNodeIds();
+                        const int sel = selectedIds.empty() ? -1 : selectedIds[0];
                         if (sel >= 0)
                         {
                             m_propertyPanel.SetSelectedNode(m_graphId, sel);
@@ -1225,7 +1224,8 @@ void BehaviorTreeRenderer::HandleKeyboardShortcuts()
     {
         if (m_imNodesAdapter)
         {
-            int selectedNodeId = m_imNodesAdapter->GetSelectedNodeId();
+            const std::vector<int> selectedIds = m_imNodesAdapter->GetSelectedCanonicalNodeIds();
+            const int selectedNodeId = selectedIds.empty() ? -1 : selectedIds[0];
             if (selectedNodeId != -1)
             {
                 // Retrieve the active graph
@@ -1252,11 +1252,7 @@ void BehaviorTreeRenderer::HandleKeyboardShortcuts()
             auto* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
             if (graphDoc)
             {
-                const auto& nodes = graphDoc->GetNodes();
-                for (const auto& node : nodes)
-                {
-                    ImNodes::SelectNode(static_cast<int>(node.id.value));
-                }
+                m_imNodesAdapter->SelectAllCanonicalNodes();
             }
         }
     }
