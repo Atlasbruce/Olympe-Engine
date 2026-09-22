@@ -234,8 +234,8 @@
         "name": "Root",
         "parameters": {},
         "position": {
-          "x": 183,
-          "y": 401
+          "x": 119,
+          "y": 209
         },
         "type": "BT_Root"
       },
@@ -282,8 +282,8 @@
         "name": "Patrol",
         "parameters": {},
         "position": {
-          "x": 685,
-          "y": 689
+          "x": 654,
+          "y": 697
         },
         "type": "BT_Sequence"
       },
@@ -329,8 +329,8 @@
         "name": "BT_MoveToTarget_10",
         "parameters": {},
         "position": {
-          "x": 1338.74,
-          "y": 130.503
+          "x": 1339.74,
+          "y": 82.503
         },
         "type": "BT_MoveToTarget"
       },

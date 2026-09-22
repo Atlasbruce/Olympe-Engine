@@ -4,15 +4,13 @@
  * @author Olympe Engine - Phase 44.3 Integration (Legacy Save/SaveAs into Framework)
  * @date 2026-03-11
  *
- * Phase 44.3 Update: Modified to use NodeGraphManager directly for persistence.
- * BehaviorTree graphs are managed by NodeGraphManager, so we delegate all
- * save/load operations to it directly instead of going through BehaviorTreeRenderer.
+ * The renderer remains the single owner of the active graph identity.  The
+ * Framework document delegates persistence through it so Browse, Save and
+ * Save As all leave the renderer, document adapter and TabManager synchronized.
  */
 
 #include "BehaviorTreeGraphDocument.h"
 #include "../BehaviorTreeRenderer.h"
-#include "../NodeGraphPanel.h"
-#include "../BTNodeGraphManager.h"
 #include "../../system/system_utils.h"
 
 namespace Olympe
@@ -37,21 +35,21 @@ namespace Olympe
         {
             SYSTEM_LOG << "[BehaviorTreeGraphDocument::Load] Loading from: " << filePath << "\n";
 
-            // Phase 44.3: Load using NodeGraphManager directly
-            int graphId = NodeGraphManager::Get().LoadGraph(filePath);
-
-            if (graphId >= 0)
+            if (!m_btRenderer)
             {
-                // Update path
-                m_filePath = filePath;
-                SYSTEM_LOG << "[BehaviorTreeGraphDocument::Load] SUCCESS: Loaded graph ID " << graphId << " from " << filePath << "\n";
-                return true;
-            }
-            else
-            {
-                SYSTEM_LOG << "[BehaviorTreeGraphDocument::Load] ERROR: Failed to load " << filePath << "\n";
+                SYSTEM_LOG << "[BehaviorTreeGraphDocument::Load] ERROR: No renderer bound\n";
                 return false;
             }
+
+            // Do not load the backend directly here: BehaviorTreeRenderer::Load
+            // also updates its active graph id, ImNodes adapter and canvas state.
+            const bool success = m_btRenderer->Load(filePath);
+            if (success)
+            {
+                m_filePath = filePath;
+                SYSTEM_LOG << "[BehaviorTreeGraphDocument::Load] SUCCESS: Loaded " << filePath << "\n";
+            }
+            return success;
         }
         catch (const std::exception& e)
         {

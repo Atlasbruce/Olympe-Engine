@@ -480,7 +480,9 @@ bool BehaviorTreeRenderer::CreateNew(const std::string& name)
     // CRITICAL: Set the active graph immediately so any dependent systems (like palette/adapter) see it
     NodeGraph::NodeGraphManager::Get().SetActiveGraph(newGraphId);
 
-    // Phase 50.1.1: Clear filepath for new unsaved graph
+    // A new graph is always unsaved, including the first graph created by a
+    // renderer that previously had no active backend graph.
+    m_filePath.clear();
     if (m_document)
     {
         m_document->SetFilePath("");
@@ -1064,7 +1066,11 @@ bool BehaviorTreeRenderer::Save(const std::string& path)
     bool ok = NodeGraph::NodeGraphManager::Get().SaveGraph(graphId, savePath);
     SYSTEM_LOG << "[BehaviorTreeRenderer::Save] SaveGraph result: " << (ok ? "SUCCESS" : "FAILED") << "\n";
     if (ok && !path.empty())
+    {
         m_filePath = path;
+        if (m_document)
+            m_document->SetFilePath(path);
+    }
     return ok;
 }
 
