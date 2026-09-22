@@ -39,6 +39,11 @@
 | DB-31 | Régler les portées de perception, lecture, interaction et communication du slice. | Moyenne | Tests slice | 🟡 |
 | DB-32 | Définir les actes de communication et représentation technique d'une proposition/accord. | Moyenne | Dialogue, social | 🟡 |
 | DB-33 | Évaluer la nécessité d'un moteur général d'inférence. | Basse | Tests agents | 🟡 |
+| DB-34 | Définir ton/indices expressifs et taxonomie du contenu de communication. | Basse | Dialogue | 🟡 |
+| DB-35 | Définir persistance des propositions et cycle de vie technique des engagements. | Moyenne | Social, runtime | 🟡 |
+| DB-36 | Définir timers/fréquences et interruptibilité détaillée des actions. | Moyenne | Runtime | 🟡 |
+| DB-37 | Définir comparaison multidimensionnelle, volonté de tenter et effort acceptable sans score universel. | Haute | Tests décisionnels | 🟡 |
+| DB-38 | Définir représentation runtime et déclencheurs significatifs de réévaluation. | Moyenne | Runtime | 🟡 |
 
 ## Candidat issu de DR-01
 

@@ -259,3 +259,7 @@ La consolidation est `CREATE / IGNORE / VERSION` sur une connaissance `CURRENT` 
 ## Propagation DR-08
 
 **🟢 CANON :** entendre, mémoriser, croire et répondre sont distincts. Une déclaration est une information sourcée concernant ce qu'un agent affirme ; elle ne modifie pas la vérité du Monde. Déclarer posséder une information ne divulgue pas son contenu. Répéter une même affirmation par la même source ne renforce pas automatiquement sa fiabilité.
+
+## Propagation DR08-06
+
+**🟢 CANON :** le contenu d'une communication est sémantique et composable ; une relation de causalité doit être communiquée explicitement. Les événements significatifs mettent à jour l'état interne puis sont consolidés avant toute appréciation éventuelle.

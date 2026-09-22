@@ -18,6 +18,36 @@
 
 namespace Olympe {
 
+namespace {
+
+FilePickerType GetBrowsePickerType(DocumentType documentType)
+{
+    switch (documentType)
+    {
+    case DocumentType::BEHAVIOR_TREE:  return FilePickerType::BehaviorTree;
+    case DocumentType::VISUAL_SCRIPT:  return FilePickerType::SubGraph;
+    case DocumentType::ANIMATION_GRAPH:return FilePickerType::AnimationGraph;
+    case DocumentType::ENTITY_PREFAB:  return FilePickerType::EntityPrefab;
+    case DocumentType::UNKNOWN:
+    default:                            return FilePickerType::GenericGraph;
+    }
+}
+
+SaveFileType GetSavePickerType(DocumentType documentType)
+{
+    switch (documentType)
+    {
+    case DocumentType::BEHAVIOR_TREE:  return SaveFileType::BehaviorTree;
+    case DocumentType::VISUAL_SCRIPT:  return SaveFileType::Blueprint;
+    case DocumentType::ANIMATION_GRAPH:return SaveFileType::AnimationGraph;
+    case DocumentType::ENTITY_PREFAB:  return SaveFileType::EntityPrefab;
+    case DocumentType::UNKNOWN:
+    default:                            return SaveFileType::GenericGraph;
+    }
+}
+
+} // namespace
+
 // ============================================================================
 // Constructor / Destructor
 // ============================================================================
@@ -190,26 +220,9 @@ void CanvasToolbarRenderer::RenderModals()
     {
         m_showSaveAsModal = false;
 
-        Olympe::SaveFileType fileType = Olympe::SaveFileType::Blueprint;
-        if (m_document)
-        {
-            switch (m_document->GetType())
-            {
-            case DocumentType::BEHAVIOR_TREE:
-                fileType = Olympe::SaveFileType::BehaviorTree;
-                break;
-            case DocumentType::ANIMATION_GRAPH:
-                fileType = Olympe::SaveFileType::AnimationGraph;
-                break;
-            case DocumentType::ENTITY_PREFAB:
-                fileType = Olympe::SaveFileType::EntityPrefab;
-                break;
-            case DocumentType::VISUAL_SCRIPT:
-            default:
-                fileType = Olympe::SaveFileType::Blueprint;
-                break;
-            }
-        }
+        const SaveFileType fileType = m_document
+            ? GetSavePickerType(m_document->GetType())
+            : SaveFileType::GenericGraph;
 
         CanvasModalRenderer::Get().OpenSaveFilePickerModal(
             GetDefaultSaveDirectory(),
@@ -228,6 +241,33 @@ void CanvasToolbarRenderer::RenderModals()
         }
 
         CanvasModalRenderer::Get().CloseSaveFileModal();
+    }
+
+    if (m_showBrowseModal)
+    {
+        m_showBrowseModal = false;
+        delete m_browseModal;
+        m_browseModal = new FilePickerModal(
+            m_document ? GetBrowsePickerType(m_document->GetType()) : FilePickerType::GenericGraph,
+            "canvas_toolbar_browse");
+        m_browseModal->Open(GetInitialDirectory());
+    }
+
+    if (m_browseModal)
+    {
+        m_browseModal->Render();
+        if (m_browseModal->IsConfirmed())
+        {
+            const std::string selectedFile = m_browseModal->GetSelectedFile();
+            delete m_browseModal;
+            m_browseModal = nullptr;
+            OnBrowseComplete(selectedFile);
+        }
+        else if (!m_browseModal->IsOpen())
+        {
+            delete m_browseModal;
+            m_browseModal = nullptr;
+        }
     }
 }
 
@@ -331,8 +371,21 @@ void CanvasToolbarRenderer::RenderPathDisplay()
 
 void CanvasToolbarRenderer::OnSaveClicked()
 {
-    SYSTEM_LOG << "[CanvasToolbarRenderer] OnSaveClicked - Delegating to TabManager for unified path\n";
-    TabManager::Get().SaveActiveTab();
+    if (!m_document)
+        return;
+
+    if (m_document->GetFilePath().empty())
+    {
+        OnSaveAsClicked();
+        return;
+    }
+
+    if (ExecuteSave(m_document->GetFilePath()))
+    {
+        TabManager::Get().OnGraphDocumentSaved(m_document, m_document->GetFilePath());
+        if (m_onSaveComplete)
+            m_onSaveComplete(m_document->GetFilePath());
+    }
 }
 
 void CanvasToolbarRenderer::OnSaveAsClicked()
@@ -443,7 +496,7 @@ std::string CanvasToolbarRenderer::GetInitialDirectory() const
 
     std::string path = m_document->GetFilePath();
     if (path.empty())
-        return ".";
+        return GetDefaultSaveDirectory();
 
     // Extract directory from path
     size_t lastSlash = path.find_last_of("\\/");

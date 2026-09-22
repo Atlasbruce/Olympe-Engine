@@ -98,6 +98,26 @@
 | Déclaration | Communication signalant la possession d'une information sans nécessairement en révéler le contenu. |
 | Accord social | Attente sociale mémorisable née d'une proposition et acceptation ; ni contrat du Monde ni condition de quête. |
 
+## Ajouts CANON DR08-06
+
+| Terme | Définition canonique |
+|---|---|
+| Acte de communication | Message composé d'émetteur, destinataires, intention, contenu et mode de diffusion. |
+| Engagement | Attente sociale active issue d'un accord, distincte d'un but, plan ou action et sans autorité d'exécution. |
+| État d'engagement | État social d'un engagement connu/accepté/actif, distinct de son exécution courante. |
+| Mode de diffusion | Manière de transmettre un acte, par exemple parler, crier ou broadcast Observer. |
+
+## Ajouts CANON DR08-07
+
+| Terme | Définition canonique |
+|---|---|
+| Appraisal | Appréciation subjective multidimensionnelle des possibilités connues afin d'arbitrer ce qui mérite d'être tenté. |
+| Faisabilité objective | Ce que le Monde permet réellement. |
+| Faisabilité perçue | Ce qu'un participant estime réalisable depuis ses connaissances et son état subjectif. |
+| Volonté de tenter | Disposition subjective à essayer une possibilité, distincte de sa faisabilité perçue. |
+| Effort acceptable | Niveau de coût, risque ou effort qu'un participant estime acceptable dans ce contexte. |
+| Réévaluation | Nouveau processus d'appréciation qui peut conserver ou modifier stratégie/plan. |
+
 **WIP explicite :** les variables éventuelles de fiabilité et de fraîcheur d'une connaissance, ainsi que leurs formules, ne sont pas définies.
 
 Les définitions détaillées et les confusions à éviter figurent dans l'audit et les sections 11, 14, 20 et 21.

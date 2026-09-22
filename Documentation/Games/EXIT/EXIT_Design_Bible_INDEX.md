@@ -20,6 +20,8 @@
 11. [DR-06 - Modèle de décision](EXIT_DESIGN_REVIEW_DR06_DECISION_MODEL.md)
 12. [DR-07 - Échec, solvabilité et Observers](EXIT_DESIGN_REVIEW_DR07_FAILURE_SOLVABILITY_OBSERVERS_DEBRIEF.md)
 13. [DR-08 - Vertical Slice de référence](EXIT_DESIGN_REVIEW_DR08_VERTICAL_SLICE.md)
+14. [DR-08-06 - Communication et engagements sociaux](EXIT_DESIGN_REVIEW_DR08_06_COMMUNICATION_SOCIAL_COMMITMENT_RUNTIME.md)
+15. [DR-08-07 - Appraisal et décision NPC](EXIT_DESIGN_REVIEW_DR08_07_NPC_DECISION_APPRAISAL_RUNTIME.md)
 
 ## Systèmes de monde et de jeu
 

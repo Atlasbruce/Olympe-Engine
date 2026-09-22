@@ -63,8 +63,12 @@ public:
 
     // --- Public API ---
 
-    /** Set the document being edited */
-    void SetDocument(void* document);  // void* to avoid circular dependencies
+    /**
+     * Set the IGraphDocument being edited.
+     * The void pointer is retained for legacy renderer compatibility; callers
+     * must provide an IGraphDocument instance.
+     */
+    void SetDocument(void* document);
 
     /** Get document pointer */
     void* GetDocument() const { return m_document; }

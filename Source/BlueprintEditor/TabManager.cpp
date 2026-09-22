@@ -46,6 +46,7 @@ TabManager::TabManager()
     : m_nextTabNum(1)
     , m_nextTabIDNum(1)
     , m_showSaveAsDialog(false)
+    , m_ownsSaveAsModal(false)
 {
     std::memset(m_saveAsBuffer, 0, sizeof(m_saveAsBuffer));
 }
@@ -708,15 +709,26 @@ void TabManager::RenderTabBar()
             if (ImGui::Button("Save", ImVec2(100, 0)))
             {
                 SetActiveTab(m_pendingCloseTabID);
-                SaveActiveTab();
-                // Close after saving
-                for (size_t i = 0; i < m_tabs.size(); ++i)
+                EditorTab* tabToSave = GetTab(m_pendingCloseTabID);
+                const bool needsSaveAs = tabToSave && tabToSave->filePath.empty();
+                const bool saved = SaveActiveTab();
+
+                if (saved)
                 {
-                    if (m_tabs[i].tabID == m_pendingCloseTabID)
+                    for (size_t i = 0; i < m_tabs.size(); ++i)
                     {
-                        DestroyTab(i);
-                        break;
+                        if (m_tabs[i].tabID == m_pendingCloseTabID)
+                        {
+                            DestroyTab(i);
+                            break;
+                        }
                     }
+                }
+                else if (needsSaveAs)
+                {
+                    // Keep the tab alive until the Framework Save As modal
+                    // reports a successful save.
+                    m_pendingCloseAfterSaveTabID = m_pendingCloseTabID;
                 }
                 m_pendingCloseTabID = "";
                 ImGui::CloseCurrentPopup();
@@ -791,12 +803,13 @@ void TabManager::RenderTabBar()
             // PHASE 88: Use CanvasModalRenderer instead of DataManager for unified save modal dispatch
             // This ensures results are handled by CanvasModalRenderer::Get().IsSaveFileModalConfirmed()
             CanvasModalRenderer::Get().OpenSaveFilePickerModal("Gamedata/", suggestedName, fileType);
+            m_ownsSaveAsModal = true;
             SYSTEM_LOG << "[TabManager] Opening unified SaveAs modal via CanvasModalRenderer (Type: " << graphType << ")\n";
         }
     }
 
     // Handle SaveAs result from unified dispatcher
-    if (CanvasModalRenderer::Get().IsSaveFileModalConfirmed()) {
+    if (m_ownsSaveAsModal && CanvasModalRenderer::Get().IsSaveFileModalConfirmed()) {
         std::string selectedFile = CanvasModalRenderer::Get().GetSelectedSaveFilePath();
         if (!selectedFile.empty()) {
             EditorTab* tab = GetActiveTab();
@@ -807,11 +820,32 @@ void TabManager::RenderTabBar()
                     tab->displayName = DisplayNameFromPath(selectedFile);
                     SYSTEM_LOG << "[TabManager] SaveAs: saved to '" << selectedFile << "'\n";
                     CanvasModalRenderer::Get().CloseSaveFileModal();
+                    m_ownsSaveAsModal = false;
+                    if (m_pendingCloseAfterSaveTabID == tab->tabID)
+                    {
+                        for (size_t i = 0; i < m_tabs.size(); ++i)
+                        {
+                            if (m_tabs[i].tabID == tab->tabID)
+                            {
+                                DestroyTab(i);
+                                break;
+                            }
+                        }
+                        m_pendingCloseAfterSaveTabID = "";
+                    }
                 } else {
                     SYSTEM_LOG << "[TabManager] SaveAs: FAILED to save to '" << selectedFile << "'\n";
                 }
             }
         }
+    }
+
+    if (m_ownsSaveAsModal && !CanvasModalRenderer::Get().IsSaveFileModalOpen())
+    {
+        // The user cancelled the dialog.  Do not let this legacy TabManager
+        // request consume a future Framework toolbar result.
+        m_ownsSaveAsModal = false;
+        m_pendingCloseAfterSaveTabID = "";
     }
 
     ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_Reorderable |

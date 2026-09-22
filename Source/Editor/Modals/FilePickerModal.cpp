@@ -308,6 +308,8 @@ std::string FilePickerModal::GetDefaultDirectory() const
             return "./Gamedata/Animation/AnimationBanks";
         case FilePickerType::AnimationGraph:
             return "./Blueprints";
+        case FilePickerType::GenericGraph:
+            return "./Gamedata";
         case FilePickerType::Audio:
             return "./Gamedata/Audio";
         case FilePickerType::Tileset:
@@ -333,6 +335,8 @@ std::string FilePickerModal::GetFilePattern() const
             return ".tsx";
         case FilePickerType::AnimationGraph:
             return ".ani.runtime.json";
+        case FilePickerType::GenericGraph:
+            return ".json";
         case FilePickerType::Audio:
             return ".ogg";
         case FilePickerType::Tileset:
@@ -358,6 +362,8 @@ std::string FilePickerModal::GetModalTitle() const
             return ("Select Animation Graph TSX##filepicker_animtsx_" + m_instanceId);
         case FilePickerType::AnimationGraph:
             return ("Select Animation Graph File##filepicker_animgraph_" + m_instanceId);
+        case FilePickerType::GenericGraph:
+            return ("Select Graph Document##filepicker_graph_" + m_instanceId);
         case FilePickerType::Audio:
             return ("Select Audio File##filepicker_audio_" + m_instanceId);
         case FilePickerType::Tileset:
@@ -383,6 +389,8 @@ std::string FilePickerModal::GetDescriptionText() const
             return "Select one or more TSX files for the Animation Graph";
         case FilePickerType::AnimationGraph:
             return "Select an Animation Graph export (.ani.runtime.json) to load";
+        case FilePickerType::GenericGraph:
+            return "Select a graph document (.json) to load";
         case FilePickerType::Audio:
             return "Select an Audio file (.ogg)";
         case FilePickerType::Tileset:
@@ -400,11 +408,17 @@ void FilePickerModal::RefreshFileList()
 
     std::string pattern = m_currentFilter.empty() ? GetFilePattern() : m_currentFilter;
 
-    // For SubGraph type, scan multiple root directories recursively
+    // SubGraph remains a cross-root search.  A generic document browser is a
+    // navigable file browser: scanning only its visible folder avoids walking
+    // the entire repository when opening an unsaved graph.
     if (m_fileType == FilePickerType::SubGraph)
     {
         ScanDirectoriesRecursively("./GameData", pattern);
         ScanDirectoriesRecursively("./Blueprint", pattern);
+    }
+    else if (m_fileType == FilePickerType::GenericGraph)
+    {
+        ScanDirectory(m_currentPath, pattern);
     }
     else
     {
@@ -424,6 +438,57 @@ void FilePickerModal::RefreshFileList()
 void FilePickerModal::ScanDirectoriesRecursively(const std::string& rootPath, const std::string& pattern)
 {
     ScanDirectoriesRecursivelyHelper(rootPath, pattern, rootPath);
+}
+
+void FilePickerModal::ScanDirectory(const std::string& directory, const std::string& pattern)
+{
+#ifdef _WIN32
+    WIN32_FIND_DATAA findData;
+    const std::string searchPath = directory + "\\\\*";
+    HANDLE hFind = FindFirstFileA(searchPath.c_str(), &findData);
+    if (hFind == INVALID_HANDLE_VALUE)
+        return;
+
+    do
+    {
+        const std::string filename = findData.cFileName;
+        if (filename == "." || filename == "..")
+            continue;
+
+        if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            m_folderList.push_back(filename);
+        }
+        else if (pattern == "*" || filename.find(pattern) != std::string::npos)
+        {
+            m_fileList.push_back(filename);
+        }
+    } while (FindNextFileA(hFind, &findData) != 0);
+
+    FindClose(hFind);
+#else
+    DIR* dir = opendir(directory.c_str());
+    if (!dir)
+        return;
+
+    while (dirent* entry = readdir(dir))
+    {
+        const std::string filename = entry->d_name;
+        if (filename == "." || filename == "..")
+            continue;
+
+        const std::string fullPath = directory + "/" + filename;
+        struct stat statbuf;
+        if (stat(fullPath.c_str(), &statbuf) != 0)
+            continue;
+
+        if (S_ISDIR(statbuf.st_mode))
+            m_folderList.push_back(filename);
+        else if (pattern == "*" || filename.find(pattern) != std::string::npos)
+            m_fileList.push_back(filename);
+    }
+    closedir(dir);
+#endif
 }
 
 void FilePickerModal::ScanDirectoriesRecursivelyHelper(const std::string& rootPath, const std::string& pattern, const std::string& currentPath)

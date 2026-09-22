@@ -25,6 +25,7 @@ enum class SaveFileType
     Blueprint,     ///< .ats files (SubGraph/VisualScript)
     AnimationGraph, ///< .ani.json files (Animation Graph)
     EntityPrefab,  ///< .pref.json files (Entity Prefab)
+    GenericGraph,  ///< .json files (generic graph document)
     Audio          ///< .ogg files (audio assets)
 };
 

@@ -22,6 +22,20 @@ Une décision validée doit indiquer sa date, son statut, sa raison, son impact 
 | DR-06 | 20 septembre 2026 | Modèle de décision subjectif et friction décisionnelle validés. | 🟢 CANON |
 | DR-07 | 20 septembre 2026 | Contrat d'échec, relance, Observers et débrief validés. | 🟢 CANON |
 | DR-08 (01-05) | 21 septembre 2026 | Vertical slice de référence, accès subjectif et communication validés. | 🟢 CANON |
+| DR-08-06 | 21 septembre 2026 | Communication et engagements sociaux à l'exécution validés. | 🟢 CANON |
+| DR-08-07 | 22 septembre 2026 | Runtime d'appréciation subjective et de décision NPC validé. | 🟢 CANON |
+
+## DR-08-07 — décisions validées
+
+| ID | Décision | Statut |
+|---|---|---|
+| DR08-07 D01 à D12 | Décisions détaillées dans `EXIT_DESIGN_REVIEW_DR08_07_NPC_DECISION_APPRAISAL_RUNTIME.md`. | 🟢 CANON |
+
+## DR-08-06 — décisions validées
+
+| ID | Décision | Statut |
+|---|---|---|
+| DR08-06 D01 à D11 | Décisions détaillées dans `EXIT_DESIGN_REVIEW_DR08_06_COMMUNICATION_SOCIAL_COMMITMENT_RUNTIME.md`. | 🟢 CANON |
 
 ## DR-08 — décisions validées
 

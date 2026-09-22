@@ -112,8 +112,7 @@ void SaveFilePickerModal::Render()
         ImGui::OpenPopup(title.c_str());
     }
     bool open = m_isOpen;
-    std::string modalId = title + "##savefilepicker";
-    if (ImGui::BeginPopupModal(modalId.c_str(), &open, ImGuiWindowFlags_AlwaysAutoResize))
+    if (ImGui::BeginPopupModal(title.c_str(), &open, ImGuiWindowFlags_AlwaysAutoResize))
     {
         // Description
         ImGui::TextColored(ImVec4(0.8f, 0.95f, 1.0f, 1.0f), "%s", GetDescriptionText().c_str());
@@ -227,6 +226,8 @@ std::string SaveFilePickerModal::GetDefaultDirectory() const
             return "./Gamedata/Animation/AnimationGraphs/";
         case SaveFileType::EntityPrefab:
             return "./Gamedata/EntityPrefab/";
+        case SaveFileType::GenericGraph:
+            return "./Gamedata/";
         case SaveFileType::Audio:
             return "./Gamedata/Audio/";
         default:
@@ -246,6 +247,8 @@ std::string SaveFilePickerModal::GetFileExtension() const
             return ".ani.json";
         case SaveFileType::EntityPrefab:
             return ".pref.json";
+        case SaveFileType::GenericGraph:
+            return ".json";
         case SaveFileType::Audio:
             return ".ogg";
         default:
@@ -265,6 +268,8 @@ std::string SaveFilePickerModal::GetModalTitle() const
             return "Save AnimationGraph As##save_anim";
         case SaveFileType::EntityPrefab:
             return "Save Entity Prefab As##save_pref";
+        case SaveFileType::GenericGraph:
+            return "Save Graph Document As##save_graph";
         case SaveFileType::Audio:
             return "Save Audio As##save_audio";
         default:
@@ -284,6 +289,8 @@ std::string SaveFilePickerModal::GetDescriptionText() const
             return "Save your Animation Graph with a new name";
         case SaveFileType::EntityPrefab:
             return "Save your Entity Prefab with a new name";
+        case SaveFileType::GenericGraph:
+            return "Save your graph document with a new name";
         case SaveFileType::Audio:
             return "Save your audio file with a new name";
         default:

@@ -217,3 +217,11 @@ La divergence n'est pas scriptée comme « Ivo est courageux ». Elle résulte d
 ## Propagation DR-06
 
 **🟢 CANON :** un agent identifie les options qu'il connaît et estime possibles, puis les apprécie subjectivement avant de filtrer, comparer et décider. But, stratégie et plan ont des responsabilités distinctes. L'appréciation est multidimensionnelle et non un score unique imposé ; stress et friction décisionnelle contribuent à la latence, non à une irrationalité ni à une action forcée.
+
+## Propagation DR08-06
+
+**🟢 CANON :** une communication, proposition, menace ou engagement ne commande jamais directement but, stratégie, plan ou action. Un engagement actif peut être temporairement non exécuté ; engagements concurrents participent à l'appréciation. Une réévaluation peut conserver le plan courant ou conclure qu'aucun plan utile n'est disponible, sans blocage cognitif.
+
+## Propagation DR08-07
+
+**🟢 CANON :** l'Appraisal arbitre seulement des possibilités connues depuis un contexte subjectif. Importance et urgence sont distinctes ; faisabilité objective ≠ faisabilité perçue. Une possibilité peu probable peut rester tentable selon bénéfice, urgence, alternatives et effort acceptable. La réévaluation compare au plan courant et peut produire `KEEP` ou `CHANGE` ; réévaluation ≠ changement.

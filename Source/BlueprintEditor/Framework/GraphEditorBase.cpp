@@ -1,5 +1,6 @@
 #include "GraphEditorBase.h"
 #include "CanvasFramework.h"
+#include "IGraphDocument.h"
 #include "../Utilities/CanvasHitTesting.h"
 #include "../../third_party/imgui/imgui.h"
 #include <iostream>
@@ -53,14 +54,14 @@ void GraphEditorBase::SetDocument(void* document)
 
 bool GraphEditorBase::IsDirty() const
 {
-    // To be overridden or enhanced by subclass
-    return false;
+    const IGraphDocument* document = static_cast<const IGraphDocument*>(m_document);
+    return document && document->IsDirty();
 }
 
 std::string GraphEditorBase::GetCurrentPath() const
 {
-    // To be overridden or enhanced by subclass
-    return "";
+    const IGraphDocument* document = static_cast<const IGraphDocument*>(m_document);
+    return document ? document->GetFilePath() : "";
 }
 
 void GraphEditorBase::SaveCanvasState()
@@ -238,7 +239,11 @@ void GraphEditorBase::UpdateSelectedNodesProperty(const std::string& propName, c
 
 void GraphEditorBase::MarkDirty()
 {
-    std::cout << "[GraphEditorBase] Document marked dirty\n";
+    IGraphDocument* document = static_cast<IGraphDocument*>(m_document);
+    if (document)
+    {
+        document->OnDocumentModified();
+    }
 }
 
 // ============================================================================

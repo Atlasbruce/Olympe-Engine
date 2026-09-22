@@ -30,6 +30,7 @@ enum class FilePickerType
     AnimationBank, ///< .tsx / bank json files for animation banks
     AnimationGraphTsx, ///< .tsx files for Animation Graph TSX sources
     AnimationGraph, ///< .ani.runtime.json animation graph exports
+    GenericGraph,   ///< Generic JSON graph document
     Audio,         ///< Future: .ogg, .wav files
     Tileset        ///< Future: .tsj tileset files
 };
@@ -193,6 +194,11 @@ private:
      * @param pattern File pattern to match
      */
     void ScanDirectoriesRecursively(const std::string& rootPath, const std::string& pattern);
+
+    /**
+     * @brief Scans only the visible directory, for interactive file browsing.
+     */
+    void ScanDirectory(const std::string& directory, const std::string& pattern);
 
     /**
      * @brief Helper function for recursive scanning

@@ -252,3 +252,7 @@ Le dialogue n'est pas seulement du texte : il expose une intention, une demande,
 ## Propagation DR-08
 
 **🟢 CANON :** une proposition acceptée crée une attente sociale et une expérience mémorisable, non une règle du Monde ni une condition de quête. Une promesse non tenue ne prouve pas automatiquement une intention de trahir ; l'interprétation reste subjective et fondée sur les informations accessibles.
+
+## Propagation DR08-06
+
+**🟢 CANON :** proposition → acceptation → accord → engagement(s), tout en restant distinct de but, plan et action. Une proposition sans réponse est non bloquante. Une menace est une communication conditionnelle : elle ne prouve pas la capacité, ne garantit pas l'action future et ne force jamais la conformité.

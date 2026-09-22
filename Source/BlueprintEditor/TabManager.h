@@ -281,11 +281,13 @@ private:
     // then cleared so that user-initiated tab clicks are not overridden.
     std::string m_pendingSelectTabID;
 
-    // Pending close state (for deferred close when dialog is shown)
-    std::string m_pendingCloseTabID;
+        // Pending close state (for deferred close when dialog is shown)
+        std::string m_pendingCloseTabID;
+        std::string m_pendingCloseAfterSaveTabID;
 
         // Save As dialog state
         bool m_showSaveAsDialog;
+        bool m_ownsSaveAsModal;
         char m_saveAsBuffer[512];
         std::string m_saveAsTabID;
 

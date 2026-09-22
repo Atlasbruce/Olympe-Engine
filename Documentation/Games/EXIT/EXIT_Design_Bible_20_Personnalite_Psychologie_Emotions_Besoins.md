@@ -252,3 +252,7 @@ La réassurance est une famille d'influences, pas une jauge. L'espoir n'est pas 
 ## Propagation DR-06
 
 **🟢 CANON :** le stress influe sur la temporalité du traitement, sans supprimer les capacités fondamentales, les options connues ni rendre le NPC artificiellement irrationnel. Il reste distinct de la friction décisionnelle, qui exprime la difficulté d'arbitrer entre plusieurs options subjectivement viables.
+
+## Propagation DR08-07
+
+**🟢 CANON :** personnalité, valeurs, confiance en soi et état psycho-émotionnel modulent l'appréciation d'une possibilité, sans créer de connaissance, falsifier une estimation factuelle ni imposer but, stratégie, plan ou action.
