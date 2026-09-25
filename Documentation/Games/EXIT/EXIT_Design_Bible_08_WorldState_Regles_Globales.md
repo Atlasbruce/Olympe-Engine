@@ -3,7 +3,7 @@
 
 **Statut :** 🟡 WIP  
 **Dépendances :** 11 connaissance, 15 Gestionnaire de quêtes, 16 Solvabilité  
-**Dernière mise à jour :** 17 septembre 2026
+**Dernière mise à jour :** 25 septembre 2026
 
 ## Définition
 
@@ -40,7 +40,7 @@ Le État du monde est la source de vérité simulée : positions, possessions, p
 ## Questions ouvertes
 
 - Quels événements persistent entre niveaux ?
-- Quel est le contrat de mort, d'incapacité et de sauvegarde ?
+- Quels paramètres de Recovery, d'évacuation et de présentation de Waiting Room doivent être retenus ?
 - Quel modèle temporel permet aux NPC autonomes de rester lisibles ?
 
 ## Propagation DR-02
@@ -50,3 +50,7 @@ Le État du monde est la source de vérité simulée : positions, possessions, p
 ## Propagation DR-03
 
 **🟢 CANON :** le Monde possède les opérations d'instanciation et ne lit ni n'écrit directement le tableau noir IA. Les systèmes IA NPC médiatisent toute transformation de données du Monde en état interne d'agent.
+
+## Propagation DR08-09
+
+**🟢 CANON :** le World conserve les corps `UNCONSCIOUS` et `DEAD` dans le Level, expose l'inventaire physique d'un corps mort et produit les transitions physiques telles que `CrossExit START → ESCAPED`. Il ne divulgue jamais ces changements sans mécanisme de perception/communication légitime. Les événements concurrents qui modifient l'Attempt suivent un ordre autoritatif déterministe ; la simultanéité visible ne crée pas de simultanéité logique.

@@ -47,6 +47,7 @@ namespace Olympe
     class ICanvasEditor
     {
     public:
+        static constexpr float DefaultAutoPanningSpeed = 1000.0f;
         virtual ~ICanvasEditor() = default;
 
         // ====================================================================
@@ -162,6 +163,13 @@ namespace Olympe
          * @note Convenience method: SetPan(ImVec2(0, 0))
          */
         virtual void ResetPan() = 0;
+
+        /**
+         * Advance edge auto-panning for an active canvas interaction.
+         * Native ImNodes canvases delegate to ImNodes; custom canvases apply
+         * the equivalent pan themselves.
+         */
+        virtual void UpdateAutoPanning(bool interactionActive) = 0;
 
         // ====================================================================
         // Zoom Management

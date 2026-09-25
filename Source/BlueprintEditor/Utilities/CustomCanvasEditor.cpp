@@ -5,6 +5,7 @@
 
 #include "CustomCanvasEditor.h"
 #include "../../third_party/imgui/imgui.h"
+#include <cmath>
 
 namespace Olympe
 {
@@ -125,6 +126,28 @@ namespace Olympe
         if (zoom < m_minZoom) return m_minZoom;
         if (zoom > m_maxZoom) return m_maxZoom;
         return zoom;
+    }
+
+    void CustomCanvasEditor::UpdateAutoPanning(bool interactionActive)
+    {
+        if (!interactionActive)
+            return;
+
+        const ImVec2 mouse = ImGui::GetIO().MousePos;
+        const ImVec2 min = m_canvasScreenPos;
+        const ImVec2 max(min.x + m_canvasSize.x, min.y + m_canvasSize.y);
+        ImVec2 direction(0.0f, 0.0f);
+        if (mouse.x < min.x) direction.x = 1.0f;
+        else if (mouse.x > max.x) direction.x = -1.0f;
+        if (mouse.y < min.y) direction.y = 1.0f;
+        else if (mouse.y > max.y) direction.y = -1.0f;
+
+        if (direction.x == 0.0f && direction.y == 0.0f)
+            return;
+
+        const float length = sqrtf(direction.x * direction.x + direction.y * direction.y);
+        const float scale = (ImGui::GetIO().DeltaTime * ICanvasEditor::DefaultAutoPanningSpeed) / length;
+        PanBy(ImVec2(direction.x * scale, direction.y * scale));
     }
 
     // ========================================================================

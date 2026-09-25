@@ -2,7 +2,7 @@
 ## 33 - Registre des décisions et changelog
 
 **Statut :** 🟡 WIP  
-**Dernière mise à jour :** 17 septembre 2026
+**Dernière mise à jour :** 25 septembre 2026
 
 ## Règle
 
@@ -24,6 +24,38 @@ Une décision validée doit indiquer sa date, son statut, sa raison, son impact 
 | DR-08 (01-05) | 21 septembre 2026 | Vertical slice de référence, accès subjectif et communication validés. | 🟢 CANON |
 | DR-08-06 | 21 septembre 2026 | Communication et engagements sociaux à l'exécution validés. | 🟢 CANON |
 | DR-08-07 | 22 septembre 2026 | Runtime d'appréciation subjective et de décision NPC validé. | 🟢 CANON |
+| DR-08-08 | 24 septembre 2026 | Action Runtime, interaction physique et Inventory Commit consolidés après AR01–AR08. | 🟢 CANON |
+| DR-08-09 | 25 septembre 2026 | Contrat Attempt/Exit/Game Mode, états participant et ordonnancement autoritatif validés. | 🟢 CANON |
+| DR-08 | 25 septembre 2026 | Vertical Slice consolidé 01–09 et GST01 enregistré ; aucun blocage structurel nouveau. | 🟢 REVIEW COMPLETED |
+
+## DR-08-09 — décisions validées
+
+| ID / domaine | Décision | Statut |
+|---|---|---|
+| Participant Runtime State | Physical State, Level Presence, Agency, Outcome et Attempt Runtime State sont indépendants. | 🟢 CANON |
+| UNCONSCIOUS / DEAD | Inconscience récupérable ; DEAD terminal pour l'Attempt mais non pour le Participant. | 🟢 CANON |
+| Exit / CrossExit | CLOSED/LOCKED → OPEN ; `valid CrossExit START = ESCAPED`. | 🟢 CANON |
+| Game Modes / END ATTEMPT | GameManager interprète les outcomes ; End Attempt est une frontière de simulation. | 🟢 CANON |
+| Evacuation information | Broadcast, alarm et displays sont distincts ; aucun timer magique pour NPC. | 🟢 CANON |
+| Event ordering | Traitement déterministe des événements concurrents contre l'état autoritatif courant. | 🟢 CANON |
+
+## GST01 — référence validée
+
+| ID | Décision / résultat | Statut |
+|---|---|---|
+| GST01 | Test global Vertical Slice ; `NEW STRUCTURAL BLOCKER = NONE`. | 🟢 REFERENCE |
+
+## DR-08-08 — décisions validées
+
+| ID | Décision | Statut |
+|---|---|---|
+| DR08-08 D01 | Decision / Execution Separation. | 🟢 CANON |
+| DR08-08 D02 | Action / Execution / World Consequence Separation. | 🟢 CANON |
+| DR08-08 D03 | Layered Failure / Invalidation. | 🟢 CANON |
+| DR08-08 D04 | Execution Transition Availability : `CAN INTERRUPT ≠ SHOULD INTERRUPT`. | 🟢 CANON |
+| DR08-08 D05 | Interruption sans rollback implicite du World. | 🟢 CANON |
+| DR08-08 D06 | Inventory Action / Inventory Commit atomique. | 🟢 CANON |
+| DR08-08 D07 | Social Commitment distinct d'Action Execution et d'Inventory Commit. | 🟢 CANON |
 
 ## DR-08-07 — décisions validées
 

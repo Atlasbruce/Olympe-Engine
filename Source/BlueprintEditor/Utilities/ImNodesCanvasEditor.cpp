@@ -8,6 +8,11 @@
 
 namespace Olympe
 {
+    void ImNodesCanvasEditor::ApplyFrameworkAutoPanning()
+    {
+        ImNodes::GetIO().AutoPanningSpeed = DefaultAutoPanningSpeed;
+    }
+
     ImNodesCanvasEditor::ImNodesCanvasEditor(
         const char* name,
         ImVec2 canvasScreenPos,
@@ -33,6 +38,8 @@ namespace Olympe
         {
             ImNodes::EditorContextSet(m_imnodesContext);
         }
+
+        ApplyFrameworkAutoPanning();
 
         // Start imnodes rendering cycle
         ImNodes::BeginNodeEditor();
@@ -103,6 +110,15 @@ namespace Olympe
     void ImNodesCanvasEditor::ResetPan()
     {
         SetPan(ImVec2(0.0f, 0.0f));
+    }
+
+    void ImNodesCanvasEditor::UpdateAutoPanning(bool interactionActive)
+    {
+        (void)interactionActive;
+        // ImNodes advances edge panning internally while its interaction is
+        // active.  Applying the shared policy here keeps the configuration
+        // consistent without adding a second pan delta.
+        ApplyFrameworkAutoPanning();
     }
 
     // ========================================================================

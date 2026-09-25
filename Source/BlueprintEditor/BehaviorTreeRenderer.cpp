@@ -622,6 +622,7 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
         // LEGACY RESTORATION: Enable Zoom and Multiple Selection for BT
         // ImNodes supports zoom via its IO system.
         ImNodesIO& io = ImNodes::GetIO();
+        ImNodesCanvasEditor::ApplyFrameworkAutoPanning();
         io.EmulateThreeButtonMouse.Modifier = &ImGui::GetIO().KeyAlt; // Alt + Left to pan
         io.LinkDetachWithModifierClick.Modifier = &ImGui::GetIO().KeyAlt;
         // Multiple Select is enabled by default in ImNodes if no modifier is set, 
@@ -683,6 +684,7 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
         int hoveredNode = -1, hoveredLink = -1;
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
         {
+            bool openedContextMenu = false;
             if (m_imNodesAdapter->HandleContextMenuTrigger(&hoveredNode, &hoveredLink))
             {
                 // Cache hovered ids into renderer transient members so RenderContextMenu
@@ -693,6 +695,22 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
                 // Open the canvas popup used by this renderer
                 ImGui::OpenPopup("BT_Canvas_Context_Menu");
                 SYSTEM_LOG << "[BehaviorTreeRenderer] Opened BT_Canvas_Context_Menu (hoveredNode=" << hoveredNode << ", hoveredLink=" << hoveredLink << ")\n";
+                openedContextMenu = true;
+            }
+
+            // ImNodes does not always report an empty editor as hovered after
+            // EndNodeEditor().  Keep the Framework canvas menu available on
+            // blank space without making node/link targets ambiguous.
+            const ImVec2 mouse = ImGui::GetMousePos();
+            const bool isInsideCanvas = mouse.x >= m_canvasScreenPos.x &&
+                mouse.y >= m_canvasScreenPos.y &&
+                mouse.x < m_canvasScreenPos.x + canvasSize.x &&
+                mouse.y < m_canvasScreenPos.y + canvasSize.y;
+            if (!openedContextMenu && isInsideCanvas)
+            {
+                m_contextHoveredNode = -1;
+                m_contextHoveredLink = -1;
+                ImGui::OpenPopup("BT_Canvas_Context_Menu");
             }
         }
     }
@@ -778,8 +796,6 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
     // Handle keyboard shortcuts for copy/paste/duplicate
     HandleKeyboardShortcuts();
 
-    // PHASE 78: Render context menu
-    RenderContextMenu();
 }
 
 void BehaviorTreeRenderer::RenderContextMenu()
@@ -905,7 +921,7 @@ void BehaviorTreeRenderer::RenderContextMenu()
             }
             if (ImGui::MenuItem("Reset View"))
             {
-                ImNodes::EditorContextResetPanning(ImVec2(0, 0));
+                m_imNodesAdapter->ResetView();
             }
         }
         ImGui::EndPopup();
@@ -1390,15 +1406,15 @@ void BehaviorTreeRenderer::OnRunGraphClicked()
 // Phase 35.0: Canvas state management
 void BehaviorTreeRenderer::SaveCanvasState()
 {
-    // For BehaviorTree, save the canvas screen position
-    // This helps preserve viewport context
-    m_savedCanvasState.canvasOffset = m_canvasScreenPos;
+    m_savedCanvasState.canvasOffset = m_imNodesAdapter
+        ? m_imNodesAdapter->GetPanning()
+        : ImVec2(0, 0);
 }
 
 void BehaviorTreeRenderer::RestoreCanvasState()
 {
-    // Restore previously saved canvas offset
-    m_canvasScreenPos = m_savedCanvasState.canvasOffset;
+    if (m_imNodesAdapter)
+        m_imNodesAdapter->SetPanning(m_savedCanvasState.canvasOffset);
 }
 
 std::string BehaviorTreeRenderer::GetCanvasStateJSON() const

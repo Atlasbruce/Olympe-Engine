@@ -225,3 +225,7 @@ La divergence n'est pas scriptée comme « Ivo est courageux ». Elle résulte d
 ## Propagation DR08-07
 
 **🟢 CANON :** l'Appraisal arbitre seulement des possibilités connues depuis un contexte subjectif. Importance et urgence sont distinctes ; faisabilité objective ≠ faisabilité perçue. Une possibilité peu probable peut rester tentable selon bénéfice, urgence, alternatives et effort acceptable. La réévaluation compare au plan courant et peut produire `KEEP` ou `CHANGE` ; réévaluation ≠ changement.
+
+## Propagation DR08-08
+
+**🟢 CANON :** un changement de décision, stratégie ou plan ne retire pas automatiquement l'Action en cours de l'exécution physique. La cognition peut préférer une nouvelle séquence pendant que le World poursuit l'exécution précédente. L'échec d'exécution n'invalide pas par lui-même plan, stratégie ni but ; il peut seulement produire une information pertinente à réévaluer. Un ancien plan suspendu ne reprend jamais mécaniquement : il est réapprécié dans le Decision Context courant.

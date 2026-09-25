@@ -240,6 +240,11 @@ void PlaceholderCanvas::HandleNodeInteraction()
                               mousePos.y >= canvasPos.y && mousePos.y < canvasPos.y + canvasSize.y);
 
     if (!isMouseOverCanvas) {
+        const bool activeInteraction = ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+            (m_isDraggingNode || m_isSelectingRectangle || m_linkDrag.IsActive());
+        if (m_canvasEditor)
+            m_canvasEditor->UpdateAutoPanning(activeInteraction);
+
         // Reset hover state when mouse leaves canvas
         m_hoveredNodeId = -1;
         m_hoveredConnectionId = -1;

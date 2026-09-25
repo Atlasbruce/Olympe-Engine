@@ -133,6 +133,8 @@ namespace Olympe
          */
         virtual void ResetPan() override { m_canvasOffset = ImVec2(0.0f, 0.0f); }
 
+        virtual void UpdateAutoPanning(bool interactionActive) override;
+
         // ====================================================================
         // Zoom Management
         // ====================================================================

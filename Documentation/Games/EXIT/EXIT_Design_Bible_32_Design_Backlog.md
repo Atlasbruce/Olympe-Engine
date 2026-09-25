@@ -42,6 +42,10 @@
 | DB-34 | Définir ton/indices expressifs et taxonomie du contenu de communication. | Basse | Dialogue | 🟡 |
 | DB-35 | Définir persistance des propositions et cycle de vie technique des engagements. | Moyenne | Social, runtime | 🟡 |
 | DB-36 | Définir timers/fréquences et interruptibilité détaillée des actions. | Moyenne | Runtime | 🟡 |
+| DB-37 | Définir le modèle runtime d'Action : lifecycle, structure de séquence, contexte suspendu, reprise/reconstruction et synchronisation animation. | Haute | DR08-08 | 🟡 |
+| DB-38 | Définir le contrat DR08-09 : incapacité, mort, traversée de l'Exit, état ESCAPED et interprétation GameManager. | Haute | Vertical Slice Runtime Contract | 🔵 |
+| DB-39 | Définir signalétique/Information Design d'évacuation sans révélation magique de l'Exit. | Moyenne | GST01 | 🟡 |
+| DB-40 | Définir paramètres du contrat runtime validé : timer, Recovery, waiting room, représentation alarme/écrans et ordonnancement technique. | Moyenne | DR08-09 | 🟡 |
 | DB-37 | Définir comparaison multidimensionnelle, volonté de tenter et effort acceptable sans score universel. | Haute | Tests décisionnels | 🟡 |
 | DB-38 | Définir représentation runtime et déclencheurs significatifs de réévaluation. | Moyenne | Runtime | 🟡 |
 

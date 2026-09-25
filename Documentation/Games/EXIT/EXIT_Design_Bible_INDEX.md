@@ -22,6 +22,17 @@
 13. [DR-08 - Vertical Slice de référence](EXIT_DESIGN_REVIEW_DR08_VERTICAL_SLICE.md)
 14. [DR-08-06 - Communication et engagements sociaux](EXIT_DESIGN_REVIEW_DR08_06_COMMUNICATION_SOCIAL_COMMITMENT_RUNTIME.md)
 15. [DR-08-07 - Appraisal et décision NPC](EXIT_DESIGN_REVIEW_DR08_07_NPC_DECISION_APPRAISAL_RUNTIME.md)
+16. [DR-08-08 - Action Runtime et interaction physique](EXIT_DESIGN_REVIEW_DR08_08_ACTION_RUNTIME_PHYSICAL_INTERACTION.md)
+17. [DR-08-09 - Contrat runtime du Vertical Slice](EXIT_DESIGN_REVIEW_DR08_09_VERTICAL_SLICE_RUNTIME_CONTRACT.md)
+
+## Validation systémique et stress-tests
+
+- [Framework de test systémique](Testing/EXIT_SYSTEMIC_TEST_FRAMEWORK.md)
+- [Taxonomie des tags de test](Testing/EXIT_TEST_TAG_TAXONOMY.md)
+- [Base de situations de test](Testing/EXIT_TEST_SITUATION_DATABASE.md)
+- [Gabarit de Decision Trace](Testing/EXIT_TEST_DECISION_TRACE_TEMPLATE.md)
+- [Batch préparatoire DR08-08 — Action Runtime](Testing/Batches/DR08_08_ACTION_RUNTIME_BATCH.md)
+- [GST01 — Global Vertical Slice Stress Test](Testing/Batches/GST01_GLOBAL_VERTICAL_SLICE_STRESS_TEST.md)
 
 ## Systèmes de monde et de jeu
 

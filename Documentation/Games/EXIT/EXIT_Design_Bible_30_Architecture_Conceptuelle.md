@@ -16,7 +16,7 @@ WORLD STATE <----> TOPOLOGIE / OBJETS / MACHINES / DANGERS
       v
 AGENTS JOUEUR ET NPC
   perception -> memory -> knowledge -> needs/goals
-  -> stratégie -> GOAP/plan -> tasks/actions
+  -> stratégie -> GOAP/plan -> actions
       |
       +-- personality / psychologie / relations modulent les choix
       |
@@ -53,6 +53,14 @@ Tableau noir IA : état privé + représentation locale
 ```
 
 Le suivi de conditions est hybride (événements pertinents et contrôle périodique basse fréquence). Les fréquences, interfaces et composants ne sont pas définis ici.
+
+## Propagation DR08-08
+
+**🟢 CANON :** entre le Plan cognitif et le World autoritatif, l'Action Runtime distingue Action tentée, Execution courante et conséquences World. Il peut informer la cognition de changements pertinents sans décider à sa place. Les mutations d'inventaire atomiques sont possédées par le système autoritatif d'inventaire/échange au moment de l'**Inventory Commit**. Les classes, API, structures de séquence et lifecycle technique restent 🟡 WIP.
+
+## Propagation DR08-09
+
+**🟢 CANON :** le World produit les transitions physiques telles que `CrossExit START → ESCAPED`; le GameManager et le Game Mode en interprètent les outcomes d'Attempt. Le timer d'évacuation est représenté dans le World avant perception/connaissance du participant. Les événements concurrents sont ordonnés de façon autoritative et déterministe ; aucune simultanéité visuelle ne donne accès à une vérité concurrente.
 
 ## Propagation DR-04
 

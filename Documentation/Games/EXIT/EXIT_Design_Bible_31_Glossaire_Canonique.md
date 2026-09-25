@@ -118,6 +118,30 @@
 | Effort acceptable | Niveau de coût, risque ou effort qu'un participant estime acceptable dans ce contexte. |
 | Réévaluation | Nouveau processus d'appréciation qui peut conserver ou modifier stratégie/plan. |
 
+## Ajouts CANON DR08-08
+
+| Terme | Définition canonique |
+|---|---|
+| Exécution | Manière dont une Action est actuellement accomplie physiquement ou systémiquement ; distincte de l'Action et de ses conséquences World. |
+| Disponibilité de transition d'exécution | Possibilité physique/systémique de faire passer l'exécution courante à une autre exécution maintenant ; distincte de l'opportunité cognitive de le faire. |
+| Inventory Action | Action manipulant ou transférant un élément d'inventaire physique : Take, Give, Drop, Insert ou Consume. |
+| Inventory Commit | Instant atomique logique où une mutation autoritative d'inventaire devient effective. |
+| Social Commitment | Engagement social persistant envers un ou plusieurs participants, généralement issu d'un accord ; distinct d'une Action, de son exécution et d'un Inventory Commit. |
+
+## Ajouts CANON DR08-09
+
+| Terme | Définition canonique |
+|---|---|
+| État physique | Dimension du participant décrivant notamment NORMAL, INJURED, UNCONSCIOUS ou DEAD ; distincte de présence, agency et outcome. |
+| Présence de niveau | Dimension indiquant si le participant/corps est IN_LEVEL ou OUT_OF_LEVEL. |
+| Agency | Disponibilité de la cognition et de l'action volontaire : ACTIVE ou SUSPENDED. |
+| Participant Outcome | Résultat de participant non résolu, ESCAPED/WON selon contexte ou LOST ; distinct de l'état physique. |
+| Recovery | Retour légitime d'un participant UNCONSCIOUS vers une Agency active ; peut transmettre uniquement la Knowledge directement liée à ce rétablissement. |
+| CrossExit | Action de franchissement ; son START valide produit logiquement ESCAPED. |
+| Escaped | Participant sorti de la simulation active du Level, OUT_OF_LEVEL et en attente du Debrief, mais toujours présent dans la Session. |
+| End Attempt | Frontière de simulation qui suspend toute participation active au Level sans modifier implicitement les états physiques. |
+| Ordonnancement autoritatif | Règle déterministe de traitement des événements concurrents, chaque événement étant évalué contre l'état résultant du précédent. |
+
 **WIP explicite :** les variables éventuelles de fiabilité et de fraîcheur d'une connaissance, ainsi que leurs formules, ne sont pas définies.
 
 Les définitions détaillées et les confusions à éviter figurent dans l'audit et les sections 11, 14, 20 et 21.

@@ -39,6 +39,16 @@ namespace Olympe
     class ImNodesCanvasEditor : public ICanvasEditor
     {
     public:
+        /// Native ImNodes edge auto-pan speed used consistently by Framework canvases.
+        static constexpr float DefaultAutoPanningSpeed = ICanvasEditor::DefaultAutoPanningSpeed;
+
+        /**
+         * Apply the Framework edge auto-pan policy to the active ImNodes context.
+         * ImNodes performs the motion natively while dragging a node, creating
+         * a link, or drawing a selection rectangle beyond the canvas bounds.
+         */
+        static void ApplyFrameworkAutoPanning();
+
         /**
          * @brief Construct imnodes-based canvas editor
          * @param name Identifier for this editor (e.g., "VisualScript")
@@ -127,6 +137,8 @@ namespace Olympe
          * @brief Reset pan to origin
          */
         virtual void ResetPan() override;
+
+        virtual void UpdateAutoPanning(bool interactionActive) override;
 
         // ====================================================================
         // Zoom Management

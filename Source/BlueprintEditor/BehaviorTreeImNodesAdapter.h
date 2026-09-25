@@ -595,6 +595,25 @@ namespace Olympe
             return pan;
         }
 
+        /** Restore a saved viewport offset in this adapter's ImNodes context. */
+        void SetPanning(const ImVec2& pan)
+        {
+            if (!m_imnodesContext || !m_editorContext)
+                return;
+
+            ImNodesContext* oldContext = ImNodes::GetCurrentContext();
+            ImNodes::SetCurrentContext(m_imnodesContext);
+            ImNodes::EditorContextSet(m_editorContext);
+            ImNodes::EditorContextResetPanning(pan);
+            if (oldContext)
+                ImNodes::SetCurrentContext(oldContext);
+        }
+
+        void ResetView()
+        {
+            SetPanning(ImVec2(0, 0));
+        }
+
     private:
         int m_graphId = -1;
         ImNodesContext* m_imnodesContext = nullptr;
