@@ -50,6 +50,12 @@ namespace Olympe
         static void ApplyFrameworkAutoPanning();
 
         /**
+         * Apply the shared native interaction policy for every ImNodes canvas.
+         * The graph type keeps ownership of semantic link validation only.
+         */
+        static void ApplyFrameworkInteractionPolicy();
+
+        /**
          * @brief Construct imnodes-based canvas editor
          * @param name Identifier for this editor (e.g., "VisualScript")
          * @param canvasScreenPos Top-left corner of canvas on screen (pixels)
@@ -60,7 +66,8 @@ namespace Olympe
             const char* name,
             ImVec2 canvasScreenPos,
             ImVec2 canvasSize,
-            ImNodesEditorContext* imnodesContext = nullptr
+            ImNodesEditorContext* imnodesContext = nullptr,
+            ImNodesContext* globalContext = nullptr
         );
 
         virtual ~ImNodesCanvasEditor() = default;
@@ -359,6 +366,7 @@ namespace Olympe
         ImVec2 m_canvasScreenPos;
         ImVec2 m_canvasSize;
         ImNodesEditorContext* m_imnodesContext;
+        ImNodesContext* m_globalContext;
         bool m_gridVisible;
 
         // Minimap configuration

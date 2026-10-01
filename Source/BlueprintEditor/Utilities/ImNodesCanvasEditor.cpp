@@ -13,16 +13,27 @@ namespace Olympe
         ImNodes::GetIO().AutoPanningSpeed = DefaultAutoPanningSpeed;
     }
 
+    void ImNodesCanvasEditor::ApplyFrameworkInteractionPolicy()
+    {
+        ImNodesIO& io = ImNodes::GetIO();
+        io.AutoPanningSpeed = DefaultAutoPanningSpeed;
+        io.EmulateThreeButtonMouse.Modifier = &ImGui::GetIO().KeyAlt;
+        io.LinkDetachWithModifierClick.Modifier = &ImGui::GetIO().KeyAlt;
+        io.MultipleSelectModifier.Modifier = &ImGui::GetIO().KeyCtrl;
+    }
+
     ImNodesCanvasEditor::ImNodesCanvasEditor(
         const char* name,
         ImVec2 canvasScreenPos,
         ImVec2 canvasSize,
-        ImNodesEditorContext* imnodesContext
+        ImNodesEditorContext* imnodesContext,
+        ImNodesContext* globalContext
     )
         : m_name(name)
         , m_canvasScreenPos(canvasScreenPos)
         , m_canvasSize(canvasSize)
         , m_imnodesContext(imnodesContext)
+        , m_globalContext(globalContext)
         , m_gridVisible(true)
     {
     }
@@ -34,12 +45,16 @@ namespace Olympe
     void ImNodesCanvasEditor::BeginRender()
     {
         // Switch to this canvas's imnodes context
+        if (m_globalContext)
+        {
+            ImNodes::SetCurrentContext(m_globalContext);
+        }
         if (m_imnodesContext)
         {
             ImNodes::EditorContextSet(m_imnodesContext);
         }
 
-        ApplyFrameworkAutoPanning();
+        ApplyFrameworkInteractionPolicy();
 
         // Start imnodes rendering cycle
         ImNodes::BeginNodeEditor();
@@ -93,12 +108,29 @@ namespace Olympe
 
     ImVec2 ImNodesCanvasEditor::GetPan() const
     {
-        return ImNodes::EditorContextGetPanning();
+        ImNodesContext* previousContext = ImNodes::GetCurrentContext();
+        if (m_globalContext)
+            ImNodes::SetCurrentContext(m_globalContext);
+        if (m_imnodesContext)
+            ImNodes::EditorContextSet(m_imnodesContext);
+
+        const ImVec2 pan = ImNodes::EditorContextGetPanning();
+
+        if (previousContext && previousContext != m_globalContext)
+            ImNodes::SetCurrentContext(previousContext);
+        return pan;
     }
 
     void ImNodesCanvasEditor::SetPan(const ImVec2& offset)
     {
+        ImNodesContext* previousContext = ImNodes::GetCurrentContext();
+        if (m_globalContext)
+            ImNodes::SetCurrentContext(m_globalContext);
+        if (m_imnodesContext)
+            ImNodes::EditorContextSet(m_imnodesContext);
         ImNodes::EditorContextResetPanning(offset);
+        if (previousContext && previousContext != m_globalContext)
+            ImNodes::SetCurrentContext(previousContext);
     }
 
     void ImNodesCanvasEditor::PanBy(const ImVec2& delta)
@@ -118,7 +150,7 @@ namespace Olympe
         // ImNodes advances edge panning internally while its interaction is
         // active.  Applying the shared policy here keeps the configuration
         // consistent without adding a second pan delta.
-        ApplyFrameworkAutoPanning();
+        ApplyFrameworkInteractionPolicy();
     }
 
     // ========================================================================

@@ -121,7 +121,6 @@ void PlaceholderCanvas::RenderConnections()
 void PlaceholderCanvas::RenderNodeBox(const PlaceholderNode& node, bool isSelected)
 {
     ImDrawList* drawList = ImGui::GetWindowDrawList();
-    ImVec2 canvasPos = ImGui::GetCursorScreenPos();
 
     // Transform node canvas coordinates to screen coordinates
     ImVec2 nodeScreenPos = CanvasToScreen(ImVec2(node.posX, node.posY));
@@ -129,45 +128,15 @@ void PlaceholderCanvas::RenderNodeBox(const PlaceholderNode& node, bool isSelect
     ImVec2 nodeSize(node.width * canvasZoom, node.height * canvasZoom);
     ImVec2 nodeScreenEnd = ImVec2(nodeScreenPos.x + nodeSize.x, nodeScreenPos.y + nodeSize.y);
 
-    // Node color based on type
-    ImU32 nodeColor = GetNodeColorForType(node.type);
-
     // Phase 76: Hover detection affects border
     bool isHovered = (m_hoveredNodeId == node.nodeId);
-    ImU32 borderColor = isSelected ? IM_COL32(0, 255, 255, 255) : (isHovered ? IM_COL32(255, 200, 0, 255) : IM_COL32(200, 200, 200, 255));
-    float borderWidth = isSelected ? 3.0f : (isHovered ? 2.5f : 1.5f);
-
-    // Phase 63.1: Draw blue glow on selection (subtle shadow effect)
-    if (isSelected) {
-        drawList->AddRect(
-            ImVec2(nodeScreenPos.x - 3.0f, nodeScreenPos.y - 3.0f),
-            ImVec2(nodeScreenEnd.x + 3.0f, nodeScreenEnd.y + 3.0f),
-            IM_COL32(0, 200, 255, 100),  // Light cyan glow
-            4.0f,
-            ImDrawFlags_RoundCornersAll,
-            1.0f
-        );
-    }
-
-    // Phase 76: Draw yellow glow on hover
-    if (isHovered && !isSelected) {
-        drawList->AddRect(
-            ImVec2(nodeScreenPos.x - 2.0f, nodeScreenPos.y - 2.0f),
-            ImVec2(nodeScreenEnd.x + 2.0f, nodeScreenEnd.y + 2.0f),
-            IM_COL32(255, 200, 0, 150),  // Yellow hover glow
-            4.0f,
-            ImDrawFlags_RoundCornersAll,
-            1.0f
-        );
-    }
-
-    // Draw node box
-    drawList->AddRectFilled(nodeScreenPos, nodeScreenEnd, nodeColor, 4.0f);
-    drawList->AddRect(nodeScreenPos, nodeScreenEnd, borderColor, 4.0f, ImDrawFlags_RoundCornersAll, borderWidth);
+    CanvasNodeVisualStyle style;
+    style.titleBarColor = GetNodeColorForType(node.type);
+    RenderTwoToneNodeFrame(drawList, nodeScreenPos, nodeScreenEnd, style, isSelected, isHovered);
 
     // Draw title text
     drawList->AddText(
-        ImVec2(nodeScreenPos.x + 8.0f, nodeScreenPos.y + 8.0f),
+        ImVec2(nodeScreenPos.x + 8.0f, nodeScreenPos.y + 5.0f),
         IM_COL32(255, 255, 255, 255),
         node.title.c_str()
     );
@@ -175,7 +144,7 @@ void PlaceholderCanvas::RenderNodeBox(const PlaceholderNode& node, bool isSelect
     // Draw node ID as small label
     std::string idLabel = "ID:" + std::to_string(node.nodeId);
     drawList->AddText(
-        ImVec2(nodeScreenPos.x + 8.0f, nodeScreenEnd.y - 18.0f),
+        ImVec2(nodeScreenPos.x + 8.0f, nodeScreenPos.y + style.titleBarHeight + 8.0f),
         IM_COL32(200, 200, 200, 255),
         idLabel.c_str()
     );
@@ -185,11 +154,17 @@ void PlaceholderCanvas::RenderNodeBox(const PlaceholderNode& node, bool isSelect
     const ImU32 portColor = IM_COL32(255, 255, 0, 255);  // Yellow
 
     // Input port (left side, middle)
-    ImVec2 inputPortPos = ImVec2(nodeScreenPos.x, (nodeScreenPos.y + nodeScreenEnd.y) * 0.5f);
+    const CanvasPinHitArea inputPin = GetNodePinHitArea(node, CanvasPinDirection::Input);
+    ImVec2 inputPortPos = inputPin.center;
     drawList->AddCircleFilled(inputPortPos, portRadius, portColor);
+    if (m_linkDrag.HasSnapTarget() && m_linkDrag.GetSnapTarget().nodeId == node.nodeId &&
+        m_linkDrag.GetSnapTarget().direction == CanvasPinDirection::Input) {
+        drawList->AddCircle(inputPortPos, portRadius + 4.0f, IM_COL32(255, 255, 255, 255), 0, 2.0f);
+    }
 
     // Output port (right side, middle)
-    ImVec2 outputPortPos = ImVec2(nodeScreenEnd.x, (nodeScreenPos.y + nodeScreenEnd.y) * 0.5f);
+    const CanvasPinHitArea outputPin = GetNodePinHitArea(node, CanvasPinDirection::Output);
+    ImVec2 outputPortPos = outputPin.center;
     drawList->AddCircleFilled(outputPortPos, portRadius, portColor);
 }
 
@@ -228,6 +203,49 @@ ImU32 PlaceholderCanvas::GetNodeColorForType(PlaceholderNodeType type)
     }
 }
 
+CanvasPinHitArea PlaceholderCanvas::GetNodePinHitArea(
+    const PlaceholderNode& node,
+    CanvasPinDirection direction)
+{
+    const ImVec2 nodeScreenPos = CanvasToScreen(ImVec2(node.posX, node.posY));
+    const float canvasZoom = GetCanvasZoom();
+    const ImVec2 nodeScreenEnd(
+        nodeScreenPos.x + node.width * canvasZoom,
+        nodeScreenPos.y + node.height * canvasZoom);
+
+    CanvasPinHitArea pin;
+    pin.nodeId = node.nodeId;
+    pin.direction = direction;
+    pin.radius = 10.0f * canvasZoom; // forgiving grab area; visible pin remains smaller
+    pin.center = direction == CanvasPinDirection::Input
+        ? ImVec2(nodeScreenPos.x, (nodeScreenPos.y + nodeScreenEnd.y) * 0.5f)
+        : ImVec2(nodeScreenEnd.x, (nodeScreenPos.y + nodeScreenEnd.y) * 0.5f);
+    return pin;
+}
+
+void PlaceholderCanvas::UpdateLinkSnapTarget(const ImVec2& mousePos)
+{
+    if (!m_linkDrag.IsActive() || !m_document)
+        return;
+
+    std::vector<CanvasPinHitArea> inputPins;
+    for (const PlaceholderNode& node : m_document->GetAllNodes())
+    {
+        if (node.nodeId != m_linkDrag.GetSourceNodeId())
+            inputPins.push_back(GetNodePinHitArea(node, CanvasPinDirection::Input));
+    }
+
+    const CanvasPinHitArea* target = FindCanvasPinAt(
+        inputPins, mousePos, CanvasPinDirection::Input);
+    if (target)
+        m_linkDrag.SetSnapTarget(*target);
+    else
+    {
+        m_linkDrag.ClearSnapTarget();
+        m_linkDrag.UpdatePreviewEnd(mousePos);
+    }
+}
+
 void PlaceholderCanvas::HandleNodeInteraction()
 {
     ImGuiIO& io = ImGui::GetIO();
@@ -240,17 +258,49 @@ void PlaceholderCanvas::HandleNodeInteraction()
                               mousePos.y >= canvasPos.y && mousePos.y < canvasPos.y + canvasSize.y);
 
     if (!isMouseOverCanvas) {
-        const bool activeInteraction = ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+        const bool leftMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
+        const bool activeInteraction = leftMouseDown &&
             (m_isDraggingNode || m_isSelectingRectangle || m_linkDrag.IsActive());
-        if (m_canvasEditor)
-            m_canvasEditor->UpdateAutoPanning(activeInteraction);
 
-        // Reset hover state when mouse leaves canvas
+        // Auto-panning changes the screen transform.  Keep an active drag in
+        // sync with that change so the dragged node remains under the cursor.
+        ImVec2 autoPanDelta(0.0f, 0.0f);
+        if (m_canvasEditor && activeInteraction) {
+            const ImVec2 panBefore = m_canvasEditor->GetPan();
+            m_canvasEditor->UpdateAutoPanning(true);
+            const ImVec2 panAfter = m_canvasEditor->GetPan();
+            autoPanDelta = ImVec2(panAfter.x - panBefore.x, panAfter.y - panBefore.y);
+        }
+
+        // Reset hover state when mouse leaves canvas, but do not terminate an
+        // interaction that started in it.  This matches the ImNodes behavior.
         m_hoveredNodeId = -1;
         m_hoveredConnectionId = -1;
-        if (m_linkDrag.IsActive() && !ImGui::IsMouseDown(0)) {
+
+        if (leftMouseDown) {
+            if (m_isSelectingRectangle) {
+                m_selectionRectEnd = mousePos;
+            }
+            else if (m_linkDrag.IsActive()) {
+                UpdateLinkSnapTarget(mousePos);
+            }
+            else if (m_isDraggingNode) {
+                const ImVec2 dragDelta(
+                    io.MouseDelta.x - autoPanDelta.x,
+                    io.MouseDelta.y - autoPanDelta.y);
+                m_renderer->ApplyNodeDragDelta(dragDelta, GetCanvasZoom());
+            }
+            return;
+        }
+
+        if (m_isSelectingRectangle) {
+            SelectNodesInRectangle();
+            m_isSelectingRectangle = false;
+        }
+        if (m_linkDrag.IsActive()) {
             m_linkDrag.Cancel();
         }
+        m_isDraggingNode = false;
         return;
     }
 
@@ -275,19 +325,10 @@ void PlaceholderCanvas::HandleNodeInteraction()
         if (nodeAtPos >= 0) {
             PlaceholderNode* node = m_document->GetNode(nodeAtPos);
             if (node) {
-                ImVec2 nodeScreenPos = CanvasToScreen(ImVec2(node->posX, node->posY));
-                const float canvasZoom = GetCanvasZoom();
-                ImVec2 nodeScreenEnd = ImVec2(nodeScreenPos.x + node->width * canvasZoom,
-                                              nodeScreenPos.y + node->height * canvasZoom);
-
-                const float portRadius = 5.0f * canvasZoom;
-
-                // Output port (right side)
-                ImVec2 outputPortPos = ImVec2(nodeScreenEnd.x, (nodeScreenPos.y + nodeScreenEnd.y) * 0.5f);
-
-                // If close to output port, start connection drag
-                if (CanvasHitTesting::ContainsPointInCircle(mousePos, outputPortPos, portRadius)) {
-                    m_linkDrag.Begin(nodeAtPos, mousePos);
+                const CanvasPinHitArea outputPin = GetNodePinHitArea(
+                    *node, CanvasPinDirection::Output);
+                if (outputPin.Contains(mousePos)) {
+                    m_linkDrag.Begin(nodeAtPos, outputPin.center, outputPin.pinIndex);
                     std::cout << "[PlaceholderCanvas] Started connection drag from node " << nodeAtPos << "\n";
                     return;
                 }
@@ -333,7 +374,7 @@ void PlaceholderCanvas::HandleNodeInteraction()
             // Update rectangle end point
             m_selectionRectEnd = mousePos;
         } else if (m_linkDrag.IsActive()) {
-            m_linkDrag.UpdatePreviewEnd(mousePos);
+            UpdateLinkSnapTarget(mousePos);
         } else if (m_isDraggingNode) {
             if (io.MouseDelta.x != 0.0f || io.MouseDelta.y != 0.0f) {
                 m_renderer->ApplyNodeDragDelta(io.MouseDelta, GetCanvasZoom());
@@ -350,25 +391,13 @@ void PlaceholderCanvas::HandleNodeInteraction()
 
         // Phase 64.2: Handle connection drag release
         if (m_linkDrag.IsActive()) {
+            UpdateLinkSnapTarget(mousePos);
+            const bool hasSnapTarget = m_linkDrag.HasSnapTarget();
+            const CanvasPinHitArea targetPin = hasSnapTarget
+                ? m_linkDrag.GetSnapTarget() : CanvasPinHitArea{};
             const int sourceNodeId = m_linkDrag.Complete();
-            // Check if releasing on an input port of another node
-            int nodeAtMouse = GetNodeAtScreenPos(mousePos);
-            if (nodeAtMouse >= 0 && nodeAtMouse != sourceNodeId) {
-                PlaceholderNode* targetNode = m_document->GetNode(nodeAtMouse);
-                if (targetNode) {
-                    ImVec2 nodeScreenPos = CanvasToScreen(ImVec2(targetNode->posX, targetNode->posY));
-                    const float canvasZoom = GetCanvasZoom();
-                    ImVec2 nodeScreenEnd = ImVec2(nodeScreenPos.x + targetNode->width * canvasZoom,
-                                                  nodeScreenPos.y + targetNode->height * canvasZoom);
-
-                    const float portRadius = 5.0f * canvasZoom;
-                    ImVec2 inputPortPos = ImVec2(nodeScreenPos.x, (nodeScreenPos.y + nodeScreenEnd.y) * 0.5f);
-                    // If close to input port, create connection
-                    if (CanvasHitTesting::ContainsPointInCircle(mousePos, inputPortPos, portRadius)) {
-                        HandleConnectionCreated(sourceNodeId, nodeAtMouse);
-                    }
-                }
-            }
+            if (hasSnapTarget)
+                HandleConnectionCreated(sourceNodeId, targetPin.nodeId);
         }
         m_isDraggingNode = false;
     }

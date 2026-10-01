@@ -5,6 +5,7 @@
 #include "../Utilities/CanvasContextMenu.h"
 #include "../Utilities/ICanvasEditor.h"
 #include "../Utilities/CanvasLinkDrag.h"
+#include "../Utilities/CanvasNodeVisualStyle.h"
 
 namespace Olympe {
 
@@ -130,6 +131,8 @@ public:
     // Drag-drop handling (Phase 64)
     void HandleNodeCreatedFromPalette(PlaceholderNodeType type, const ImVec2& dropPos);
     void HandleConnectionCreated(int fromNodeId, int toNodeId);
+    CanvasPinHitArea GetNodePinHitArea(const PlaceholderNode& node, CanvasPinDirection direction);
+    void UpdateLinkSnapTarget(const ImVec2& mousePos);
 
     // Node rendering helpers
     ImU32 GetNodeColorForType(PlaceholderNodeType type);

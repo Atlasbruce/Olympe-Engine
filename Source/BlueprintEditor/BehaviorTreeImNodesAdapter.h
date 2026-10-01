@@ -359,6 +359,10 @@ namespace Olympe
          */
         ImNodesContext* GetContext() const { return m_imnodesContext; }
 
+        /// Editor state is owned by this adapter and must be used by the
+        /// Framework canvas wrapper for out-of-render coordinate transforms.
+        ImNodesEditorContext* GetEditorContext() const { return m_editorContext; }
+
         /**
          * @brief Returns the ID of the currently selected node, or -1 if none.
          */

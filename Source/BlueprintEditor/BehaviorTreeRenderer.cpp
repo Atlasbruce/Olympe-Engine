@@ -11,6 +11,7 @@
 #include "BehaviorTreeRenderer.h"
 #include "NodeGraphPanel.h"
 #include "Framework/CanvasToolbarRenderer.h"
+#include "Framework/BlueprintDropRouting.h"
 #include "BTNodeGraphManager.h"
 #include "../NodeGraphCore/NodeGraphManager.h"
 #include "GraphExecutionTracer.h"
@@ -598,9 +599,22 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
     ImVec2 canvasSize = ImGui::GetContentRegionAvail();
 
     // PHASE 70: Use standardized ImNodesCanvasEditor for framework parity
-    if (!m_canvasEditor && m_graphId >= 0)
+    // Initialize ImNodes adapter if needed
+    if (!m_imNodesAdapter && m_graphId >= 0)
     {
-        m_canvasEditor = std::make_unique<ImNodesCanvasEditor>("BehaviorTree", m_canvasScreenPos, canvasSize);
+        m_imNodesAdapter = std::make_unique<BehaviorTreeImNodesAdapter>();
+        m_imNodesAdapter->Initialize(m_graphId);
+    }
+
+    // The Framework wrapper uses the adapter's dedicated ImNodes editor state.
+    // This keeps ScreenToCanvas valid after the ImNodes render scope has ended,
+    // which is where the shared drop overlay receives its payload.
+    if (!m_canvasEditor && m_imNodesAdapter)
+    {
+        m_canvasEditor = std::make_unique<ImNodesCanvasEditor>(
+            "BehaviorTree", m_canvasScreenPos, canvasSize,
+            m_imNodesAdapter->GetEditorContext(),
+            m_imNodesAdapter->GetContext());
     }
 
     if (m_canvasEditor)
@@ -609,25 +623,12 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
         m_canvasEditor->SetCanvasSize(canvasSize);
     }
 
-    // Initialize ImNodes adapter if needed
-    if (!m_imNodesAdapter && m_graphId >= 0)
-    {
-        m_imNodesAdapter = std::make_unique<BehaviorTreeImNodesAdapter>();
-        m_imNodesAdapter->Initialize(m_graphId);
-    }
-
     // Render using ImNodes adapter
     if (m_imNodesAdapter && m_canvasEditor)
     {
-        // LEGACY RESTORATION: Enable Zoom and Multiple Selection for BT
-        // ImNodes supports zoom via its IO system.
-        ImNodesIO& io = ImNodes::GetIO();
-        ImNodesCanvasEditor::ApplyFrameworkAutoPanning();
-        io.EmulateThreeButtonMouse.Modifier = &ImGui::GetIO().KeyAlt; // Alt + Left to pan
-        io.LinkDetachWithModifierClick.Modifier = &ImGui::GetIO().KeyAlt;
-        // Multiple Select is enabled by default in ImNodes if no modifier is set, 
-        // but we ensure it works with Ctrl for standard behavior
-        io.MultipleSelectModifier.Modifier = &ImGui::GetIO().KeyCtrl;
+        // The Framework owns native interaction ergonomics (edge pan, Alt-pan,
+        // Alt-detach and Ctrl multi-selection). BT owns link semantics only.
+        ImNodesCanvasEditor::ApplyFrameworkInteractionPolicy();
 
         // PHASE 72 FIX: Do NOT wrap adapter->Render() with canvasEditor->BeginRender()/EndRender()
         // BehaviorTreeImNodesAdapter already manages its own ImNodes scope via BeginNodeEditor/EndNodeEditor.
@@ -757,12 +758,17 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
 
     if (ImGui::BeginDragDropTarget())
     {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("BT_NODE_TYPE"))
+        BlueprintDropContext dropContext;
+        dropContext.graphType = GetGraphType();
+        const ImGuiPayload* payload = m_canvasEditor
+            ? AcceptBlueprintDropPayload("BT_NODE_TYPE", *m_canvasEditor, dropContext)
+            : nullptr;
+        if (payload && payload->Data)
         {
-            const char* nodeTypeStr = (const char*)payload->Data;
-            ImVec2 mousePos = ImGui::GetMousePos();
-            SYSTEM_LOG << "[BehaviorTreeRenderer] NODE DROP RECEIVED VIA OVERLAY: " << nodeTypeStr << "\n";
-            AcceptNodeDrop(nodeTypeStr, mousePos.x, mousePos.y);
+            const char* nodeTypeStr = static_cast<const char*>(payload->Data);
+            dropContext.payloadValue = nodeTypeStr;
+            LogBlueprintDropReceived(dropContext);
+            AcceptNodeDrop(nodeTypeStr, dropContext.canvasX, dropContext.canvasY);
         }
         ImGui::EndDragDropTarget();
     }
@@ -1135,7 +1141,7 @@ void BehaviorTreeRenderer::SetFilePath(const std::string& path)
     }
 }
 
-void BehaviorTreeRenderer::AcceptNodeDrop(const std::string& nodeType, float screenX, float screenY)
+void BehaviorTreeRenderer::AcceptNodeDrop(const std::string& nodeType, float canvasX, float canvasY)
 {
     // Phase 60 FIX: Implement AcceptNodeDrop for drag-drop node creation
     // This method is called by the drag-drop target when user drops a node from the palette
@@ -1154,33 +1160,8 @@ void BehaviorTreeRenderer::AcceptNodeDrop(const std::string& nodeType, float scr
         return;
     }
 
-    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] Checkpoint 1: Coordinate transformation start\n";
-
-    // PHASE 78 FIX: Direct coordinate calculation to avoid crash in m_canvasEditor->ScreenToCanvas()
-    // m_canvasEditor->ScreenToCanvas calls ImNodes::EditorContextGetPanning(), which CRASHES 
-    // if called when the BT ImNodes context is not current or outside of its render scope.
-
-    ImVec2 mouseInCanvas;
-
-    // 1. Get relative position to canvas
-    float relX = screenX - m_canvasScreenPos.x;
-    float relY = screenY - m_canvasScreenPos.y;
-
-    // 2. Adjust for Panning (from ImNodes adapter if available)
-    ImVec2 pan = { 0, 0 };
-    if (m_imNodesAdapter)
-    {
-        // We use the adapter's context awareness if possible
-        // But to be even safer, we'll try-catch or check existence in memory
-        // For now, simpler: retrieve pan through the adapter which holds the context
-        pan = m_imNodesAdapter->GetPanning(); 
-    }
-
-    mouseInCanvas.x = relX - pan.x;
-    mouseInCanvas.y = relY - pan.y;
-
-    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] Checkpoint 2: Node creation at canvas-logical (" 
-               << mouseInCanvas.x << ", " << mouseInCanvas.y << ") [Pan: " << pan.x << "," << pan.y << "]\n";
+    SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] Creating node at framework canvas position ("
+               << canvasX << ", " << canvasY << ")\n";
 
     // Get the active graph
     GraphId id{static_cast<uint32_t>(m_graphId)};
@@ -1213,8 +1194,8 @@ void BehaviorTreeRenderer::AcceptNodeDrop(const std::string& nodeType, float scr
     newNode.id = NodeId{newNodeId};
     newNode.type = nodeType;
     newNode.name = nodeType + "_" + std::to_string(newNodeId);  // Generate unique name
-    newNode.position.x = mouseInCanvas.x;
-    newNode.position.y = mouseInCanvas.y;
+    newNode.position.x = canvasX;
+    newNode.position.y = canvasY;
 
     // Add to nodes vector
     nodes.push_back(newNode);
