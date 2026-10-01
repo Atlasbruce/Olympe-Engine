@@ -185,6 +185,16 @@ private:
      * @param screenY Absolute screen Y coordinate
      */
     void AcceptNodeDrop(const std::string& nodeType, float screenX, float screenY);
+    void RecordNodeMoveCommand(const std::vector<BehaviorTreeImNodesAdapter::NodePositionChange>& changes);
+    bool RecordLinkCreateCommand(uint32_t sourceNodeId, uint32_t targetNodeId);
+    bool RecordLinkDeleteCommand(uint32_t linkId);
+    bool RecordNodeDeleteCommand(uint32_t nodeId);
+    bool RecordNodeDeleteCommand(const std::vector<uint32_t>& nodeIds);
+    void RecordRootNodeChangeCommand(uint32_t nodeId);
+    void RecordNodePropertyEditCommand(uint32_t nodeId, const std::string& propertyKey,
+                                       const std::string& before, const std::string& after);
+    void RecordNodeParameterAddCommand(uint32_t nodeId, const std::string& parameterKey);
+    void RecordChildReorderCommand(uint32_t parentNodeId, size_t fromIndex, size_t toIndex);
 
     /**
      * @brief Render context menu for canvas and nodes

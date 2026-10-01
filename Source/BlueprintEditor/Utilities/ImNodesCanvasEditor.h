@@ -29,6 +29,7 @@
 #pragma once
 
 #include "ICanvasEditor.h"
+#include "CanvasNodeVisualStyle.h"
 #include "../../third_party/imnodes/imnodes.h"
 #include <string>
 #include <vector>
@@ -54,6 +55,15 @@ namespace Olympe
          * The graph type keeps ownership of semantic link validation only.
          */
         static void ApplyFrameworkInteractionPolicy();
+
+        /** Apply the shared two-tone node frame to the active ImNodes scope. */
+        static void PushTwoToneNodeStyle(
+            ImU32 titleColor,
+            ImU32 titleHoveredColor,
+            ImU32 titleSelectedColor);
+
+        /** Balance PushTwoToneNodeStyle(). */
+        static void PopTwoToneNodeStyle();
 
         /**
          * @brief Construct imnodes-based canvas editor

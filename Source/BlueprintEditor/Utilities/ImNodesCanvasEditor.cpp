@@ -22,6 +22,26 @@ namespace Olympe
         io.MultipleSelectModifier.Modifier = &ImGui::GetIO().KeyCtrl;
     }
 
+    void ImNodesCanvasEditor::PushTwoToneNodeStyle(
+        ImU32 titleColor,
+        ImU32 titleHoveredColor,
+        ImU32 titleSelectedColor)
+    {
+        CanvasNodeVisualStyle style;
+        ImNodes::PushColorStyle(ImNodesCol_NodeBackground, style.bodyColor);
+        ImNodes::PushColorStyle(ImNodesCol_NodeBackgroundHovered, IM_COL32(58, 58, 58, 255));
+        ImNodes::PushColorStyle(ImNodesCol_NodeBackgroundSelected, IM_COL32(66, 66, 66, 255));
+        ImNodes::PushColorStyle(ImNodesCol_TitleBar, titleColor);
+        ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, titleHoveredColor);
+        ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, titleSelectedColor);
+    }
+
+    void ImNodesCanvasEditor::PopTwoToneNodeStyle()
+    {
+        for (int index = 0; index < 6; ++index)
+            ImNodes::PopColorStyle();
+    }
+
     ImNodesCanvasEditor::ImNodesCanvasEditor(
         const char* name,
         ImVec2 canvasScreenPos,

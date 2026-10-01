@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <functional>
 #include <map>
 #include "../third_party/imgui/imgui.h"
 #include "../NodeGraphCore/NodeGraphManager.h"
@@ -43,6 +44,9 @@ class BTNodeGraphManager;
 class BTNodePropertyPanel
 {
 public:
+    using PropertyEditCommittedCallback = std::function<void(uint32_t, const std::string&, const std::string&, const std::string&)>;
+    using ParameterAddedCallback = std::function<void(uint32_t, const std::string&)>;
+
     BTNodePropertyPanel()
         : m_activeGraphId(-1)
         , m_selectedNodeId(-1)
@@ -59,6 +63,20 @@ public:
     void Initialize()
     {
         // Initialize property panel
+    }
+
+    /**
+     * @brief Called once an editable text field loses focus after a real change.
+     * The renderer converts this notification into a framework command.
+     */
+    void SetOnPropertyEditCommitted(PropertyEditCommittedCallback callback)
+    {
+        m_onPropertyEditCommitted = std::move(callback);
+    }
+
+    void SetOnParameterAdded(ParameterAddedCallback callback)
+    {
+        m_onParameterAdded = std::move(callback);
     }
 
     /**
@@ -136,6 +154,8 @@ public:
                 node->parameters[key] = typeBuf;
                 graphDoc->SetDirty(true);
             }
+            const std::string currentInternalType = node->parameters.count(key) ? node->parameters.at(key) : "";
+            CommitStringEdit(node->id.value, "parameter:" + key, value, currentInternalType);
             ImGui::SameLine();
             ImGui::TextDisabled("(%s)", key.c_str());
         }
@@ -150,6 +170,7 @@ public:
         // Name Editing
         ImGui::TextUnformatted("Name");
         ImGui::SetNextItemWidth(-1);
+        const std::string originalName = node->name;
         char nameBuf[256];
         memset(nameBuf, 0, sizeof(nameBuf));
 #ifdef _MSC_VER
@@ -162,6 +183,7 @@ public:
             node->name = nameBuf;
             graphDoc->SetDirty(true);
         }
+        CommitStringEdit(node->id.value, "name", originalName, node->name);
         if (ImGui::IsItemHovered()) ImGui::SetTooltip("Rename node for better organization");
 
         ImGui::Spacing();
@@ -182,6 +204,7 @@ public:
             {
                 for (auto& param : node->parameters)
                 {
+                    const std::string originalValue = param.second;
                     ImGui::TextUnformatted(param.first.c_str());
                     ImGui::SetNextItemWidth(-1);
                     
@@ -199,6 +222,7 @@ public:
                         param.second = paramBuf;
                         changed = true;
                     }
+                    CommitStringEdit(node->id.value, "parameter:" + param.first, originalValue, param.second);
                 }
             }
             
@@ -224,6 +248,9 @@ public:
                     node->parameters["subgraphPath"] = pathBuf;
                     graphDoc->SetDirty(true);
                 }
+                const std::string currentSubGraphPath = node->parameters.count("subgraphPath")
+                    ? node->parameters.at("subgraphPath") : "";
+                CommitStringEdit(node->id.value, "parameter:subgraphPath", path, currentSubGraphPath);
 
                 if (ImGui::Button("Open SubGraph (Ctrl+Double Click)"))
                 {
@@ -253,6 +280,9 @@ public:
                             node->parameters[bindKey] = bindBuf;
                             graphDoc->SetDirty(true);
                         }
+                        const std::string currentBinding = node->parameters.count(bindKey)
+                            ? node->parameters.at(bindKey) : "";
+                        CommitStringEdit(node->id.value, "parameter:" + bindKey, bindVal, currentBinding);
                     }
                 }
             }
@@ -269,8 +299,22 @@ public:
                 ImGui::InputText("Parameter Name", newKey, sizeof(newKey));
                 if (ImGui::Button("Add") && strlen(newKey) > 0)
                 {
-                    node->parameters[newKey] = "";
+                    const std::string newParameterKey = newKey;
+                    const auto existingParameter = node->parameters.find(newParameterKey);
+                    const bool alreadyExists = existingParameter != node->parameters.end();
+                    const std::string previousValue = alreadyExists ? existingParameter->second : "";
+                    node->parameters[newParameterKey] = "";
                     graphDoc->SetDirty(true);
+                    if (alreadyExists)
+                    {
+                        if (m_onPropertyEditCommitted)
+                            m_onPropertyEditCommitted(node->id.value, "parameter:" + newParameterKey,
+                                                      previousValue, "");
+                    }
+                    else if (m_onParameterAdded)
+                    {
+                        m_onParameterAdded(node->id.value, newParameterKey);
+                    }
                     newKey[0] = '\0';
                     ImGui::CloseCurrentPopup();
                 }
@@ -320,9 +364,31 @@ public:
     int m_selectedNodeId = -1;
 
 private:
+    void CommitStringEdit(uint32_t nodeId, const std::string& propertyKey,
+                          const std::string& valueAtFrameStart, const std::string& currentValue)
+    {
+        const ImGuiID itemId = ImGui::GetItemID();
+        if (ImGui::IsItemActivated())
+            m_editOriginalValues[itemId] = valueAtFrameStart;
+
+        if (!ImGui::IsItemDeactivatedAfterEdit())
+            return;
+
+        const auto it = m_editOriginalValues.find(itemId);
+        const std::string originalValue = it != m_editOriginalValues.end() ? it->second : valueAtFrameStart;
+        if (it != m_editOriginalValues.end())
+            m_editOriginalValues.erase(it);
+
+        if (originalValue != currentValue && m_onPropertyEditCommitted)
+            m_onPropertyEditCommitted(nodeId, propertyKey, originalValue, currentValue);
+    }
+
     int m_activeGraphId = -1;          ///< Current graph ID in BTNodeGraphManager
     char m_nodeNameBuffer[256] = {0}; ///< Buffer for node name editing
     char m_paramBuffer[512] = {0};    ///< Buffer for parameter editing
+    std::map<ImGuiID, std::string> m_editOriginalValues;
+    PropertyEditCommittedCallback m_onPropertyEditCommitted;
+    ParameterAddedCallback m_onParameterAdded;
 
     // Rendering helpers
     void RenderNodeBasicInfo(const GraphNode* node);

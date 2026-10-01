@@ -15,6 +15,7 @@
 #include "../system/system_utils.h"
 #include "BTNodeGraphManager.h"
 #include "NodeStyleRegistry.h"
+#include "Utilities/ImNodesCanvasEditor.h"
 #include "../NodeGraphCore/NodeGraphManager.h"
 #include <algorithm>
 #include <vector>
@@ -33,6 +34,16 @@ namespace Olympe
     class BehaviorTreeImNodesAdapter
     {
     public:
+        struct NodePositionChange
+        {
+            uint32_t nodeId = 0;
+            ImVec2 before = ImVec2(0.0f, 0.0f);
+            ImVec2 after = ImVec2(0.0f, 0.0f);
+        };
+        using NodePositionsCommittedCallback = std::function<void(const std::vector<NodePositionChange>&)>;
+        using LinkCreateRequestedCallback = std::function<bool(uint32_t, uint32_t)>;
+        using LinkDeleteRequestedCallback = std::function<bool(uint32_t)>;
+
         BehaviorTreeImNodesAdapter()
             : m_imnodesContext(nullptr)
             , m_editorContext(nullptr)
@@ -104,6 +115,7 @@ namespace Olympe
             m_hoveredNodeCache = -1;
             m_hoveredLinkCache = -1;
             m_isEditorHoveredCache = false;
+            m_dragStartPositions.clear();
 
             if (m_imnodesContext)
             {
@@ -140,6 +152,27 @@ namespace Olympe
             }
 
             SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Initialized with graph ID: " << graphId << "\n";
+        }
+
+        void SetOnNodePositionsCommitted(NodePositionsCommittedCallback callback)
+        {
+            m_onNodePositionsCommitted = std::move(callback);
+        }
+
+        void SetOnLinkCreateRequested(LinkCreateRequestedCallback callback)
+        {
+            m_onLinkCreateRequested = std::move(callback);
+        }
+
+        void SetOnLinkDeleteRequested(LinkDeleteRequestedCallback callback)
+        {
+            m_onLinkDeleteRequested = std::move(callback);
+        }
+
+        /** Re-apply document positions after an undo/redo command. */
+        void InvalidateNodePositions()
+        {
+            m_initializedNodes.clear();
         }
 
         // Mapping between canonical NodeId (document) and ImNodes uids used for rendering
@@ -322,10 +355,15 @@ namespace Olympe
 
                                 if (startNode != 0 && endNode != 0)
                                 {
-                                    graphDoc->ConnectPins(NodeGraphTypes::PinId{startNode}, 
-                                                         NodeGraphTypes::PinId{endNode});
-                                    graphDoc->SetDirty(true);
-                                    SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Link created (mapped): " << startNode << " -> " << endNode << "\n";
+                                    const bool created = m_onLinkCreateRequested
+                                        ? m_onLinkCreateRequested(startNode, endNode)
+                                        : (graphDoc->ConnectPins(NodeGraphTypes::PinId{startNode},
+                                            NodeGraphTypes::PinId{endNode}).value != 0);
+                                    if (created)
+                                    {
+                                        graphDoc->SetDirty(true);
+                                        SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Link created (mapped): " << startNode << " -> " << endNode << "\n";
+                                    }
                                 }
                                 else
                                 {
@@ -333,6 +371,30 @@ namespace Olympe
                                                << startPinId << " -> " << endPinId << "\n";
                                 }
                             }
+                }
+            }
+
+            // ImNodes reports link destruction after EndNodeEditor().  Route it
+            // through the renderer so deletion is recorded by the shared command
+            // history instead of mutating the document directly.
+            int destroyedLinkUid = -1;
+            if (ImNodes::IsLinkDestroyed(&destroyedLinkUid))
+            {
+                const auto it = m_linkUidToDocumentLinkId.find(destroyedLinkUid);
+                if (it != m_linkUidToDocumentLinkId.end())
+                {
+                    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetActiveGraph();
+                    if (graphDoc)
+                    {
+                        const bool deleted = m_onLinkDeleteRequested
+                            ? m_onLinkDeleteRequested(it->second)
+                            : graphDoc->DisconnectLink(NodeGraphTypes::LinkId{it->second});
+                        if (deleted)
+                        {
+                            graphDoc->SetDirty(true);
+                            SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Link deleted: " << it->second << "\n";
+                        }
+                    }
                 }
             }
 
@@ -640,6 +702,11 @@ namespace Olympe
         int m_hoveredNodeCache = -1;
         int m_hoveredLinkCache = -1;
         bool m_isEditorHoveredCache = false;
+        std::map<uint32_t, ImVec2> m_dragStartPositions;
+        NodePositionsCommittedCallback m_onNodePositionsCommitted;
+        LinkCreateRequestedCallback m_onLinkCreateRequested;
+        LinkDeleteRequestedCallback m_onLinkDeleteRequested;
+        std::map<int, uint32_t> m_linkUidToDocumentLinkId;
 
         // Rendering helpers
         void RenderNodes()
@@ -671,9 +738,8 @@ namespace Olympe
                 NodeType type = StringToNodeType(node.type);
                 const NodeStyle& style = NodeStyleRegistry::Get().GetStyle(type);
 
-                ImNodes::PushColorStyle(ImNodesCol_TitleBar, style.headerColor);
-                ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, style.headerHoveredColor);
-                ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, style.headerSelectedColor);
+                ImNodesCanvasEditor::PushTwoToneNodeStyle(
+                    style.headerColor, style.headerHoveredColor, style.headerSelectedColor);
 
                 ImNodes::BeginNode(mappedUid);
 
@@ -782,9 +848,7 @@ namespace Olympe
 
                 ImNodes::EndNode();
                 
-                ImNodes::PopColorStyle();
-                ImNodes::PopColorStyle();
-                ImNodes::PopColorStyle();
+                ImNodesCanvasEditor::PopTwoToneNodeStyle();
             }
         }
 
@@ -800,6 +864,7 @@ namespace Olympe
             }
 
             const auto& links = graphDoc->GetLinks();
+            m_linkUidToDocumentLinkId.clear();
             
             // Build a map of parent node -> list of links from that parent. In GraphDocument
             // links.fromPin.value/toPin.value are canonical node IDs (not raw ImNodes attr ids).
@@ -809,7 +874,8 @@ namespace Olympe
                 outputToLinks[links[i].fromPin.value].push_back(i);
             }
 
-            // Phase 85: Sort links for each output pin based on target node Y position
+            // BT execution order is inferred from sibling Y position.  This
+            // keeps ordering live while users arrange their graph visually.
             for (auto& pair : outputToLinks)
             {
                 std::sort(pair.second.begin(), pair.second.end(), [&](size_t a, size_t b) {
@@ -879,6 +945,7 @@ namespace Olympe
                 }
 
                 ImNodes::Link(linkUid, fromAttr, toAttr);
+                m_linkUidToDocumentLinkId[linkUid] = link.id.value;
                 // Update last-registered set after links drawn
                 m_lastRegisteredAttributes.insert(fromAttr);
                 m_lastRegisteredAttributes.insert(toAttr);
@@ -974,6 +1041,7 @@ namespace Olympe
             if (graphDoc)
             {
                 auto& nodes = graphDoc->GetNodesRef();
+                const bool leftMouseDown = ImGui::IsMouseDown(ImGuiMouseButton_Left);
                 for (auto& node : nodes)
                 {
                     // Map canonical NodeId -> ImNodes uid to fetch position
@@ -983,10 +1051,26 @@ namespace Olympe
                     ImVec2 pos = ImNodes::GetNodeGridSpacePos(uid);
                     if (pos.x != node.position.x || pos.y != node.position.y)
                     {
+                        if (leftMouseDown && m_dragStartPositions.find(node.id.value) == m_dragStartPositions.end())
+                            m_dragStartPositions[node.id.value] = ImVec2(node.position.x, node.position.y);
                         node.position.x = pos.x;
                         node.position.y = pos.y;
                         graphDoc->SetDirty(true);
                     }
+                }
+
+                if (!leftMouseDown && !m_dragStartPositions.empty())
+                {
+                    std::vector<NodePositionChange> changes;
+                    for (const auto& entry : m_dragStartPositions)
+                    {
+                        const NodeData* node = graphDoc->GetNode(NodeId{entry.first});
+                        if (node && (node->position.x != entry.second.x || node->position.y != entry.second.y))
+                            changes.push_back({ entry.first, entry.second, ImVec2(node->position.x, node->position.y) });
+                    }
+                    m_dragStartPositions.clear();
+                    if (!changes.empty() && m_onNodePositionsCommitted)
+                        m_onNodePositionsCommitted(changes);
                 }
             }
         }

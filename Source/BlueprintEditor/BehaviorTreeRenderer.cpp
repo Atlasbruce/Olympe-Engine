@@ -12,6 +12,7 @@
 #include "NodeGraphPanel.h"
 #include "Framework/CanvasToolbarRenderer.h"
 #include "Framework/BlueprintDropRouting.h"
+#include "Commands/CallbackGraphCommand.h"
 #include "BTNodeGraphManager.h"
 #include "../NodeGraphCore/NodeGraphManager.h"
 #include "GraphExecutionTracer.h"
@@ -35,6 +36,7 @@ namespace Olympe {
 using GraphDocument = Olympe::NodeGraphTypes::GraphDocument;
 using NodeData = Olympe::NodeGraphTypes::NodeData;
 using NodeId = Olympe::NodeGraphTypes::NodeId;
+using Vector2 = Olympe::NodeGraphTypes::Vector2;
 
 BehaviorTreeRenderer::BehaviorTreeRenderer(NodeGraphPanel& panel)
     : m_panel(panel)
@@ -59,6 +61,15 @@ BehaviorTreeRenderer::BehaviorTreeRenderer(NodeGraphPanel& panel)
     m_document = std::make_unique<BehaviorTreeGraphDocument>(this);
     m_document->SetRenderer(this); // Phase 55: Bind this renderer wrapper to allow custom toolbar controls
     m_framework = std::make_unique<CanvasFramework>(m_document.get());
+    m_propertyPanel.SetOnPropertyEditCommitted(
+        [this](uint32_t nodeId, const std::string& propertyKey,
+               const std::string& before, const std::string& after) {
+            RecordNodePropertyEditCommand(nodeId, propertyKey, before, after);
+        });
+    m_propertyPanel.SetOnParameterAdded(
+        [this](uint32_t nodeId, const std::string& parameterKey) {
+            RecordNodeParameterAddCommand(nodeId, parameterKey);
+        });
 
     // Initialize minimap renderer (Phase 70)
     m_minimap = std::make_unique<CanvasMinimapRenderer>();
@@ -604,6 +615,18 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
     {
         m_imNodesAdapter = std::make_unique<BehaviorTreeImNodesAdapter>();
         m_imNodesAdapter->Initialize(m_graphId);
+        m_imNodesAdapter->SetOnNodePositionsCommitted(
+            [this](const std::vector<BehaviorTreeImNodesAdapter::NodePositionChange>& changes) {
+                RecordNodeMoveCommand(changes);
+            });
+        m_imNodesAdapter->SetOnLinkCreateRequested(
+            [this](uint32_t sourceNodeId, uint32_t targetNodeId) {
+                return RecordLinkCreateCommand(sourceNodeId, targetNodeId);
+            });
+        m_imNodesAdapter->SetOnLinkDeleteRequested(
+            [this](uint32_t linkId) {
+                return RecordLinkDeleteCommand(linkId);
+            });
     }
 
     // The Framework wrapper uses the adapter's dedicated ImNodes editor state.
@@ -830,15 +853,7 @@ void BehaviorTreeRenderer::RenderContextMenu()
 
             if (ImGui::MenuItem("Set as Root"))
             {
-                auto& manager = NodeGraph::NodeGraphManager::Get();
-                NodeGraphTypes::GraphDocument* graphDoc = manager.GetGraph(NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
-                if (graphDoc)
-                {
-                    // LEGACY RESTORATION: Set root node ID in metadata
-                    graphDoc->metadata["rootNodeId"] = popupNodeId;
-                    graphDoc->rootNodeId = NodeGraphTypes::NodeId{ static_cast<uint32_t>(popupNodeId) };
-                    graphDoc->SetDirty(true);
-                }
+                RecordRootNodeChangeCommand(static_cast<uint32_t>(popupNodeId));
             }
 
             // LEGACY RESTORATION: Breakpoint and Node State
@@ -850,22 +865,43 @@ void BehaviorTreeRenderer::RenderContextMenu()
                 bool isBreakpoint = node->parameters.count("breakpoint") && node->parameters.at("breakpoint") == "true";
                 if (ImGui::MenuItem("Toggle Breakpoint", "B", isBreakpoint))
                 {
-                    node->parameters["breakpoint"] = isBreakpoint ? "false" : "true";
-                    graphDoc->SetDirty(true);
+                    RecordNodePropertyEditCommand(node->id.value, "parameter:breakpoint",
+                                                  isBreakpoint ? "true" : "false",
+                                                  isBreakpoint ? "false" : "true");
                 }
 
                 bool isDisabled = node->parameters.count("disabled") && node->parameters.at("disabled") == "true";
                 if (ImGui::MenuItem("Disable Node", nullptr, isDisabled))
                 {
-                    node->parameters["disabled"] = isDisabled ? "false" : "true";
-                    graphDoc->SetDirty(true);
+                    RecordNodePropertyEditCommand(node->id.value, "parameter:disabled",
+                                                  isDisabled ? "true" : "false",
+                                                  isDisabled ? "false" : "true");
                 }
             }
 
             if (ImGui::BeginMenu("Reorder Children"))
             {
-                ImGui::MenuItem("Move Left / Up (stub)");
-                ImGui::MenuItem("Move Right / Down (stub)");
+                if (!node || node->children.empty())
+                {
+                    ImGui::TextDisabled("No children");
+                }
+                else
+                {
+                    for (size_t childIndex = 0; childIndex < node->children.size(); ++childIndex)
+                    {
+                        const NodeData* childNode = graphDoc->GetNode(node->children[childIndex]);
+                        const std::string childLabel = std::to_string(childIndex) + ": " +
+                            (childNode ? childNode->name : std::string("Missing node"));
+                        if (ImGui::BeginMenu(childLabel.c_str()))
+                        {
+                            if (ImGui::MenuItem("Move Up", nullptr, false, childIndex > 0))
+                                RecordChildReorderCommand(node->id.value, childIndex, childIndex - 1);
+                            if (ImGui::MenuItem("Move Down", nullptr, false, childIndex + 1 < node->children.size()))
+                                RecordChildReorderCommand(node->id.value, childIndex, childIndex + 1);
+                            ImGui::EndMenu();
+                        }
+                    }
+                }
                 ImGui::EndMenu();
             }
 
@@ -879,7 +915,7 @@ void BehaviorTreeRenderer::RenderContextMenu()
                     SYSTEM_LOG << "[BehaviorTreeRenderer] Delete Node requested canonicalId=" << popupNodeId << std::endl;
                     if (popupNodeId != -1)
                     {
-                        bool ok = graphDoc->DeleteNode(NodeGraphTypes::NodeId{ static_cast<uint32_t>(popupNodeId) });
+                        bool ok = RecordNodeDeleteCommand(static_cast<uint32_t>(popupNodeId));
                         SYSTEM_LOG << "[BehaviorTreeRenderer] DeleteNode result=" << ok << " for canonicalId=" << popupNodeId << std::endl;
                     }
                     else
@@ -906,9 +942,7 @@ void BehaviorTreeRenderer::RenderContextMenu()
                     const auto& links = graphDoc->GetLinks();
                     if (popupLinkId >= 0 && static_cast<size_t>(popupLinkId) < links.size())
                     {
-                        NodeGraphTypes::LinkId lid{ static_cast<uint32_t>(links[popupLinkId].id.value) };
-                        graphDoc->DisconnectLink(lid);
-                        graphDoc->SetDirty(true);
+                        RecordLinkDeleteCommand(links[popupLinkId].id.value);
                     }
                 }
             }
@@ -1197,11 +1231,31 @@ void BehaviorTreeRenderer::AcceptNodeDrop(const std::string& nodeType, float can
     newNode.position.x = canvasX;
     newNode.position.y = canvasY;
 
-    // Add to nodes vector
-    nodes.push_back(newNode);
+    // The framework owns history; BT supplies only its graph-specific create
+    // and delete operations. Redo restores the exact same canonical node id.
+    const NodeId createdNodeId = newNode.id;
+    const bool created = m_framework && m_framework->ExecuteCommand(
+        std::unique_ptr<GraphCommand>(new CallbackGraphCommand(
+            "Create BehaviorTree Node",
+            [graphDoc, newNode]() mutable -> bool {
+                if (graphDoc->GetNode(newNode.id))
+                    return false;
+                graphDoc->GetNodesRef().push_back(newNode);
+                graphDoc->SetDirty(true);
+                return true;
+            },
+            [graphDoc, createdNodeId]() -> bool {
+                const bool removed = graphDoc->DeleteNode(createdNodeId);
+                if (removed)
+                    graphDoc->SetDirty(true);
+                return removed;
+            })));
 
-    // Mark graph as dirty so Save button becomes active
-    graphDoc->SetDirty(true);
+    if (!created)
+    {
+        SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] ERROR: Could not record create-node command\n";
+        return;
+    }
 
     // PHASE 61 DIAGNOSTIC: Verify node was added
     SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] DIAGNOSTIC: nodeCount_after=" 
@@ -1210,6 +1264,348 @@ void BehaviorTreeRenderer::AcceptNodeDrop(const std::string& nodeType, float can
 
     SYSTEM_LOG << "[BehaviorTreeRenderer::AcceptNodeDrop] SUCCESS: Created node #" << newNodeId
                << " (type=" << nodeType << ", name=" << newNode.name << ")\n";
+}
+
+bool BehaviorTreeRenderer::RecordLinkCreateCommand(uint32_t sourceNodeId, uint32_t targetNodeId)
+{
+    if (!m_framework || sourceNodeId == 0 || targetNodeId == 0 || sourceNodeId == targetNodeId)
+        return false;
+
+    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(
+        NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+    NodeData* sourceNode = graphDoc ? graphDoc->GetNode(NodeId{sourceNodeId}) : nullptr;
+    if (!graphDoc || !sourceNode || !graphDoc->GetNode(NodeId{targetNodeId}))
+        return false;
+
+    const std::vector<NodeId> childrenBefore = sourceNode->children;
+    std::vector<NodeId> childrenAfter = childrenBefore;
+    if (std::find(childrenAfter.begin(), childrenAfter.end(), NodeId{targetNodeId}) == childrenAfter.end())
+        childrenAfter.push_back(NodeId{targetNodeId});
+    const auto linkId = std::make_shared<NodeGraphTypes::LinkId>();
+    return m_framework->ExecuteCommand(std::unique_ptr<GraphCommand>(new CallbackGraphCommand(
+        "Create BehaviorTree Link",
+        [graphDoc, sourceNodeId, targetNodeId, childrenAfter, linkId]() -> bool {
+            *linkId = graphDoc->ConnectPins(
+                NodeGraphTypes::PinId{sourceNodeId}, NodeGraphTypes::PinId{targetNodeId});
+            NodeData* source = graphDoc->GetNode(NodeId{sourceNodeId});
+            if (linkId->value == 0 || !source)
+                return false;
+            source->children = childrenAfter;
+            graphDoc->SetDirty(true);
+            return true;
+        },
+        [graphDoc, sourceNodeId, childrenBefore, linkId]() -> bool {
+            NodeData* source = graphDoc->GetNode(NodeId{sourceNodeId});
+            if (!source || linkId->value == 0 || !graphDoc->DisconnectLink(*linkId))
+                return false;
+            source->children = childrenBefore;
+            graphDoc->SetDirty(true);
+            return true;
+        })));
+}
+
+bool BehaviorTreeRenderer::RecordLinkDeleteCommand(uint32_t linkId)
+{
+    if (!m_framework || linkId == 0)
+        return false;
+
+    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(
+        NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+    if (!graphDoc)
+        return false;
+
+    const NodeGraphTypes::LinkData* existingLink = graphDoc->GetLink(NodeGraphTypes::LinkId{linkId});
+    if (!existingLink)
+        return false;
+
+    const NodeGraphTypes::LinkData linkSnapshot = *existingLink;
+    NodeData* sourceNode = graphDoc->GetNode(NodeId{linkSnapshot.fromPin.value});
+    if (!sourceNode)
+        return false;
+    const std::vector<NodeId> childrenBefore = sourceNode->children;
+    std::vector<NodeId> childrenAfter = childrenBefore;
+    childrenAfter.erase(std::remove(childrenAfter.begin(), childrenAfter.end(),
+                                    NodeId{linkSnapshot.toPin.value}), childrenAfter.end());
+    const auto activeLinkId = std::make_shared<NodeGraphTypes::LinkId>(linkSnapshot.id);
+    return m_framework->ExecuteCommand(std::unique_ptr<GraphCommand>(new CallbackGraphCommand(
+        "Delete BehaviorTree Link",
+        [graphDoc, linkSnapshot, childrenAfter, activeLinkId]() -> bool {
+            NodeData* source = graphDoc->GetNode(NodeId{linkSnapshot.fromPin.value});
+            if (!source || activeLinkId->value == 0 || !graphDoc->DisconnectLink(*activeLinkId))
+                return false;
+            source->children = childrenAfter;
+            graphDoc->SetDirty(true);
+            return true;
+        },
+        [graphDoc, linkSnapshot, childrenBefore, activeLinkId]() -> bool {
+            *activeLinkId = graphDoc->ConnectPins(linkSnapshot.fromPin, linkSnapshot.toPin);
+            if (activeLinkId->value == 0)
+                return false;
+
+            NodeGraphTypes::LinkData* restoredLink = graphDoc->GetLink(*activeLinkId);
+            if (!restoredLink)
+                return false;
+
+            restoredLink->fromPinName = linkSnapshot.fromPinName;
+            restoredLink->toPinName = linkSnapshot.toPinName;
+            restoredLink->fromAttrUid = linkSnapshot.fromAttrUid;
+            restoredLink->toAttrUid = linkSnapshot.toAttrUid;
+            NodeData* source = graphDoc->GetNode(NodeId{linkSnapshot.fromPin.value});
+            if (!source)
+                return false;
+            source->children = childrenBefore;
+            graphDoc->SetDirty(true);
+            return true;
+        })));
+}
+
+bool BehaviorTreeRenderer::RecordNodeDeleteCommand(uint32_t nodeId)
+{
+    return RecordNodeDeleteCommand(std::vector<uint32_t>{nodeId});
+}
+
+bool BehaviorTreeRenderer::RecordNodeDeleteCommand(const std::vector<uint32_t>& nodeIds)
+{
+    if (!m_framework || nodeIds.empty())
+        return false;
+
+    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(
+        NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+    if (!graphDoc)
+        return false;
+
+    std::vector<uint32_t> existingNodeIds;
+    for (uint32_t nodeId : nodeIds)
+    {
+        if (nodeId != 0 && graphDoc->GetNode(NodeId{nodeId}) &&
+            std::find(existingNodeIds.begin(), existingNodeIds.end(), nodeId) == existingNodeIds.end())
+        {
+            existingNodeIds.push_back(nodeId);
+        }
+    }
+    if (existingNodeIds.empty())
+        return false;
+
+    // A node deletion also removes its incident links and child references.  Keep
+    // a document-level snapshot so Undo restores that topology exactly.
+    const std::vector<NodeData> nodesBefore = graphDoc->GetNodes();
+    const std::vector<NodeGraphTypes::LinkData> linksBefore = graphDoc->GetLinks();
+    const NodeId rootBefore = graphDoc->rootNodeId;
+    const json metadataBefore = graphDoc->metadata;
+
+    return m_framework->ExecuteCommand(std::unique_ptr<GraphCommand>(new CallbackGraphCommand(
+        existingNodeIds.size() == 1 ? "Delete BehaviorTree Node" : "Delete BehaviorTree Nodes",
+        [graphDoc, existingNodeIds]() -> bool {
+            bool deletedAny = false;
+            for (uint32_t nodeId : existingNodeIds)
+            {
+                if (graphDoc->DeleteNode(NodeId{nodeId}))
+                    deletedAny = true;
+                if (graphDoc->rootNodeId.value == nodeId)
+                {
+                    graphDoc->rootNodeId = NodeId{0};
+                    graphDoc->metadata["rootNodeId"] = 0;
+                }
+            }
+            return deletedAny;
+        },
+        [graphDoc, nodesBefore, linksBefore, rootBefore, metadataBefore]() -> bool {
+            graphDoc->GetNodesRef() = nodesBefore;
+            graphDoc->GetLinksRef() = linksBefore;
+            graphDoc->rootNodeId = rootBefore;
+            graphDoc->metadata = metadataBefore;
+            graphDoc->SetDirty(true);
+            return true;
+        })));
+}
+
+void BehaviorTreeRenderer::RecordRootNodeChangeCommand(uint32_t nodeId)
+{
+    if (!m_framework || nodeId == 0)
+        return;
+
+    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(
+        NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+    if (!graphDoc || !graphDoc->GetNode(NodeId{nodeId}) || graphDoc->rootNodeId.value == nodeId)
+        return;
+
+    const NodeId rootBefore = graphDoc->rootNodeId;
+    const json metadataBefore = graphDoc->metadata;
+    m_framework->ExecuteCommand(std::unique_ptr<GraphCommand>(new CallbackGraphCommand(
+        "Set BehaviorTree Root",
+        [graphDoc, nodeId]() -> bool {
+            graphDoc->rootNodeId = NodeId{nodeId};
+            graphDoc->metadata["rootNodeId"] = static_cast<int>(nodeId);
+            graphDoc->SetDirty(true);
+            return true;
+        },
+        [graphDoc, rootBefore, metadataBefore]() -> bool {
+            graphDoc->rootNodeId = rootBefore;
+            graphDoc->metadata = metadataBefore;
+            graphDoc->SetDirty(true);
+            return true;
+        })));
+}
+
+void BehaviorTreeRenderer::RecordNodePropertyEditCommand(uint32_t nodeId,
+                                                           const std::string& propertyKey,
+                                                           const std::string& before,
+                                                           const std::string& after)
+{
+    if (!m_framework || nodeId == 0 || propertyKey.empty() || before == after)
+        return;
+
+    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(
+        NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+    if (!graphDoc)
+        return;
+
+    const auto applyValue = [graphDoc, nodeId, propertyKey](const std::string& value) -> bool {
+        NodeData* node = graphDoc->GetNode(NodeId{nodeId});
+        if (!node)
+            return false;
+
+        if (propertyKey == "name")
+            node->name = value;
+        else if (propertyKey.compare(0, 10, "parameter:") == 0)
+            node->parameters[propertyKey.substr(10)] = value;
+        else
+            return false;
+
+        graphDoc->SetDirty(true);
+        return true;
+    };
+
+    m_framework->ExecuteCommand(std::unique_ptr<GraphCommand>(new CallbackGraphCommand(
+        "Edit BehaviorTree Node Property",
+        [applyValue, after]() -> bool { return applyValue(after); },
+        [applyValue, before]() -> bool { return applyValue(before); })));
+}
+
+void BehaviorTreeRenderer::RecordNodeParameterAddCommand(uint32_t nodeId, const std::string& parameterKey)
+{
+    if (!m_framework || nodeId == 0 || parameterKey.empty())
+        return;
+
+    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(
+        NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+    if (!graphDoc || !graphDoc->GetNode(NodeId{nodeId}))
+        return;
+
+    m_framework->ExecuteCommand(std::unique_ptr<GraphCommand>(new CallbackGraphCommand(
+        "Add BehaviorTree Node Parameter",
+        [graphDoc, nodeId, parameterKey]() -> bool {
+            NodeData* node = graphDoc->GetNode(NodeId{nodeId});
+            if (!node)
+                return false;
+            node->parameters[parameterKey] = "";
+            graphDoc->SetDirty(true);
+            return true;
+        },
+        [graphDoc, nodeId, parameterKey]() -> bool {
+            NodeData* node = graphDoc->GetNode(NodeId{nodeId});
+            if (!node)
+                return false;
+            node->parameters.erase(parameterKey);
+            graphDoc->SetDirty(true);
+            return true;
+        })));
+}
+
+void BehaviorTreeRenderer::RecordChildReorderCommand(uint32_t parentNodeId, size_t fromIndex, size_t toIndex)
+{
+    if (!m_framework || fromIndex == toIndex)
+        return;
+
+    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(
+        NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+    NodeData* parentNode = graphDoc ? graphDoc->GetNode(NodeId{parentNodeId}) : nullptr;
+    if (!parentNode || fromIndex >= parentNode->children.size() || toIndex >= parentNode->children.size())
+        return;
+
+    const std::vector<NodeId> before = parentNode->children;
+    std::vector<NodeId> after = before;
+    const NodeId movedChild = after[fromIndex];
+    after.erase(after.begin() + static_cast<std::ptrdiff_t>(fromIndex));
+    after.insert(after.begin() + static_cast<std::ptrdiff_t>(toIndex), movedChild);
+
+    // BT execution order is historically inferred from sibling Y positions.
+    // Keep that automatic mechanism authoritative by swapping the two sibling
+    // positions along with the hierarchy order requested by the context menu.
+    const NodeId displacedChild = before[toIndex];
+    NodeData* movedNode = graphDoc->GetNode(movedChild);
+    NodeData* displacedNode = graphDoc->GetNode(displacedChild);
+    if (!movedNode || !displacedNode)
+        return;
+    const Vector2 movedPositionBefore = movedNode->position;
+    const Vector2 displacedPositionBefore = displacedNode->position;
+
+    const auto applyOrder = [graphDoc, parentNodeId, movedChild, displacedChild]
+        (const std::vector<NodeId>& children, const Vector2& movedPosition, const Vector2& displacedPosition) -> bool {
+        NodeData* node = graphDoc->GetNode(NodeId{parentNodeId});
+        NodeData* moved = graphDoc->GetNode(movedChild);
+        NodeData* displaced = graphDoc->GetNode(displacedChild);
+        if (!node || !moved || !displaced)
+            return false;
+        node->children = children;
+        moved->position = movedPosition;
+        displaced->position = displacedPosition;
+        graphDoc->SetDirty(true);
+        return true;
+    };
+
+    m_framework->ExecuteCommand(std::unique_ptr<GraphCommand>(new CallbackGraphCommand(
+        "Reorder BehaviorTree Children",
+        [applyOrder, after, movedPositionBefore, displacedPositionBefore]() -> bool {
+            return applyOrder(after, displacedPositionBefore, movedPositionBefore);
+        },
+        [applyOrder, before, movedPositionBefore, displacedPositionBefore]() -> bool {
+            return applyOrder(before, movedPositionBefore, displacedPositionBefore);
+        })));
+
+    if (m_imNodesAdapter)
+        m_imNodesAdapter->InvalidateNodePositions();
+}
+
+void BehaviorTreeRenderer::RecordNodeMoveCommand(
+    const std::vector<BehaviorTreeImNodesAdapter::NodePositionChange>& changes)
+{
+    if (!m_framework || changes.empty())
+        return;
+
+    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(
+        NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+    if (!graphDoc)
+        return;
+
+    const bool recorded = m_framework->ExecuteCommand(
+        std::unique_ptr<GraphCommand>(new CallbackGraphCommand(
+            "Move BehaviorTree Node(s)",
+            [graphDoc, changes]() -> bool {
+                for (const auto& change : changes)
+                {
+                    NodeData* node = graphDoc->GetNode(NodeId{change.nodeId});
+                    if (!node) return false;
+                    node->position.x = change.after.x;
+                    node->position.y = change.after.y;
+                }
+                graphDoc->SetDirty(true);
+                return true;
+            },
+            [graphDoc, changes]() -> bool {
+                for (const auto& change : changes)
+                {
+                    NodeData* node = graphDoc->GetNode(NodeId{change.nodeId});
+                    if (!node) return false;
+                    node->position.x = change.before.x;
+                    node->position.y = change.before.y;
+                }
+                graphDoc->SetDirty(true);
+                return true;
+            })));
+
+    if (!recorded)
+        SYSTEM_LOG << "[BehaviorTreeRenderer] Failed to record node move command\n";
 }
 
 void BehaviorTreeRenderer::HandleKeyboardShortcuts()
@@ -1222,27 +1618,36 @@ void BehaviorTreeRenderer::HandleKeyboardShortcuts()
         if (m_imNodesAdapter)
         {
             const std::vector<int> selectedIds = m_imNodesAdapter->GetSelectedCanonicalNodeIds();
-            const int selectedNodeId = selectedIds.empty() ? -1 : selectedIds[0];
-            if (selectedNodeId != -1)
+            std::vector<uint32_t> selectedNodeIds;
+            for (int selectedId : selectedIds)
             {
-                // Retrieve the active graph
-                NodeGraphTypes::GraphId id{ static_cast<uint32_t>(m_graphId) };
-                NodeGraphTypes::GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(id);
-                if (graphDoc)
-                {
-                    if (graphDoc->DeleteNode(NodeGraphTypes::NodeId{ static_cast<uint32_t>(selectedNodeId) }))
-                    {
-                        SYSTEM_LOG << "[BehaviorTreeRenderer] Deleted node #" << selectedNodeId << "\n";
-                        m_propertyPanel.ClearSelection();
-                        graphDoc->SetDirty(true);
-                    }
-                }
+                if (selectedId >= 0)
+                    selectedNodeIds.push_back(static_cast<uint32_t>(selectedId));
+            }
+            if (RecordNodeDeleteCommand(selectedNodeIds))
+            {
+                SYSTEM_LOG << "[BehaviorTreeRenderer] Deleted " << selectedNodeIds.size() << " node(s)\n";
+                m_propertyPanel.ClearSelection();
             }
         }
     }
 
     if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl))
     {
+        if (ImGui::IsKeyPressed(ImGuiKey_Z) && m_framework)
+        {
+            if (m_framework->Undo() && m_imNodesAdapter)
+                m_imNodesAdapter->InvalidateNodePositions();
+            m_propertyPanel.ClearSelection();
+            return;
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey_Y) && m_framework)
+        {
+            if (m_framework->Redo() && m_imNodesAdapter)
+                m_imNodesAdapter->InvalidateNodePositions();
+            m_propertyPanel.ClearSelection();
+            return;
+        }
         if (ImGui::IsKeyPressed(ImGuiKey_A))
         {
             // LEGACY RESTORATION: Select All logic

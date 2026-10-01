@@ -212,6 +212,7 @@ bool CanvasFramework::LoadDocument(const std::string& filePath)
 
     if (success)
     {
+        ClearCommandHistory();
         SetStatusMessage("Document loaded: " + filePath, 3.0f);
         SYSTEM_LOG << "[CanvasFramework] Successfully loaded document\n";
     }
@@ -223,6 +224,39 @@ bool CanvasFramework::LoadDocument(const std::string& filePath)
 
     return success;
 }
+
+bool CanvasFramework::ExecuteCommand(GraphCommandPtr command)
+{
+    if (!m_commandHistory.ExecuteCommand(std::move(command)))
+        return false;
+    if (m_document)
+        m_document->OnDocumentModified();
+    return true;
+}
+
+bool CanvasFramework::Undo()
+{
+    if (!m_commandHistory.Undo())
+        return false;
+    if (m_document)
+        m_document->OnDocumentModified();
+    return true;
+}
+
+bool CanvasFramework::Redo()
+{
+    if (!m_commandHistory.Redo())
+        return false;
+    if (m_document)
+        m_document->OnDocumentModified();
+    return true;
+}
+
+bool CanvasFramework::CanUndo() const { return m_commandHistory.CanUndo(); }
+bool CanvasFramework::CanRedo() const { return m_commandHistory.CanRedo(); }
+std::string CanvasFramework::GetUndoDescription() const { return m_commandHistory.GetUndoDescription(); }
+std::string CanvasFramework::GetRedoDescription() const { return m_commandHistory.GetRedoDescription(); }
+void CanvasFramework::ClearCommandHistory() { m_commandHistory.Clear(); }
 
 bool CanvasFramework::IsDirty() const
 {

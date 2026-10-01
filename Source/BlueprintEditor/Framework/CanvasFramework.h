@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include "../Commands/CommandHistory.h"
 
 namespace Olympe {
 
@@ -218,6 +219,16 @@ public:
      */
     void OpenBrowseDialog();
 
+    // ========== COMMAND HISTORY ==========
+    bool ExecuteCommand(GraphCommandPtr command);
+    bool Undo();
+    bool Redo();
+    bool CanUndo() const;
+    bool CanRedo() const;
+    std::string GetUndoDescription() const;
+    std::string GetRedoDescription() const;
+    void ClearCommandHistory();
+
     // ========== FEATURE QUERIES ==========
 
     /**
@@ -246,6 +257,7 @@ public:
             // ========== STATE ==========
             IGraphDocument* m_document;                    ///< Non-owning reference to document
             CanvasToolbarRenderer* m_toolbar;              ///< Owned toolbar instance
+            CommandHistory m_commandHistory;                ///< Shared graph edit history
     
     // ========== LAYOUT ==========
     float m_canvasX = 0.0f;                        ///< Canvas layout X
