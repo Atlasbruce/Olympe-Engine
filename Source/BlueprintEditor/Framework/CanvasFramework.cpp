@@ -13,6 +13,14 @@
 
 namespace Olympe {
 
+namespace {
+GraphClipboardPayloadPtr& SharedGraphClipboardPayload()
+{
+    static GraphClipboardPayloadPtr payload;
+    return payload;
+}
+}
+
 // ============================================================================
 // Constructor / Destructor
 // ============================================================================
@@ -257,6 +265,27 @@ bool CanvasFramework::CanRedo() const { return m_commandHistory.CanRedo(); }
 std::string CanvasFramework::GetUndoDescription() const { return m_commandHistory.GetUndoDescription(); }
 std::string CanvasFramework::GetRedoDescription() const { return m_commandHistory.GetRedoDescription(); }
 void CanvasFramework::ClearCommandHistory() { m_commandHistory.Clear(); }
+
+void CanvasFramework::SetClipboardPayload(GraphClipboardPayloadPtr payload)
+{
+    SharedGraphClipboardPayload() = std::move(payload);
+}
+
+GraphClipboardPayloadPtr CanvasFramework::GetClipboardPayload() const
+{
+    return SharedGraphClipboardPayload();
+}
+
+bool CanvasFramework::HasClipboardPayload(const char* graphTypeId) const
+{
+    const GraphClipboardPayloadPtr payload = SharedGraphClipboardPayload();
+    return payload && graphTypeId && std::string(payload->GetGraphTypeId()) == graphTypeId;
+}
+
+void CanvasFramework::ClearClipboardPayload()
+{
+    SharedGraphClipboardPayload().reset();
+}
 
 bool CanvasFramework::IsDirty() const
 {

@@ -135,8 +135,8 @@
         "name": "Root",
         "parameters": {},
         "position": {
-          "x": 183,
-          "y": 401
+          "x": 50,
+          "y": 386
         },
         "type": "BT_Root"
       },
@@ -146,8 +146,8 @@
         "name": "MoveToTarget",
         "parameters": {},
         "position": {
-          "x": 918.74,
-          "y": 385.503
+          "x": 1130,
+          "y": 242
         },
         "type": "BT_MoveToTarget"
       },
@@ -157,8 +157,8 @@
         "name": "Idle",
         "parameters": {},
         "position": {
-          "x": 694,
-          "y": 900
+          "x": 770,
+          "y": 722
         },
         "type": "BT_Idle"
       },
@@ -172,8 +172,8 @@
         "name": "Zombie Routine",
         "parameters": {},
         "position": {
-          "x": 376,
-          "y": 401
+          "x": 410,
+          "y": 386
         },
         "type": "BT_Selector"
       },
@@ -187,8 +187,8 @@
         "name": "Detect Player",
         "parameters": {},
         "position": {
-          "x": 665,
-          "y": 305
+          "x": 770,
+          "y": 146
         },
         "type": "BT_Sequence"
       },
@@ -200,8 +200,8 @@
           "conditionType": ""
         },
         "position": {
-          "x": 915,
-          "y": 125
+          "x": 1130,
+          "y": 50
         },
         "type": "BT_HasTarget"
       },
@@ -213,8 +213,8 @@
           "actionType": ""
         },
         "position": {
-          "x": 920,
-          "y": 255
+          "x": 1130,
+          "y": 146
         },
         "type": "BT_SetMoveGoalToTarget"
       },
@@ -222,14 +222,15 @@
         "children": [
           32,
           33,
+          36,
           35
         ],
         "id": 31,
         "name": "Zombie Wander",
         "parameters": {},
         "position": {
-          "x": 673,
-          "y": 581
+          "x": 770,
+          "y": 482
         },
         "type": "BT_Selector"
       },
@@ -239,8 +240,8 @@
         "name": "Choose Random Navigable Point",
         "parameters": {},
         "position": {
-          "x": 917,
-          "y": 511
+          "x": 1130,
+          "y": 338
         },
         "type": "BT_ChooseRandomNavigablePoint"
       },
@@ -250,8 +251,8 @@
         "name": "Request Pathfinding",
         "parameters": {},
         "position": {
-          "x": 920,
-          "y": 607
+          "x": 1130,
+          "y": 434
         },
         "type": "BT_RequestPathfinding"
       },
@@ -261,8 +262,8 @@
         "name": "Wait Random Time",
         "parameters": {},
         "position": {
-          "x": 923,
-          "y": 806
+          "x": 1130,
+          "y": 626
         },
         "type": "BT_WaitRandomTime"
       },
@@ -272,8 +273,8 @@
         "name": "Follow Path",
         "parameters": {},
         "position": {
-          "x": 936,
-          "y": 709
+          "x": 1130,
+          "y": 530
         },
         "type": "BT_FollowPath"
       }
@@ -281,7 +282,7 @@
     "rootNodeId": 1
   },
   "editorState": {
-    "layoutDirection": "TopToBottom",
+    "layoutDirection": "LeftToRight",
     "scrollOffset": {
       "x": 0,
       "y": 0

@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include "../Commands/CommandHistory.h"
+#include "GraphClipboard.h"
 
 namespace Olympe {
 
@@ -228,6 +229,12 @@ public:
     std::string GetUndoDescription() const;
     std::string GetRedoDescription() const;
     void ClearCommandHistory();
+
+    // ========== GRAPH CLIPBOARD ==========
+    void SetClipboardPayload(GraphClipboardPayloadPtr payload);
+    GraphClipboardPayloadPtr GetClipboardPayload() const;
+    bool HasClipboardPayload(const char* graphTypeId) const;
+    void ClearClipboardPayload();
 
     // ========== FEATURE QUERIES ==========
 

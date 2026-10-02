@@ -97,14 +97,15 @@ namespace Olympe
     {
         ImVec2 pan = GetPan();
         ImVec2 canvasPos = ImVec2(screenPos.x - m_canvasScreenPos.x, screenPos.y - m_canvasScreenPos.y);
-        ImVec2 result = ImVec2(canvasPos.x - pan.x, canvasPos.y - pan.y);
+        ImVec2 result = ImVec2((canvasPos.x - pan.x) / m_zoom, (canvasPos.y - pan.y) / m_zoom);
         return result;
     }
 
     ImVec2 ImNodesCanvasEditor::CanvasToScreen(const ImVec2& canvasPos) const
     {
         ImVec2 pan = GetPan();
-        ImVec2 result = ImVec2(canvasPos.x + pan.x + m_canvasScreenPos.x, canvasPos.y + pan.y + m_canvasScreenPos.y);
+        ImVec2 result = ImVec2(canvasPos.x * m_zoom + pan.x + m_canvasScreenPos.x,
+                               canvasPos.y * m_zoom + pan.y + m_canvasScreenPos.y);
         return result;
     }
 
@@ -186,7 +187,7 @@ namespace Olympe
         // Apply canvas-specific parameters
         config.canvasPos = m_canvasScreenPos;
         config.canvasSize = m_canvasSize;
-        config.zoom = 1.0f;  // imnodes always 1.0x
+        config.zoom = m_zoom;
         config.offsetX = GetPan().x;
         config.offsetY = GetPan().y;
 
@@ -203,7 +204,7 @@ namespace Olympe
 
         config.canvasPos = m_canvasScreenPos;
         config.canvasSize = m_canvasSize;
-        config.zoom = 1.0f;  // imnodes always 1.0x
+        config.zoom = m_zoom;
         config.offsetX = GetPan().x;
         config.offsetY = GetPan().y;
 

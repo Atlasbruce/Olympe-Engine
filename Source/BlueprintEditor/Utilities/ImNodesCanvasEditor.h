@@ -165,7 +165,7 @@ namespace Olympe
          * @brief Get current zoom level
          * @return Always 1.0f (imnodes doesn't support zoom)
          */
-        virtual float GetZoom() const override { return 1.0f; }
+        virtual float GetZoom() const override { return m_zoom; }
 
         /**
          * @brief Set zoom level (no-op for imnodes)
@@ -174,9 +174,8 @@ namespace Olympe
          */
         virtual void SetZoom(float scale, const ImVec2* zoomCenter = nullptr) override
         {
-            (void)scale;
             (void)zoomCenter;
-            // No-op: imnodes doesn't support zoom
+            m_zoom = scale < 0.35f ? 0.35f : (scale > 2.25f ? 2.25f : scale);
         }
 
         /**
@@ -184,23 +183,21 @@ namespace Olympe
          */
         virtual void ZoomBy(float factor, const ImVec2* zoomCenter = nullptr) override
         {
-            (void)factor;
-            (void)zoomCenter;
-            // No-op: imnodes doesn't support zoom
+            SetZoom(m_zoom * factor, zoomCenter);
         }
 
         /**
          * @brief Get zoom limits
          * @return {1.0f, 1.0f} (fixed, no zoom support)
          */
-        virtual ImVec2 GetZoomLimits() const override { return ImVec2(1.0f, 1.0f); }
+        virtual ImVec2 GetZoomLimits() const override { return ImVec2(0.35f, 2.25f); }
 
         /**
          * @brief Reset zoom to 1.0x (no-op, already 1.0f)
          */
         virtual void ResetZoom() override
         {
-            // No-op: already at 1.0f
+            m_zoom = 1.0f;
         }
 
         /**
@@ -209,7 +206,7 @@ namespace Olympe
         virtual void ResetView() override
         {
             ResetPan();
-            // Zoom is already 1.0f, no need to reset
+            ResetZoom();
         }
 
         // ====================================================================
@@ -378,6 +375,7 @@ namespace Olympe
         ImNodesEditorContext* m_imnodesContext;
         ImNodesContext* m_globalContext;
         bool m_gridVisible;
+        float m_zoom = 1.0f;
 
         // Minimap configuration
         bool m_minimapVisible = true;

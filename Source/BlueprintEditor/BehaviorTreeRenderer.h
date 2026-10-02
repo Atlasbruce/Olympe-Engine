@@ -168,6 +168,7 @@ private:
       bool m_minimapVisible = true;
       float m_minimapSize = 0.15f;
       MinimapPosition m_minimapPosition = MinimapPosition::TopRight;
+      unsigned int m_pasteSequence = 0;
 
     // Layout rendering helpers
     void RenderLayoutWithTabs();
@@ -195,6 +196,10 @@ private:
                                        const std::string& before, const std::string& after);
     void RecordNodeParameterAddCommand(uint32_t nodeId, const std::string& parameterKey);
     void RecordChildReorderCommand(uint32_t parentNodeId, size_t fromIndex, size_t toIndex);
+    bool RecordAutoLayoutCommand();
+    bool RecordLayoutDirectionChangeCommand(NodeGraphTypes::LayoutDirection direction);
+    void CopySelectedNodesToClipboard();
+    void PasteClipboardNodes();
 
     /**
      * @brief Render context menu for canvas and nodes

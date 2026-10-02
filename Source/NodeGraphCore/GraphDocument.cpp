@@ -980,19 +980,25 @@ GraphDocument GraphDocument::FromJson(const json& j)
 
 bool GraphDocument::AutoLayout(const AutoLayoutConfig& config)
 {
-    // Validate layout direction
-    if (config.direction == LayoutDirection::LeftToRight || 
-        config.direction == LayoutDirection::RightToLeft)
-    {
-        SYSTEM_LOG << "[GraphDocument] AutoLayout failed: LeftToRight and RightToLeft not yet implemented" << std::endl;
-        return false;
-    }
-    
-    // Validate graph has root node
+    // Validate graph has root node. Newly authored BT documents can contain a
+    // BT_Root node before their metadata has been saved for the first time;
+    // adopt that canonical node so auto-layout works before the initial save.
     if (rootNodeId.value == 0)
     {
-        SYSTEM_LOG << "[GraphDocument] AutoLayout failed: No root node defined" << std::endl;
-        return false;
+        for (const NodeData& node : m_nodes)
+        {
+            if (node.type == "BT_Root")
+            {
+                rootNodeId = node.id;
+                metadata["rootNodeId"] = static_cast<int>(node.id.value);
+                break;
+            }
+        }
+        if (rootNodeId.value == 0)
+        {
+            SYSTEM_LOG << "[GraphDocument] AutoLayout failed: No root node defined" << std::endl;
+            return false;
+        }
     }
     
     if (m_nodes.empty())
@@ -1048,8 +1054,57 @@ float GraphDocument::AutoLayoutNode(
     {
         return config.nodeWidth + config.horizontalSpacing;
     }
+
+    // The core has no ImGui dependency, so estimate the visual width from the
+    // title.  This keeps long leaf labels from overlapping while allowing
+    // ordinary sibling branches to remain compact.
+    const float estimatedNodeWidth = (std::max)(
+        config.nodeWidth,
+        (std::min)(360.0f, 30.0f + static_cast<float>(node->name.size()) * 7.5f));
     
-    // Calculate Y position based on depth
+    // Horizontal hierarchies use the X axis for depth and Y for siblings.
+    // Keeping this branch here (rather than rotating positions afterwards)
+    // gives a stable, non-overlapping layout in either presentation mode.
+    const bool horizontalFlow = config.direction == LayoutDirection::LeftToRight ||
+                                config.direction == LayoutDirection::RightToLeft;
+    if (horizontalFlow)
+    {
+        const float direction = config.direction == LayoutDirection::LeftToRight ? 1.0f : -1.0f;
+        const float nodeX = startX + direction * static_cast<float>(depth) * config.horizontalSpacing;
+        float totalChildrenHeight = 0.0f;
+        float childY = startY;
+
+        for (NodeId childId : node->children)
+        {
+            const float childHeight = AutoLayoutNode(childId, config, startX, childY, depth + 1, visited);
+            totalChildrenHeight += childHeight;
+            childY += childHeight;
+        }
+
+        float nodeY = startY;
+        if (!node->children.empty())
+        {
+            const float childrenSpan = totalChildrenHeight - config.verticalSpacing;
+            nodeY = startY + childrenSpan * 0.5f - config.nodeHeight * 0.5f;
+        }
+
+        UpdateNodePosition(nodeId, Vector2{ nodeX, nodeY });
+
+        // Decorators remain adjacent to their host instead of being treated as
+        // another tree level, preserving the established BT visual semantics.
+        if (node->decoratorChild.value != 0)
+        {
+            AutoLayoutNode(node->decoratorChild, config,
+                           startX + direction * config.horizontalSpacing, nodeY,
+                           depth, visited);
+        }
+
+        return totalChildrenHeight > 0.0f
+            ? totalChildrenHeight
+            : config.nodeHeight + config.verticalSpacing;
+    }
+
+    // Vertical hierarchies use the Y axis for depth and X for siblings.
     float nodeY = 0.0f;
     if (config.direction == LayoutDirection::TopToBottom)
     {
@@ -1092,7 +1147,7 @@ float GraphDocument::AutoLayoutNode(
         // Each child returns (width + spacing), so last child has trailing spacing
         // Subtract one spacing to get the actual span occupied by children
         float childrenSpan = totalChildrenWidth - config.horizontalSpacing;
-        nodeX = startX + childrenSpan * 0.5f - config.nodeWidth * 0.5f;
+        nodeX = startX + childrenSpan * 0.5f - estimatedNodeWidth * 0.5f;
     }
     
     // Apply position to node
@@ -1104,7 +1159,7 @@ float GraphDocument::AutoLayoutNode(
     // Handle decorator child (place to the right of parent)
     if (node->decoratorChild.value != 0)
     {
-        float decoratorX = nodeX + config.nodeWidth + config.horizontalSpacing;
+        float decoratorX = nodeX + estimatedNodeWidth + config.horizontalSpacing;
         AutoLayoutNode(
             node->decoratorChild,
             config,
@@ -1122,7 +1177,7 @@ float GraphDocument::AutoLayoutNode(
     }
     else
     {
-        return config.nodeWidth + config.horizontalSpacing;
+        return estimatedNodeWidth + config.horizontalSpacing;
     }
 }
 

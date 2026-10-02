@@ -104,7 +104,11 @@ enum ImNodesAttributeFlags_
     // https://github.com/Nelarius/imnodes/issues/41#issuecomment-647132113 NOTE: the user has to
     // actually delete the link for this to work. A deleted link can be detected by calling
     // IsLinkDestroyed() after EndNodeEditor().
-    ImNodesAttributeFlags_EnableLinkCreationOnSnap = 1 << 1
+    ImNodesAttributeFlags_EnableLinkCreationOnSnap = 1 << 1,
+    // Keep input/output semantics while allowing a vertical graph to put a
+    // pin on the node's top or bottom edge.
+    ImNodesAttributeFlags_PinOnTop = 1 << 2,
+    ImNodesAttributeFlags_PinOnBottom = 1 << 3
 };
 
 struct ImNodesIO

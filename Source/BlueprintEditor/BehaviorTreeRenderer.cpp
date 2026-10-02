@@ -38,6 +38,53 @@ using NodeData = Olympe::NodeGraphTypes::NodeData;
 using NodeId = Olympe::NodeGraphTypes::NodeId;
 using Vector2 = Olympe::NodeGraphTypes::Vector2;
 
+namespace {
+class BehaviorTreeClipboardPayload final : public IGraphClipboardPayload {
+public:
+    struct InternalLink {
+        uint32_t fromNodeId = 0;
+        uint32_t toNodeId = 0;
+        std::string fromPinName;
+        std::string toPinName;
+    };
+
+    BehaviorTreeClipboardPayload(std::vector<NodeData> nodes, std::vector<InternalLink> links)
+        : nodes(std::move(nodes)), links(std::move(links)) {}
+
+    const char* GetGraphTypeId() const override { return "BehaviorTree"; }
+
+    std::vector<NodeData> nodes;
+    std::vector<InternalLink> links;
+};
+
+NodeGraphTypes::AutoLayoutConfig MakeBehaviorTreeLayoutConfig(NodeGraphTypes::LayoutDirection direction)
+{
+    NodeGraphTypes::AutoLayoutConfig config;
+    config.direction = direction;
+    config.nodeWidth = 160.0f;
+    config.nodeHeight = 90.0f;
+
+    if (direction == NodeGraphTypes::LayoutDirection::LeftToRight ||
+        direction == NodeGraphTypes::LayoutDirection::RightToLeft)
+    {
+        // A full node-width of free space between columns keeps curved links
+        // readable even in dense behaviour trees.
+        config.horizontalSpacing = config.nodeWidth * 2.0f + 40.0f;
+        // Horizontal trees grow across X; keep sibling rows deliberately
+        // compact while retaining a clear lane for each outgoing link.
+        config.verticalSpacing = 6.0f;
+    }
+    else
+    {
+        // Leave a generous vertical corridor for parent/child links, while
+        // keeping sibling branches visually separate on the X axis.
+        config.horizontalSpacing = 80.0f;
+        config.verticalSpacing = config.nodeHeight * 2.0f;
+    }
+    return config;
+}
+}
+
 BehaviorTreeRenderer::BehaviorTreeRenderer(NodeGraphPanel& panel)
     : m_panel(panel)
     , m_graphId(-1)
@@ -508,9 +555,17 @@ bool BehaviorTreeRenderer::CreateNew(const std::string& name)
 
 void BehaviorTreeRenderer::Render()
 {
-    // Phase 60 FIX: Remove SetActiveGraph from render loop - it was spamming console
-    // SetActiveGraph is only called once in Load() and CreateNew() when graph changes
-    // Calling it every frame (60+/sec) causes console spam "[NodeGraphManager] Set active graph to ID X"
+    // NodeGraphManager stores one active document globally whereas each editor
+    // tab owns its renderer.  Re-activate only when the selected tab changed:
+    // without this, opening a second BT makes the first tab render the second
+    // document through its stale ImNodes mapping.
+    if (m_graphId > 0 && NodeGraph::NodeGraphManager::IsValid())
+    {
+        const NodeGraphTypes::GraphId graphId{ static_cast<uint32_t>(m_graphId) };
+        if (NodeGraph::NodeGraphManager::Get().GetActiveGraphId() != graphId)
+            NodeGraph::NodeGraphManager::Get().SetActiveGraph(graphId);
+    }
+
     RenderLayoutWithTabs();
 
     // Render execution test panel as overlay (displays simulation results)
@@ -560,6 +615,25 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
     if (m_framework && m_framework->GetToolbar())
     {
         m_framework->GetToolbar()->Render();
+
+        GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(
+            NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+        if (graphDoc)
+        {
+            const bool horizontal = graphDoc->editorState.layoutDirection == "LeftToRight";
+            ImGui::SameLine(0.0f, 20.0f);
+            ImGui::TextDisabled("Layout");
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(115.0f);
+            if (ImGui::BeginCombo("##bt_layout_direction", horizontal ? "Horizontal" : "Vertical"))
+            {
+                if (ImGui::Selectable("Horizontal", horizontal))
+                    RecordLayoutDirectionChangeCommand(NodeGraphTypes::LayoutDirection::LeftToRight);
+                if (ImGui::Selectable("Vertical", !horizontal))
+                    RecordLayoutDirectionChangeCommand(NodeGraphTypes::LayoutDirection::TopToBottom);
+                ImGui::EndCombo();
+            }
+        }
     }
 
     // If verify modal requested, render a simple modal using ImGui
@@ -602,7 +676,10 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
     ImVec2 regionMin = ImGui::GetCursorScreenPos();
 
     // Render canvas on the left with ImNodes adapter (Phase 50.3)
-    ImGui::BeginChild("BTNodeCanvas", ImVec2(canvasWidth, 0), false, ImGuiWindowFlags_NoScrollbar);
+    // Mirror PlaceholderCanvas: the canvas owns the mouse wheel for zoom and
+    // must never forward it to the enclosing editor layout.
+    ImGui::BeginChild("BTNodeCanvas", ImVec2(canvasWidth, 0), false,
+                      ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     
     // Phase 61 FIX: Capture canvas screen position BEFORE rendering adapter
     // This position is required by AcceptNodeDrop for coordinate transformation.
@@ -668,6 +745,10 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
                 m_minimap->RenderImNodes();
             }
         });
+
+        // The adapter owns ImNodes presentation scaling; mirror it in the
+        // framework transform so grid and drop coordinates stay coherent.
+        m_canvasEditor->SetZoom(m_imNodesAdapter->GetZoom());
 
         // PHASE 78: Sync selection from ImNodes to Property Panel
         // Use GetSelectedNodes to be robust when multiple selection is enabled
@@ -762,11 +843,13 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
     // PHASE 77 FIX: OVERLAY DRAG-DROP (Parity with EntityPrefab)
     // We create an invisible overlay over the canvas area to catch drag-drop events 
     // that ImNodes might otherwise consume or ignore.
-    ImVec2 canvasEnd = ImGui::GetCursorScreenPos();
-    ImGui::SetCursorScreenPos(m_canvasScreenPos);
+    const ImVec2 canvasRegionMin = ImGui::GetItemRectMin();
+    const ImVec2 canvasRegionMax(canvasRegionMin.x + canvasWidth, ImGui::GetItemRectMax().y);
+    ImGui::SetCursorScreenPos(canvasRegionMin);
+    ImGui::PushClipRect(canvasRegionMin, canvasRegionMax, false);
 
     // Transparent dummy to act as drop target
-    ImGui::Dummy(canvasSize); 
+    ImGui::Dummy(ImVec2(canvasWidth, canvasRegionMax.y - canvasRegionMin.y));
 
     // Visual Feedback (Yellow Highlight)
     const ImGuiPayload* activePayload = ImGui::GetDragDropPayload();
@@ -795,6 +878,7 @@ void BehaviorTreeRenderer::RenderLayoutWithTabs()
         }
         ImGui::EndDragDropTarget();
     }
+    ImGui::PopClipRect();
 
     ImGui::SameLine();
 
@@ -962,6 +1046,10 @@ void BehaviorTreeRenderer::RenderContextMenu()
             if (ImGui::MenuItem("Reset View"))
             {
                 m_imNodesAdapter->ResetView();
+            }
+            if (ImGui::MenuItem("Auto Layout"))
+            {
+                RecordAutoLayoutCommand();
             }
         }
         ImGui::EndPopup();
@@ -1234,18 +1322,27 @@ void BehaviorTreeRenderer::AcceptNodeDrop(const std::string& nodeType, float can
     // The framework owns history; BT supplies only its graph-specific create
     // and delete operations. Redo restores the exact same canonical node id.
     const NodeId createdNodeId = newNode.id;
+    const NodeId rootBefore = graphDoc->rootNodeId;
+    const bool createsRoot = StringToNodeType(newNode.type) == NodeType::BT_Root;
     const bool created = m_framework && m_framework->ExecuteCommand(
         std::unique_ptr<GraphCommand>(new CallbackGraphCommand(
             "Create BehaviorTree Node",
-            [graphDoc, newNode]() mutable -> bool {
+            [graphDoc, newNode, rootBefore, createsRoot]() mutable -> bool {
                 if (graphDoc->GetNode(newNode.id))
                     return false;
                 graphDoc->GetNodesRef().push_back(newNode);
+                if (createsRoot && rootBefore.value == 0)
+                {
+                    graphDoc->rootNodeId = newNode.id;
+                    graphDoc->metadata["rootNodeId"] = static_cast<int>(newNode.id.value);
+                }
                 graphDoc->SetDirty(true);
                 return true;
             },
-            [graphDoc, createdNodeId]() -> bool {
+            [graphDoc, createdNodeId, rootBefore]() -> bool {
                 const bool removed = graphDoc->DeleteNode(createdNodeId);
+                graphDoc->rootNodeId = rootBefore;
+                graphDoc->metadata["rootNodeId"] = static_cast<int>(rootBefore.value);
                 if (removed)
                     graphDoc->SetDirty(true);
                 return removed;
@@ -1567,6 +1664,293 @@ void BehaviorTreeRenderer::RecordChildReorderCommand(uint32_t parentNodeId, size
         m_imNodesAdapter->InvalidateNodePositions();
 }
 
+bool BehaviorTreeRenderer::RecordAutoLayoutCommand()
+{
+    if (!m_framework)
+        return false;
+
+    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(
+        NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+    if (!graphDoc || graphDoc->GetNodes().empty())
+        return false;
+
+    std::map<uint32_t, Vector2> positionsBefore;
+    for (const NodeData& node : graphDoc->GetNodes())
+        positionsBefore[node.id.value] = node.position;
+
+    const auto positionsAfter = std::make_shared<std::map<uint32_t, Vector2>>();
+    const auto wasLaidOut = std::make_shared<bool>(false);
+    const NodeGraphTypes::LayoutDirection direction = graphDoc->editorState.layoutDirection == "LeftToRight"
+        ? NodeGraphTypes::LayoutDirection::LeftToRight
+        : NodeGraphTypes::LayoutDirection::TopToBottom;
+    const NodeGraphTypes::AutoLayoutConfig config = MakeBehaviorTreeLayoutConfig(direction);
+    const auto applyPositions = [graphDoc](const std::map<uint32_t, Vector2>& positions) -> bool {
+        for (const auto& position : positions)
+        {
+            NodeData* node = graphDoc->GetNode(NodeId{position.first});
+            if (!node)
+                return false;
+            node->position = position.second;
+        }
+        graphDoc->SetDirty(true);
+        return true;
+    };
+
+    const bool applied = m_framework->ExecuteCommand(std::unique_ptr<GraphCommand>(new CallbackGraphCommand(
+        "Auto Layout BehaviorTree",
+        [graphDoc, config, positionsAfter, wasLaidOut, applyPositions]() -> bool {
+            if (*wasLaidOut)
+                return applyPositions(*positionsAfter);
+
+            if (!graphDoc->AutoLayout(config))
+                return false;
+
+            positionsAfter->clear();
+            for (const NodeData& node : graphDoc->GetNodes())
+                (*positionsAfter)[node.id.value] = node.position;
+            *wasLaidOut = true;
+            return true;
+        },
+        [positionsBefore, applyPositions]() -> bool {
+            return applyPositions(positionsBefore);
+        })));
+
+    if (applied && m_imNodesAdapter)
+        m_imNodesAdapter->InvalidateNodePositions();
+    return applied;
+}
+
+bool BehaviorTreeRenderer::RecordLayoutDirectionChangeCommand(NodeGraphTypes::LayoutDirection direction)
+{
+    if (!m_framework)
+        return false;
+
+    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(
+        NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+    if (!graphDoc || graphDoc->GetNodes().empty())
+        return false;
+
+    const std::string beforeDirection = graphDoc->editorState.layoutDirection;
+    const std::string afterDirection = direction == NodeGraphTypes::LayoutDirection::LeftToRight
+        ? "LeftToRight" : "TopToBottom";
+    if (beforeDirection == afterDirection)
+        return true;
+
+    std::map<uint32_t, Vector2> positionsBefore;
+    for (const NodeData& node : graphDoc->GetNodes())
+        positionsBefore[node.id.value] = node.position;
+
+    const auto positionsAfter = std::make_shared<std::map<uint32_t, Vector2>>();
+    const auto appliedOnce = std::make_shared<bool>(false);
+    const auto applyPositions = [graphDoc](const std::map<uint32_t, Vector2>& positions) -> bool {
+        for (const auto& position : positions)
+        {
+            NodeData* node = graphDoc->GetNode(NodeId{ position.first });
+            if (!node)
+                return false;
+            node->position = position.second;
+        }
+        graphDoc->SetDirty(true);
+        return true;
+    };
+
+    const NodeGraphTypes::AutoLayoutConfig config = MakeBehaviorTreeLayoutConfig(direction);
+    const bool applied = m_framework->ExecuteCommand(std::unique_ptr<GraphCommand>(new CallbackGraphCommand(
+        "Change BehaviorTree Layout Direction",
+        [graphDoc, afterDirection, config, positionsAfter, appliedOnce, applyPositions]() -> bool {
+            graphDoc->editorState.layoutDirection = afterDirection;
+            if (*appliedOnce)
+                return applyPositions(*positionsAfter);
+            if (!graphDoc->AutoLayout(config))
+                return false;
+            positionsAfter->clear();
+            for (const NodeData& node : graphDoc->GetNodes())
+                (*positionsAfter)[node.id.value] = node.position;
+            *appliedOnce = true;
+            return true;
+        },
+        [graphDoc, beforeDirection, positionsBefore, applyPositions]() -> bool {
+            graphDoc->editorState.layoutDirection = beforeDirection;
+            return applyPositions(positionsBefore);
+        })));
+
+    if (applied && m_imNodesAdapter)
+        m_imNodesAdapter->InvalidateNodePositions();
+    return applied;
+}
+
+void BehaviorTreeRenderer::CopySelectedNodesToClipboard()
+{
+    if (!m_imNodesAdapter)
+        return;
+
+    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(
+        NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+    if (!graphDoc)
+        return;
+
+    std::set<uint32_t> copiedNodeIds;
+    for (int selectedId : m_imNodesAdapter->GetSelectedCanonicalNodeIds())
+    {
+        if (selectedId < 0)
+            continue;
+        const NodeData* selectedNode = graphDoc->GetNode(NodeId{static_cast<uint32_t>(selectedId)});
+        if (!selectedNode)
+            continue;
+
+        copiedNodeIds.insert(selectedNode->id.value);
+    }
+
+    std::vector<NodeData> copiedNodes;
+    copiedNodes.reserve(copiedNodeIds.size());
+    for (const NodeData& selectedNode : graphDoc->GetNodes())
+    {
+        if (copiedNodeIds.find(selectedNode.id.value) == copiedNodeIds.end())
+            continue;
+
+        NodeData copy = selectedNode;
+        copy.children.erase(std::remove_if(copy.children.begin(), copy.children.end(),
+            [&copiedNodeIds](const NodeId& childId) {
+                return copiedNodeIds.find(childId.value) == copiedNodeIds.end();
+            }), copy.children.end());
+        if (copiedNodeIds.find(copy.decoratorChild.value) == copiedNodeIds.end())
+            copy.decoratorChild = NodeId{0};
+        copy.imnodesUid = 0;
+        copiedNodes.push_back(std::move(copy));
+    }
+
+    std::vector<BehaviorTreeClipboardPayload::InternalLink> copiedLinks;
+    for (const NodeGraphTypes::LinkData& link : graphDoc->GetLinks())
+    {
+        if (copiedNodeIds.find(link.fromPin.value) == copiedNodeIds.end() ||
+            copiedNodeIds.find(link.toPin.value) == copiedNodeIds.end())
+            continue;
+        copiedLinks.push_back({ link.fromPin.value, link.toPin.value,
+                                link.fromPinName, link.toPinName });
+    }
+
+    if (!copiedNodes.empty() && m_framework)
+    {
+        m_framework->SetClipboardPayload(
+            std::make_shared<BehaviorTreeClipboardPayload>(std::move(copiedNodes), std::move(copiedLinks)));
+        SYSTEM_LOG << "[BehaviorTreeRenderer] Copied BehaviorTree node(s)\n";
+    }
+}
+
+void BehaviorTreeRenderer::PasteClipboardNodes()
+{
+    if (!m_framework || !m_framework->HasClipboardPayload("BehaviorTree"))
+        return;
+
+    const auto payload = std::dynamic_pointer_cast<const BehaviorTreeClipboardPayload>(
+        m_framework->GetClipboardPayload());
+    if (!payload || payload->nodes.empty())
+        return;
+
+    GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(
+        NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+    if (!graphDoc)
+        return;
+
+    uint32_t nextNodeId = 0;
+    for (const NodeData& node : graphDoc->GetNodes())
+        nextNodeId = (std::max)(nextNodeId, node.id.value);
+
+    ++m_pasteSequence;
+    const float offset = 30.0f * static_cast<float>(m_pasteSequence);
+    std::vector<NodeData> pastedNodes;
+    std::map<uint32_t, uint32_t> pastedNodeIds;
+    pastedNodes.reserve(payload->nodes.size());
+    for (const NodeData& clipboardNode : payload->nodes)
+    {
+        NodeData pastedNode = clipboardNode;
+        pastedNode.id = NodeId{++nextNodeId};
+        pastedNodeIds[clipboardNode.id.value] = pastedNode.id.value;
+        pastedNode.position.x += offset;
+        pastedNode.position.y += offset;
+        pastedNode.name = clipboardNode.name + " Copy";
+        pastedNodes.push_back(pastedNode);
+    }
+
+    for (NodeData& pastedNode : pastedNodes)
+    {
+        for (NodeId& childId : pastedNode.children)
+            childId = NodeId{ pastedNodeIds[childId.value] };
+        if (pastedNode.decoratorChild.value != 0)
+            pastedNode.decoratorChild = NodeId{ pastedNodeIds[pastedNode.decoratorChild.value] };
+    }
+
+    std::vector<BehaviorTreeClipboardPayload::InternalLink> pastedLinks;
+    pastedLinks.reserve(payload->links.size());
+    for (const auto& copiedLink : payload->links)
+    {
+        const auto fromIt = pastedNodeIds.find(copiedLink.fromNodeId);
+        const auto toIt = pastedNodeIds.find(copiedLink.toNodeId);
+        if (fromIt == pastedNodeIds.end() || toIt == pastedNodeIds.end())
+            continue;
+        pastedLinks.push_back({ fromIt->second, toIt->second,
+                                copiedLink.fromPinName, copiedLink.toPinName });
+    }
+    uint32_t pastedRootId = 0;
+    for (const NodeData& pastedNode : pastedNodes)
+    {
+        if (StringToNodeType(pastedNode.type) == NodeType::BT_Root)
+        {
+            pastedRootId = pastedNode.id.value;
+            break;
+        }
+    }
+    const NodeId rootBefore = graphDoc->rootNodeId;
+    const auto createdLinkIds = std::make_shared<std::vector<NodeGraphTypes::LinkId>>();
+
+    const bool pasted = m_framework->ExecuteCommand(std::unique_ptr<GraphCommand>(new CallbackGraphCommand(
+        pastedNodes.size() == 1 ? "Paste BehaviorTree Node" : "Paste BehaviorTree Nodes",
+        [graphDoc, pastedNodes, pastedLinks, pastedRootId, rootBefore, createdLinkIds]() -> bool {
+            for (const NodeData& pastedNode : pastedNodes)
+            {
+                if (graphDoc->GetNode(pastedNode.id))
+                    return false;
+            }
+            std::vector<NodeData>& nodes = graphDoc->GetNodesRef();
+            nodes.insert(nodes.end(), pastedNodes.begin(), pastedNodes.end());
+            if (rootBefore.value == 0 && pastedRootId != 0)
+            {
+                graphDoc->rootNodeId = NodeId{ pastedRootId };
+                // This bundled json version has integer/double/bool overloads
+                // but no uint32_t overload, so make the serialized type explicit.
+                graphDoc->metadata["rootNodeId"] = static_cast<int>(pastedRootId);
+            }
+            createdLinkIds->clear();
+            for (const auto& pastedLink : pastedLinks)
+            {
+                const NodeGraphTypes::LinkId linkId = graphDoc->ConnectPins(
+                    NodeGraphTypes::PinId{ pastedLink.fromNodeId },
+                    NodeGraphTypes::PinId{ pastedLink.toNodeId });
+                NodeGraphTypes::LinkData* link = graphDoc->GetLink(linkId);
+                if (!link)
+                    return false;
+                link->fromPinName = pastedLink.fromPinName;
+                link->toPinName = pastedLink.toPinName;
+                createdLinkIds->push_back(linkId);
+            }
+            graphDoc->SetDirty(true);
+            return true;
+        },
+        [graphDoc, pastedNodes, rootBefore]() -> bool {
+            bool removedAny = false;
+            for (const NodeData& pastedNode : pastedNodes)
+                removedAny = graphDoc->DeleteNode(pastedNode.id) || removedAny;
+            graphDoc->rootNodeId = rootBefore;
+            graphDoc->metadata["rootNodeId"] = static_cast<int>(rootBefore.value);
+            if (removedAny)
+                graphDoc->SetDirty(true);
+            return removedAny;
+        })));
+
+    if (pasted && m_imNodesAdapter)
+        m_imNodesAdapter->InvalidateNodePositions();
+}
+
 void BehaviorTreeRenderer::RecordNodeMoveCommand(
     const std::vector<BehaviorTreeImNodesAdapter::NodePositionChange>& changes)
 {
@@ -1656,6 +2040,22 @@ void BehaviorTreeRenderer::HandleKeyboardShortcuts()
             {
                 m_imNodesAdapter->SelectAllCanonicalNodes();
             }
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey_C) && !ImGui::GetIO().WantTextInput)
+        {
+            CopySelectedNodesToClipboard();
+            return;
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey_V) && !ImGui::GetIO().WantTextInput)
+        {
+            PasteClipboardNodes();
+            return;
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey_D) && !ImGui::GetIO().WantTextInput)
+        {
+            CopySelectedNodesToClipboard();
+            PasteClipboardNodes();
+            return;
         }
     }
 }

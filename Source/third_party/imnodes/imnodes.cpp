@@ -142,17 +142,29 @@ inline CubicBezier GetCubicBezier(
     ImVec2                     start,
     ImVec2                     end,
     const ImNodesAttributeType start_type,
+    const ImNodesAttributeFlags start_flags,
+    const ImNodesAttributeFlags end_flags,
     const float                line_segments_per_length)
 {
     IM_ASSERT(
         (start_type == ImNodesAttributeType_Input) || (start_type == ImNodesAttributeType_Output));
+    ImNodesAttributeFlags output_flags = start_flags;
     if (start_type == ImNodesAttributeType_Input)
     {
         ImSwap(start, end);
+        output_flags = end_flags;
     }
 
     const float  link_length = ImSqrt(ImLengthSqr(end - start));
-    const ImVec2 offset = ImVec2(0.25f * link_length, 0.f);
+    const bool vertical = (output_flags & ImNodesAttributeFlags_PinOnBottom) != 0 ||
+                          (end_flags & ImNodesAttributeFlags_PinOnTop) != 0;
+    // Curve handles depend on the distance across layout levels, not on the
+    // total diagonal length.  A distant sibling must not produce an oversized
+    // U-shaped curve merely because it is offset on the cross axis.
+    const float axis_distance = vertical ? ImAbs(end.y - start.y) : ImAbs(end.x - start.x);
+    const float handle_length = ImClamp(axis_distance * 0.28f, 28.0f, 90.0f);
+    const ImVec2 offset = vertical ? ImVec2(0.f, handle_length)
+                                   : ImVec2(handle_length, 0.f);
     CubicBezier  cubic_bezier;
     cubic_bezier.P0 = start;
     cubic_bezier.P1 = start + offset;
@@ -244,7 +256,9 @@ inline bool RectangleOverlapsLink(
     const ImRect&              rectangle,
     const ImVec2&              start,
     const ImVec2&              end,
-    const ImNodesAttributeType start_type)
+    const ImNodesAttributeType start_type,
+    const ImNodesAttributeFlags start_flags,
+    const ImNodesAttributeFlags end_flags)
 {
     // First level: simple rejection test via rectangle overlap:
 
@@ -273,7 +287,8 @@ inline bool RectangleOverlapsLink(
         // link
 
         const CubicBezier cubic_bezier =
-            GetCubicBezier(start, end, start_type, GImNodes->Style.LinkLineSegmentsPerLength);
+            GetCubicBezier(start, end, start_type, start_flags, end_flags,
+                           GImNodes->Style.LinkLineSegmentsPerLength);
         return RectangleOverlapsBezier(rectangle, cubic_bezier);
     }
 
@@ -578,9 +593,14 @@ void DrawListSortChannelsByDepth(const ImVector<int>& node_idx_depth_order)
 ImVec2 GetScreenSpacePinCoordinates(
     const ImRect&              node_rect,
     const ImRect&              attribute_rect,
-    const ImNodesAttributeType type)
+    const ImNodesAttributeType type,
+    const ImNodesAttributeFlags flags)
 {
     IM_ASSERT(type == ImNodesAttributeType_Input || type == ImNodesAttributeType_Output);
+    if (flags & ImNodesAttributeFlags_PinOnTop)
+        return ImVec2(0.5f * (node_rect.Min.x + node_rect.Max.x), node_rect.Min.y - GImNodes->Style.PinOffset);
+    if (flags & ImNodesAttributeFlags_PinOnBottom)
+        return ImVec2(0.5f * (node_rect.Min.x + node_rect.Max.x), node_rect.Max.y + GImNodes->Style.PinOffset);
     const float x = type == ImNodesAttributeType_Input
                         ? (node_rect.Min.x - GImNodes->Style.PinOffset)
                         : (node_rect.Max.x + GImNodes->Style.PinOffset);
@@ -590,7 +610,7 @@ ImVec2 GetScreenSpacePinCoordinates(
 ImVec2 GetScreenSpacePinCoordinates(const ImNodesEditorContext& editor, const ImPinData& pin)
 {
     const ImRect& parent_node_rect = editor.Nodes.Pool[pin.ParentNodeIdx].Rect;
-    return GetScreenSpacePinCoordinates(parent_node_rect, pin.AttributeRect, pin.Type);
+    return GetScreenSpacePinCoordinates(parent_node_rect, pin.AttributeRect, pin.Type, pin.Flags);
 }
 
 bool MouseInCanvas()
@@ -831,12 +851,13 @@ void BoxSelectorUpdateSelection(ImNodesEditorContext& editor, ImRect box_rect)
             const ImRect&    node_end_rect = editor.Nodes.Pool[pin_end.ParentNodeIdx].Rect;
 
             const ImVec2 start = GetScreenSpacePinCoordinates(
-                node_start_rect, pin_start.AttributeRect, pin_start.Type);
+                node_start_rect, pin_start.AttributeRect, pin_start.Type, pin_start.Flags);
             const ImVec2 end =
-                GetScreenSpacePinCoordinates(node_end_rect, pin_end.AttributeRect, pin_end.Type);
+                GetScreenSpacePinCoordinates(node_end_rect, pin_end.AttributeRect, pin_end.Type, pin_end.Flags);
 
             // Test
-            if (RectangleOverlapsLink(box_rect, start, end, pin_start.Type))
+            if (RectangleOverlapsLink(box_rect, start, end, pin_start.Type,
+                                      pin_start.Flags, pin_end.Flags))
             {
                 editor.SelectedLinkIndices.push_back(link_idx);
             }
@@ -1080,7 +1101,9 @@ void ClickInteractionUpdate(ImNodesEditorContext& editor)
                                    : GImNodes->MousePos;
 
         const CubicBezier cubic_bezier = GetCubicBezier(
-            start_pos, end_pos, start_pin.Type, GImNodes->Style.LinkLineSegmentsPerLength);
+            start_pos, end_pos, start_pin.Type, start_pin.Flags,
+            should_snap ? editor.Pins.Pool[GImNodes->HoveredPinIdx.Value()].Flags : ImNodesAttributeFlags_None,
+            GImNodes->Style.LinkLineSegmentsPerLength);
 #if IMGUI_VERSION_NUM < 18000
         GImNodes->CanvasDrawList->AddBezierCurve(
 #else
@@ -1332,7 +1355,8 @@ ImOptionalIndex ResolveHoveredLink(
         }
 
         const CubicBezier cubic_bezier = GetCubicBezier(
-            start_pin.Pos, end_pin.Pos, start_pin.Type, GImNodes->Style.LinkLineSegmentsPerLength);
+            start_pin.Pos, end_pin.Pos, start_pin.Type, start_pin.Flags, end_pin.Flags,
+            GImNodes->Style.LinkLineSegmentsPerLength);
 
         // The distance test
         {
@@ -1545,7 +1569,7 @@ void DrawPin(ImNodesEditorContext& editor, const int pin_idx)
     ImPinData&    pin = editor.Pins.Pool[pin_idx];
     const ImRect& parent_node_rect = editor.Nodes.Pool[pin.ParentNodeIdx].Rect;
 
-    pin.Pos = GetScreenSpacePinCoordinates(parent_node_rect, pin.AttributeRect, pin.Type);
+    pin.Pos = GetScreenSpacePinCoordinates(parent_node_rect, pin.AttributeRect, pin.Type, pin.Flags);
 
     ImU32 pin_color = pin.ColorStyle.Background;
 
@@ -1680,7 +1704,8 @@ void DrawLink(ImNodesEditorContext& editor, const int link_idx)
     }
 
     const CubicBezier cubic_bezier = GetCubicBezier(
-        start_pin.Pos, end_pin.Pos, start_pin.Type, GImNodes->Style.LinkLineSegmentsPerLength);
+        start_pin.Pos, end_pin.Pos, start_pin.Type, start_pin.Flags, end_pin.Flags,
+        GImNodes->Style.LinkLineSegmentsPerLength);
 
     const bool link_hovered =
         GImNodes->HoveredLinkIdx == link_idx &&
@@ -1919,7 +1944,7 @@ static void MiniMapDrawLink(ImNodesEditorContext& editor, const int link_idx)
     const CubicBezier cubic_bezier = GetCubicBezier(
         ScreenSpaceToMiniMapSpace(editor, start_pin.Pos),
         ScreenSpaceToMiniMapSpace(editor, end_pin.Pos),
-        start_pin.Type,
+        start_pin.Type, start_pin.Flags, end_pin.Flags,
         GImNodes->Style.LinkLineSegmentsPerLength / editor.MiniMapScaling);
 
     // It's possible for a link to be deleted in begin_link_interaction. A user

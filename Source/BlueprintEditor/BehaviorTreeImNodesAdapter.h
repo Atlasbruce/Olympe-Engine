@@ -23,6 +23,7 @@
 #include <map>
 #include <set>
 #include <functional>
+#include <cmath>
 
 namespace Olympe
 {
@@ -145,6 +146,7 @@ namespace Olympe
                         ImNodes::EditorContextResetPanning(ImVec2(
                             graphDoc->editorState.scrollOffset.x,
                             graphDoc->editorState.scrollOffset.y));
+                        m_canvasZoom = (std::max)(0.35f, (std::min)(2.25f, graphDoc->editorState.zoom));
                     }
                 }
                 SYSTEM_LOG << "[BehaviorTreeImNodesAdapter] Set active graph (NodeGraph manager): " 
@@ -174,6 +176,8 @@ namespace Olympe
         {
             m_initializedNodes.clear();
         }
+
+        float GetZoom() const { return m_canvasZoom; }
 
         // Mapping between canonical NodeId (document) and ImNodes uids used for rendering
         // We keep a stable small uid space to avoid passing large or legacy-encoded ids
@@ -226,6 +230,7 @@ namespace Olympe
 
             // Capture screen position for coordinate transformations
             m_canvasScreenPos = ImGui::GetCursorScreenPos();
+            m_canvasSize = ImGui::GetContentRegionAvail();
 
             // Ensure the global ImNodes context is active and set this adapter's
             // editor context so pan/selection state is isolated per adapter.
@@ -293,6 +298,7 @@ namespace Olympe
 
             // Begin node editor
             ImNodes::BeginNodeEditor();
+            UpdateMouseWheelZoom(mappingDoc);
 
             // Render nodes
             RenderNodes();
@@ -678,6 +684,12 @@ namespace Olympe
         void ResetView()
         {
             SetPanning(ImVec2(0, 0));
+            m_canvasZoom = 1.0f;
+            GraphDocument* graphDoc = NodeGraph::NodeGraphManager::Get().GetGraph(
+                NodeGraphTypes::GraphId{ static_cast<uint32_t>(m_graphId) });
+            if (graphDoc)
+                graphDoc->editorState.zoom = m_canvasZoom;
+            InvalidateNodePositions();
         }
 
     private:
@@ -686,6 +698,7 @@ namespace Olympe
 
         // Canvas state
         ImVec2 m_canvasScreenPos = ImVec2(0, 0);
+        ImVec2 m_canvasSize = ImVec2(0, 0);
         ImVec2 m_canvasOffset;
         float m_canvasZoom = 1.0f;
         int m_nextLinkId = 0;
@@ -708,6 +721,43 @@ namespace Olympe
         LinkDeleteRequestedCallback m_onLinkDeleteRequested;
         std::map<int, uint32_t> m_linkUidToDocumentLinkId;
 
+        void UpdateMouseWheelZoom(GraphDocument* graphDoc)
+        {
+            if (!graphDoc)
+                return;
+
+            const float wheel = ImGui::GetIO().MouseWheel;
+            if (wheel == 0.0f)
+                return;
+
+            const ImVec2 mouse = ImGui::GetMousePos();
+            const bool overCanvas = mouse.x >= m_canvasScreenPos.x &&
+                                    mouse.y >= m_canvasScreenPos.y &&
+                                    mouse.x < m_canvasScreenPos.x + m_canvasSize.x &&
+                                    mouse.y < m_canvasScreenPos.y + m_canvasSize.y;
+            if (!overCanvas)
+                return;
+
+            const float previousZoom = m_canvasZoom;
+            const float nextZoom = (std::max)(0.35f, (std::min)(2.25f,
+                previousZoom * std::pow(1.12f, wheel)));
+            if (nextZoom == previousZoom)
+                return;
+
+            // Keep the document point beneath the cursor stable as the
+            // presentation scale changes.
+            const ImVec2 mouseInCanvas(mouse.x - m_canvasScreenPos.x, mouse.y - m_canvasScreenPos.y);
+            const ImVec2 pan = ImNodes::EditorContextGetPanning();
+            const float scaleRatio = nextZoom / previousZoom;
+            ImNodes::EditorContextResetPanning(ImVec2(
+                mouseInCanvas.x - (mouseInCanvas.x - pan.x) * scaleRatio,
+                mouseInCanvas.y - (mouseInCanvas.y - pan.y) * scaleRatio));
+
+            m_canvasZoom = nextZoom;
+            graphDoc->editorState.zoom = m_canvasZoom;
+            InvalidateNodePositions();
+        }
+
         // Rendering helpers
         void RenderNodes()
         {
@@ -718,6 +768,7 @@ namespace Olympe
             }
 
             const auto& nodes = graphDoc->GetNodes();
+            const bool verticalLayout = graphDoc->editorState.layoutDirection != "LeftToRight";
             
             for (size_t i = 0; i < nodes.size(); ++i)
             {
@@ -730,7 +781,9 @@ namespace Olympe
                 // Phase 62 FIX: Only set position once for new nodes (use mapped uid)
                 if (m_initializedNodes.find(mappedUid) == m_initializedNodes.end())
                 {
-                    ImNodes::SetNodeGridSpacePos(mappedUid, ImVec2(node.position.x, node.position.y));
+                    ImNodes::SetNodeGridSpacePos(mappedUid, ImVec2(
+                        node.position.x * m_canvasZoom,
+                        node.position.y * m_canvasZoom));
                     m_initializedNodes.insert(mappedUid);
                 }
 
@@ -759,6 +812,27 @@ namespace Olympe
                         ImVec2(nodePos.x - 10, nodePos.y - 10), 6.0f, IM_COL32(255, 50, 50, 255));
                 }
 
+                // Determine pin visibility based on node semantic.
+                NodeType ntype = StringToNodeType(node.type);
+                bool hasInputPin = !(ntype == NodeType::BT_Root || ntype == NodeType::BT_OnEvent);
+                bool hasOutputPin = !(ntype == NodeType::BT_Action || ntype == NodeType::BT_Condition);
+
+                // A vertical hierarchy receives links from above and emits to
+                // below; horizontal retains the classic left/right treatment.
+                if (verticalLayout && hasInputPin)
+                {
+                    const int inputPinId = mappedUid * 2;
+                    m_registeredAttributes.insert(inputPinId);
+                    ImNodes::PushAttributeFlag(ImNodesAttributeFlags_PinOnTop);
+                    ImNodes::BeginInputAttribute(inputPinId);
+                    // The pin itself is centred by ImNodes.  Keep the
+                    // attribute geometrically present without consuming node
+                    // content space or pushing the title downward.
+                    ImGui::Dummy(ImVec2(1.0f, 1.0f));
+                    ImNodes::EndInputAttribute();
+                    ImNodes::PopAttributeFlag();
+                }
+
                 // Node Header with Icon
                 ImNodes::BeginNodeTitleBar();
                 if (style.icon && style.icon[0] != '\0')
@@ -771,15 +845,12 @@ namespace Olympe
                 }
                 ImNodes::EndNodeTitleBar();
 
-                // PHASE 84: Horizontal Pin Layout (VisualScript Style)
+                // Horizontal Pin Layout (VisualScript Style)
                 // Col 0: Input pins (left) | Col 1: Output pins (right)
-                ImGui::Columns(2, "bt_node_pins", false);
-                ImGui::SetColumnWidth(0, minNodeWidth * 0.5f);
-
-                // Determine pin visibility based on node semantic
-                NodeType ntype = StringToNodeType(node.type);
-                bool hasInputPin = !(ntype == NodeType::BT_Root || ntype == NodeType::BT_OnEvent);
-                bool hasOutputPin = !(ntype == NodeType::BT_Action || ntype == NodeType::BT_Condition);
+                if (!verticalLayout)
+                {
+                    ImGui::Columns(2, "bt_node_pins", false);
+                    ImGui::SetColumnWidth(0, minNodeWidth * 0.5f);
 
                 // LEFT COLUMN: Input pin (omit for Root / OnEvent entry nodes)
                 {
@@ -789,7 +860,10 @@ namespace Olympe
                         // Record attribute for this render pass
                         m_registeredAttributes.insert(inputPinId);
                         ImNodes::BeginInputAttribute(inputPinId);
-                        ImGui::TextUnformatted("In");
+                        // Pins remain fully interactive; their labels are
+                        // intentionally omitted to keep H/V node content
+                        // visually identical.
+                        ImGui::Dummy(ImVec2(1.0f, 1.0f));
                         ImNodes::EndInputAttribute();
                     }
                     else
@@ -807,10 +881,7 @@ namespace Olympe
                         int outputPinId = mappedUid * 2 + 1;
                         m_registeredAttributes.insert(outputPinId);
                         ImNodes::BeginOutputAttribute(outputPinId);
-                        // Match VisualScript right-alignment for outputs
-                        float textWidth = ImGui::CalcTextSize("Out").x;
-                        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (minNodeWidth * 0.5f) - textWidth - 25.0f);
-                        ImGui::TextUnformatted("Out");
+                        ImGui::Dummy(ImVec2(1.0f, 1.0f));
                         ImNodes::EndOutputAttribute();
                     }
                     else
@@ -818,7 +889,8 @@ namespace Olympe
                         ImGui::Dummy(ImVec2(minNodeWidth * 0.5f - 8.0f, 1.0f));
                     }
                 }
-                ImGui::Columns(1); // End columns
+                    ImGui::Columns(1); // End columns
+                }
 
                 // Node Content (below pins)
                 ImGui::Spacing();
@@ -846,6 +918,17 @@ namespace Olympe
                 }
                 ImGui::Unindent(5.0f);
 
+                if (verticalLayout && hasOutputPin)
+                {
+                    const int outputPinId = mappedUid * 2 + 1;
+                    m_registeredAttributes.insert(outputPinId);
+                    ImNodes::PushAttributeFlag(ImNodesAttributeFlags_PinOnBottom);
+                    ImNodes::BeginOutputAttribute(outputPinId);
+                    ImGui::Dummy(ImVec2(1.0f, 1.0f));
+                    ImNodes::EndOutputAttribute();
+                    ImNodes::PopAttributeFlag();
+                }
+
                 ImNodes::EndNode();
                 
                 ImNodesCanvasEditor::PopTwoToneNodeStyle();
@@ -864,6 +947,7 @@ namespace Olympe
             }
 
             const auto& links = graphDoc->GetLinks();
+            const bool verticalLayout = graphDoc->editorState.layoutDirection != "LeftToRight";
             m_linkUidToDocumentLinkId.clear();
             
             // Build a map of parent node -> list of links from that parent. In GraphDocument
@@ -888,11 +972,15 @@ namespace Olympe
                     if (ita != m_nodeIdToUid.end()) uidA = ita->second;
                     auto itb = m_nodeIdToUid.find(nodeBId);
                     if (itb != m_nodeIdToUid.end()) uidB = itb->second;
-                    // Use Grid Space for stable sorting independent of panning
+                    // Sibling ordering follows the cross axis of the current layout.
                     ImVec2 posA = ImNodes::GetNodeGridSpacePos(static_cast<int>(uidA));
                     ImVec2 posB = ImNodes::GetNodeGridSpacePos(static_cast<int>(uidB));
-                    if (posA.y != posB.y) return posA.y < posB.y;
-                    return posA.x < posB.x;
+                    const float siblingA = verticalLayout ? posA.x : posA.y;
+                    const float siblingB = verticalLayout ? posB.x : posB.y;
+                    if (siblingA != siblingB) return siblingA < siblingB;
+                    const float depthA = verticalLayout ? posA.y : posA.x;
+                    const float depthB = verticalLayout ? posB.y : posB.x;
+                    return depthA < depthB;
                 });
             }
 
@@ -983,25 +1071,14 @@ namespace Olympe
                         ImVec2 parentGridPos = ImNodes::GetNodeGridSpacePos(parentUid);
                         ImVec2 childGridPos = ImNodes::GetNodeGridSpacePos(childUid);
 
-                        // Parent output X depends on parent visual width (mirrors RenderNodes min width logic)
-                        float parentNodeWidth = 140.0f;
-                        ImVec2 parentTitleSize = ImGui::CalcTextSize(parentNode->name.c_str());
-                        if (parentTitleSize.x + 30.0f > parentNodeWidth) parentNodeWidth = parentTitleSize.x + 30.0f;
-
-                        // Child-specific offset so midpoint uses each node's local pin row
-                        const NodeData* childNode = nullptr;
-                        for (const auto& n : nodes) { if (n.id.value == toNodeId) { childNode = &n; break; } }
-
-                        float parentPinYOffset = parentTitleSize.y + 19.0f;
-                        float childPinYOffset = parentPinYOffset;
-                        if (childNode)
-                        {
-                            ImVec2 childTitleSize = ImGui::CalcTextSize(childNode->name.c_str());
-                            childPinYOffset = childTitleSize.y + 19.0f;
-                        }
-
-                        ImVec2 pOut = ImVec2(parentGridPos.x + parentNodeWidth, parentGridPos.y + parentPinYOffset);
-                        ImVec2 pIn = ImVec2(childGridPos.x, childGridPos.y + childPinYOffset);
+                        const ImVec2 parentSize = ImNodes::GetNodeDimensions(parentUid);
+                        const ImVec2 childSize = ImNodes::GetNodeDimensions(childUid);
+                        const ImVec2 pOut = verticalLayout
+                            ? ImVec2(parentGridPos.x + parentSize.x * 0.5f, parentGridPos.y + parentSize.y)
+                            : ImVec2(parentGridPos.x + parentSize.x, parentGridPos.y + parentSize.y * 0.5f);
+                        const ImVec2 pIn = verticalLayout
+                            ? ImVec2(childGridPos.x + childSize.x * 0.5f, childGridPos.y)
+                            : ImVec2(childGridPos.x, childGridPos.y + childSize.y * 0.5f);
                         ImVec2 midPointGrid = ImVec2((pOut.x + pIn.x) * 0.5f, (pOut.y + pIn.y) * 0.5f);
 
                         char idxBuf[16];
@@ -1049,12 +1126,13 @@ namespace Olympe
                     auto it = m_nodeIdToUid.find(node.id.value);
                     if (it != m_nodeIdToUid.end()) uid = it->second;
                     ImVec2 pos = ImNodes::GetNodeGridSpacePos(uid);
-                    if (pos.x != node.position.x || pos.y != node.position.y)
+                    const ImVec2 documentPos(pos.x / m_canvasZoom, pos.y / m_canvasZoom);
+                    if (documentPos.x != node.position.x || documentPos.y != node.position.y)
                     {
                         if (leftMouseDown && m_dragStartPositions.find(node.id.value) == m_dragStartPositions.end())
                             m_dragStartPositions[node.id.value] = ImVec2(node.position.x, node.position.y);
-                        node.position.x = pos.x;
-                        node.position.y = pos.y;
+                        node.position.x = documentPos.x;
+                        node.position.y = documentPos.y;
                         graphDoc->SetDirty(true);
                     }
                 }
