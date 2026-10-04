@@ -57,6 +57,13 @@ public:
     int GetMinimapPosition() const override { return m_panel.m_minimapPosition; }
     void SetMinimapPosition(int pos) override;
 
+    // Shared canvas-view controls.
+    bool SupportsGrid() const override { return true; }
+    bool IsGridVisible() const override;
+    void SetGridVisible(bool visible) override;
+    bool SupportsResetView() const override { return true; }
+    void ResetView() override;
+
     // Phase 35.0: Canvas state management
     void SaveCanvasState() override;
     void RestoreCanvasState() override;

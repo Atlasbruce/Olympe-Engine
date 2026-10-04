@@ -210,6 +210,21 @@ void CanvasToolbarRenderer::Render()
                 }
             }
         }
+
+        if (renderer && renderer->SupportsGrid())
+        {
+            ImGui::SameLine(0.0f, 12.0f);
+            bool gridVisible = renderer->IsGridVisible();
+            if (ImGui::Checkbox("Grid##unified_tb", &gridVisible))
+                renderer->SetGridVisible(gridVisible);
+        }
+
+        if (renderer && renderer->SupportsResetView())
+        {
+            ImGui::SameLine(0.0f, 10.0f);
+            if (ImGui::Button("Reset View##unified_tb", ImVec2(80.0f, 0.0f)))
+                renderer->ResetView();
+        }
     }
     ImGui::EndGroup();
 }

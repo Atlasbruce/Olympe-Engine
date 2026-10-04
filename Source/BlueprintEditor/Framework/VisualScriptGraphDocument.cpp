@@ -160,10 +160,7 @@ namespace Olympe
     {
         if (m_vsPanel)
         {
-            // Force dirty flag
-            // Note: VisualScriptEditorPanel doesn't have explicit SetDirty method
-            // Modifications are automatically tracked when nodes change
-            // This is a notification hook for future framework integration
+            m_vsPanel->MarkDirty();
             SYSTEM_LOG << "[VisualScriptGraphDocument::OnDocumentModified] Document marked as modified\n";
         }
     }

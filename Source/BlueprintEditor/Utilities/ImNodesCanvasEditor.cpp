@@ -8,6 +8,23 @@
 
 namespace Olympe
 {
+    namespace
+    {
+        // Framework positions use the canonical toolbar order:
+        // TopLeft, TopRight, BottomLeft, BottomRight.  ImNodes uses a
+        // different enum order, so convert only when entering that API.
+        ImNodesMiniMapLocation ToImNodesMiniMapLocation(int position)
+        {
+            switch (position)
+            {
+            case 0:  return ImNodesMiniMapLocation_TopLeft;
+            case 1:  return ImNodesMiniMapLocation_TopRight;
+            case 2:  return ImNodesMiniMapLocation_BottomLeft;
+            default: return ImNodesMiniMapLocation_BottomRight;
+            }
+        }
+    }
+
     void ImNodesCanvasEditor::ApplyFrameworkAutoPanning()
     {
         ImNodes::GetIO().AutoPanningSpeed = DefaultAutoPanningSpeed;
@@ -75,6 +92,11 @@ namespace Olympe
         }
 
         ApplyFrameworkInteractionPolicy();
+
+        // The framework owns grid rendering.  Leaving ImNodes' own grid
+        // enabled produces two nearly identical grids with distinct offsets.
+        ImNodes::GetStyle().Flags &= ~(ImNodesStyleFlags_GridLines |
+                                       ImNodesStyleFlags_GridLinesPrimary);
 
         // Start imnodes rendering cycle
         ImNodes::BeginNodeEditor();
@@ -259,7 +281,7 @@ namespace Olympe
 
         // Render minimap overlay using ImNodes API
         // Note: ImNodes::MiniMap must be called before ImNodes::EndNodeEditor()
-        ImNodes::MiniMap(m_minimapSize, static_cast<ImNodesMiniMapLocation>(m_minimapPosition));
+        ImNodes::MiniMap(m_minimapSize, ToImNodesMiniMapLocation(m_minimapPosition));
     }
 
     void ImNodesCanvasEditor::SetMinimapVisible(bool enabled)

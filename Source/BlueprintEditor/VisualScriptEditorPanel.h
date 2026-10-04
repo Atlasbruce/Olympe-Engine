@@ -55,6 +55,7 @@
 // Phase 41 — Framework integration
 #include "Framework/CanvasFramework.h"
 #include "Framework/VisualScriptGraphDocument.h"
+#include "Framework/VisualScriptGraphClipboard.h"
 
 // Forward-declare ImNodes context type (defined in imnodes.h) in the global
 // namespace so it can be referenced from within the Olympe namespace below.
@@ -197,6 +198,12 @@ public:
      */
     bool IsDirty() const { return m_dirty; }
 
+    /**
+     * @brief Marks the graph as modified when a framework-level command
+     *        changes its document state.
+     */
+    void MarkDirty() { m_dirty = true; }
+
     // -----------------------------------------------------------------------
     // Node management (called by palette / tests)
     // -----------------------------------------------------------------------
@@ -285,6 +292,11 @@ private:
      * Must be called AFTER EndNodeEditor() so popups are in correct ImGui scope.
      */
     void RenderContextMenus();
+
+    // Shared framework clipboard operations. These preserve the complete
+    // Visual Script node definitions plus internal exec/data links.
+    void CopySelectedNodesToFrameworkClipboard();
+    void PasteFrameworkClipboard(float canvasX, float canvasY);
 
     void RenderProperties();
 
@@ -795,6 +807,13 @@ private:
 
     /// Link ID captured at the moment a right-click context menu was opened on a link
     int m_contextLinkID = -1;
+
+    /// Deferred canvas commands requested from the context menu. They run
+    /// after EndNodeEditor(), where ImNodes selection APIs are valid.
+    bool m_pendingSelectAll = false;
+    bool m_pendingResetView = false;
+    bool m_pendingCopySelection = false;
+    bool m_pendingPaste = false;
 
     // -----------------------------------------------------------------------
     // Properties panel — undo snapshot state

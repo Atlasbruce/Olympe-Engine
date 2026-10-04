@@ -45,8 +45,9 @@ namespace Olympe
 
         /**
          * Apply the Framework edge auto-pan policy to the active ImNodes context.
-         * ImNodes performs the motion natively while dragging a node, creating
-         * a link, or drawing a selection rectangle beyond the canvas bounds.
+         * ImNodes performs the motion natively while dragging a node or
+         * creating a link beyond the canvas bounds. Rectangle selection is
+         * intentionally excluded so it never shifts the viewport.
          */
         static void ApplyFrameworkAutoPanning();
 
@@ -380,7 +381,8 @@ namespace Olympe
         // Minimap configuration
         bool m_minimapVisible = true;
         float m_minimapSize = 0.15f;
-        int m_minimapPosition = ImNodesMiniMapLocation_BottomRight;
+        // Canonical framework order: TopLeft, TopRight, BottomLeft, BottomRight.
+        int m_minimapPosition = 1;
     };
 
 } // namespace Olympe

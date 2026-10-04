@@ -40,24 +40,29 @@
     ],
     "nodes": [
       {
-        "children": [],
+        "children": [
+          2
+        ],
         "id": 1,
         "name": "BT_Root_1",
         "parameters": {},
         "position": {
-          "x": 191,
-          "y": 236
+          "x": 50,
+          "y": 98
         },
         "type": "BT_Root"
       },
       {
-        "children": [],
+        "children": [
+          3,
+          4
+        ],
         "id": 2,
         "name": "BT_Selector_2",
         "parameters": {},
         "position": {
-          "x": 450,
-          "y": 201
+          "x": 410,
+          "y": 98
         },
         "type": "BT_Selector"
       },
@@ -67,8 +72,8 @@
         "name": "BT_AttackIfClose_3",
         "parameters": {},
         "position": {
-          "x": 707,
-          "y": 96
+          "x": 770,
+          "y": 50
         },
         "type": "BT_AttackIfClose"
       },
@@ -78,16 +83,16 @@
         "name": "BT_AttackMelee_4",
         "parameters": {},
         "position": {
-          "x": 714,
-          "y": 264
+          "x": 770,
+          "y": 146
         },
         "type": "BT_AttackMelee"
       }
     ],
-    "rootNodeId": 0
+    "rootNodeId": 1
   },
   "editorState": {
-    "layoutDirection": "TopToBottom",
+    "layoutDirection": "LeftToRight",
     "scrollOffset": {
       "x": 0,
       "y": 0
@@ -96,7 +101,9 @@
     "zoom": 1
   },
   "graphKind": "BehaviorTree",
-  "metadata": {},
+  "metadata": {
+    "rootNodeId": 1
+  },
   "schemaVersion": 2,
   "type": "Untitled-BehaviorTree-1"
 }

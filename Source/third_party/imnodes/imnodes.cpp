@@ -2511,8 +2511,11 @@ void EndNodeEditor()
             BeginCanvasInteraction(editor);
         }
 
+        // Rectangle selection must remain a pure selection gesture.  Edge
+        // panning here makes a newly loaded canvas drift as soon as a user
+        // starts selecting an area.  Keep auto-pan for node drags and link
+        // creation, where it is needed to extend the editable workspace.
         bool should_auto_pan =
-            editor.ClickInteraction.Type == ImNodesClickInteractionType_BoxSelection ||
             editor.ClickInteraction.Type == ImNodesClickInteractionType_LinkCreation ||
             editor.ClickInteraction.Type == ImNodesClickInteractionType_Node;
         if (should_auto_pan && !MouseInCanvas())

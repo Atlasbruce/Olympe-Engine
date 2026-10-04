@@ -149,6 +149,19 @@ public:
     virtual void SetMinimapPosition(int pos) { (void)pos; }
 
     // ------------------------------------------------------------------
+    // Shared canvas view controls
+    // ------------------------------------------------------------------
+
+    /** @brief Whether this renderer exposes the shared grid toggle. */
+    virtual bool SupportsGrid() const { return false; }
+    virtual bool IsGridVisible() const { return false; }
+    virtual void SetGridVisible(bool visible) { (void)visible; }
+
+    /** @brief Whether this renderer can reset its pan/zoom view. */
+    virtual bool SupportsResetView() const { return false; }
+    virtual void ResetView() {}
+
+    // ------------------------------------------------------------------
     // Phase 43 - Framework Modal Rendering
     // ------------------------------------------------------------------
 

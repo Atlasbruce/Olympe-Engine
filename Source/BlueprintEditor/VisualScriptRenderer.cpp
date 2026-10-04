@@ -24,6 +24,10 @@ namespace Olympe {
 
 VisualScriptRenderer::VisualScriptRenderer()
 {
+    m_savedCanvasState.panX = 0.0f;
+    m_savedCanvasState.panY = 0.0f;
+    m_savedCanvasState.zoom = 1.0f;
+
     m_panel.Initialize();
     // Phase 55: Bind this renderer wrapper to the document adapter
     // so that the CanvasToolbarRenderer can query our minimap / verify / simulation capabilities
@@ -180,27 +184,62 @@ std::string VisualScriptRenderer::ResolvePath(const std::string& path) const
 // Phase 35.0: Canvas state management
 void VisualScriptRenderer::SaveCanvasState()
 {
-    // Phase 35.0: VisualScript uses imnodes native pan/zoom which is context-global
-    // For now, viewport state is preserved via ImNodes::EditorContext
-    // This stub ensures compatibility with the IGraphRenderer interface
+    if (!m_panel.m_canvasEditor)
+        return;
+
+    const ImVec2 pan = m_panel.m_canvasEditor->GetPan();
+    m_savedCanvasState.panX = pan.x;
+    m_savedCanvasState.panY = pan.y;
+    m_savedCanvasState.zoom = m_panel.m_canvasEditor->GetZoom();
 }
 
 void VisualScriptRenderer::RestoreCanvasState()
 {
-    // Phase 35.0: VisualScript pan/zoom restoration (handled by ImNodes context)
-    // This stub ensures compatibility with the IGraphRenderer interface
+    if (!m_panel.m_canvasEditor)
+        return;
+
+    m_panel.m_canvasEditor->SetZoom(m_savedCanvasState.zoom);
+    m_panel.m_canvasEditor->SetPan(
+        ImVec2(m_savedCanvasState.panX, m_savedCanvasState.panY));
 }
 
 std::string VisualScriptRenderer::GetCanvasStateJSON() const
 {
-    // Return empty for now - can be extended to persist canvas state in JSON files
-    return "";
+    if (!m_panel.m_canvasEditor)
+        return "{}";
+
+    const ImVec2 pan = m_panel.m_canvasEditor->GetPan();
+    nlohmann::json state;
+    state["panX"] = pan.x;
+    state["panY"] = pan.y;
+    state["zoom"] = m_panel.m_canvasEditor->GetZoom();
+    return state.dump();
 }
 
 void VisualScriptRenderer::SetCanvasStateJSON(const std::string& json)
 {
-    // Parse and restore from JSON - can be extended for persistence
-    (void)json;
+    if (!m_panel.m_canvasEditor || json.empty())
+        return;
+
+    try
+    {
+        const nlohmann::json state = nlohmann::json::parse(json);
+        if (!state.is_object())
+            return;
+
+        const float panX = state.value("panX", 0.0f);
+        const float panY = state.value("panY", 0.0f);
+        const float zoom = state.value("zoom", 1.0f);
+
+        m_savedCanvasState.panX = panX;
+        m_savedCanvasState.panY = panY;
+        m_savedCanvasState.zoom = zoom;
+        RestoreCanvasState();
+    }
+    catch (const std::exception&)
+    {
+        SYSTEM_LOG << "[VisualScriptRenderer] Ignored invalid canvas state JSON\n";
+    }
 }
 
 void VisualScriptRenderer::SetMinimapVisible(bool visible)
@@ -222,6 +261,23 @@ void VisualScriptRenderer::SetMinimapPosition(int pos)
     m_panel.m_minimapPosition = pos;
     if (m_panel.m_canvasEditor)
         m_panel.m_canvasEditor->SetMinimapPosition(pos);
+}
+
+bool VisualScriptRenderer::IsGridVisible() const
+{
+    return m_panel.m_canvasEditor && m_panel.m_canvasEditor->IsGridVisible();
+}
+
+void VisualScriptRenderer::SetGridVisible(bool visible)
+{
+    if (m_panel.m_canvasEditor)
+        m_panel.m_canvasEditor->SetGridVisible(visible);
+}
+
+void VisualScriptRenderer::ResetView()
+{
+    if (m_panel.m_canvasEditor)
+        m_panel.m_canvasEditor->ResetView();
 }
 
 void VisualScriptRenderer::RenderFrameworkModals()

@@ -7,6 +7,7 @@
 
 #include "CanvasFramework.h"
 #include "IGraphDocument.h"
+#include "../IGraphRenderer.h"
 #include "CanvasToolbarRenderer.h"
 #include "../../third_party/imgui/imgui.h"
 #include "../../system/system_utils.h"
@@ -145,13 +146,11 @@ void CanvasFramework::RenderCanvas()
         return;
     }
 
-    // TODO: Call renderer's Render() method
-    // Note: Specific renderer rendering depends on document type
-    // EntityPrefab: renderer->Render()
-    // VisualScript: imnodes rendering (different pattern)
-    // BehaviorTree: imnodes rendering (different pattern)
-    
-    SYSTEM_LOG << "[CanvasFramework] Canvas rendering delegated to document renderer\n";
+    // The renderer is the sole owner of graph-type-specific canvas contents.
+    // Calling it here makes CanvasFramework a complete rendering host instead
+    // of a toolbar/modal wrapper.  Existing editors that use a custom layout
+    // may still call RenderToolbar()/RenderModals() independently.
+    renderer->Render();
 }
 
 void CanvasFramework::RenderModals()
