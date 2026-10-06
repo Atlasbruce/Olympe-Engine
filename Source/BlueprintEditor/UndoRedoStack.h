@@ -373,6 +373,63 @@ private:
 };
 
 // ============================================================================
+// EditNodeDefinitionCommand
+// ============================================================================
+
+/**
+ * @class EditNodeDefinitionCommand
+ * @brief Restores a complete node definition after a compound editor change.
+ *
+ * @details
+ * Some specialised inspectors edit several fields as one logical operation
+ * (for example condition references plus their generated dynamic pins).  A
+ * complete node snapshot keeps that operation atomic for Undo/Redo while
+ * avoiding a partial restore of dependent fields.
+ */
+class EditNodeDefinitionCommand : public ICommand {
+public:
+    EditNodeDefinitionCommand(const TaskNodeDefinition& oldNode,
+                              const TaskNodeDefinition& newNode);
+
+    void Execute(TaskGraphTemplate& graph) override;
+    void Undo(TaskGraphTemplate& graph) override;
+    std::string GetDescription() const override;
+
+private:
+    TaskNodeDefinition m_oldNode;
+    TaskNodeDefinition m_newNode;
+
+    static void ApplyNode(TaskGraphTemplate& graph,
+                          const TaskNodeDefinition& node);
+};
+
+// ============================================================================
+// EditBlackboardCommand
+// ============================================================================
+
+/**
+ * @brief Records one atomic change to the graph-local blackboard schema.
+ *
+ * Blackboard entries are interdependent (name, type, default and scope), so a
+ * snapshot of the small schema is safer than restoring an individual field.
+ */
+class EditBlackboardCommand : public ICommand {
+public:
+    EditBlackboardCommand(const std::vector<BlackboardEntry>& oldEntries,
+                          const std::vector<BlackboardEntry>& newEntries,
+                          const std::string& description);
+
+    void Execute(TaskGraphTemplate& graph) override;
+    void Undo(TaskGraphTemplate& graph) override;
+    std::string GetDescription() const override;
+
+private:
+    std::vector<BlackboardEntry> m_oldEntries;
+    std::vector<BlackboardEntry> m_newEntries;
+    std::string                  m_description;
+};
+
+// ============================================================================
 // UndoRedoStack
 // ============================================================================
 

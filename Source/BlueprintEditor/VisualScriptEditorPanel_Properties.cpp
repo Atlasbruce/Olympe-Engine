@@ -59,6 +59,11 @@ namespace Olympe {
 void VisualScriptEditorPanel::RenderBranchNodeProperties(VSEditorNode& eNode,
                                                          TaskNodeDefinition& def)
 {
+    // Condition editing can update references, operand bindings and derived
+    // dynamic pins together.  Keep one snapshot so Ctrl+Z restores the whole
+    // coherent node state rather than only a subset of those fields.
+    const TaskNodeDefinition beforeConditionEdit = def;
+
     // ── Blue header: node name (matches canvas Section 1 title bar) ──────────
     ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.0f, 0.4f, 0.8f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.0f, 0.5f, 0.9f, 1.0f));
@@ -80,6 +85,7 @@ void VisualScriptEditorPanel::RenderBranchNodeProperties(VSEditorNode& eNode,
             m_condPanelNodeID = eNode.nodeID;
             m_conditionsPanel->SetNodeName(def.NodeName);
             m_conditionsPanel->SetConditionRefs(def.conditionRefs);
+            m_conditionsPanel->SetConditionOperandRefs(def.conditionOperandRefs);
             m_conditionsPanel->SetDynamicPins(def.dynamicPins);
             m_conditionsPanel->ClearDirty();
         }
@@ -105,6 +111,10 @@ void VisualScriptEditorPanel::RenderBranchNodeProperties(VSEditorNode& eNode,
                 }
             }
             m_conditionsPanel->ClearDirty();
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
+                    beforeConditionEdit, def)),
+                m_template);
             m_dirty = true;
         }
     }
@@ -133,6 +143,8 @@ void VisualScriptEditorPanel::RenderBranchNodeProperties(VSEditorNode& eNode,
 void VisualScriptEditorPanel::RenderMathOpNodeProperties(VSEditorNode& eNode,
                                                         TaskNodeDefinition& def)
 {
+    const TaskNodeDefinition beforeOperandEdit = def;
+
     // ── Blue header: node name (matches canvas Section 1 title bar) ──────────
     ImGui::PushStyleColor(ImGuiCol_Header,        ImVec4(0.0f, 0.4f, 0.8f, 1.0f));
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.0f, 0.5f, 0.9f, 1.0f));
@@ -191,6 +203,10 @@ void VisualScriptEditorPanel::RenderMathOpNodeProperties(VSEditorNode& eNode,
                 }
             }
             m_mathOpPanel->ClearDirty();
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
+                    beforeOperandEdit, def)),
+                m_template);
             m_dirty = true;
         }
     }
@@ -1818,6 +1834,7 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
 
             case TaskNodeType::MathOp:
             {
+                const TaskNodeDefinition beforeMathOpEdit = def;
                 ImGui::TextColored(ImVec4(1.0f, 0.85f, 0.0f, 1.0f), "Math Operation");
                 ImGui::Separator();
 
@@ -1849,6 +1866,10 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
                             break;
                         }
                     }
+                    m_undoStack.PushCommand(
+                        std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
+                            beforeMathOpEdit, def)),
+                        m_template);
                     m_dirty = true;
                 }
 
@@ -1933,6 +1954,7 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
     // ---- Branch-specific: Conditions panel ----
     if (def.Type == TaskNodeType::Branch)
     {
+        const TaskNodeDefinition beforeConditionEdit = def;
         // Update condition panel with current node's data
         if (m_condPanelNodeID != m_selectedNodeID)
         {
@@ -1964,6 +1986,10 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
                     break;
                 }
             }
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
+                    beforeConditionEdit, def)),
+                m_template);
         }
 
         ImGui::Separator();

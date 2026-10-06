@@ -72,6 +72,7 @@ void VisualScriptEditorPanel::PerformUndo()
     m_justPerformedUndoRedo      = true;
     m_skipPositionSyncNextFrame  = true;
     m_nodeDragStartPositions.clear();
+    m_condPanelNodeID = -1;
     m_dirty = true;
     m_verificationDone = false;
     SYSTEM_LOG << "[VSEditor] Undo complete. Template now has "
@@ -102,6 +103,7 @@ void VisualScriptEditorPanel::PerformRedo()
     m_justPerformedUndoRedo      = true;
     m_skipPositionSyncNextFrame  = true;
     m_nodeDragStartPositions.clear();
+    m_condPanelNodeID = -1;
     m_dirty = true;
     m_verificationDone = false;
     SYSTEM_LOG << "[VSEditor] Redo complete. Template now has "
@@ -283,6 +285,20 @@ void VisualScriptEditorPanel::RenderToolbar()
 			ImGui::SameLine();
 		}
 	}
+
+	// The Visual Script editor keeps its own command stack while the legacy
+	// BlueprintEditor backend has a separate one.  Expose these controls here
+	// so the user always invokes the history that owns VS node/property edits.
+	ImGui::SameLine();
+	if (ImGui::Button("Undo##vsHistory") && m_undoStack.CanUndo())
+		PerformUndo();
+	if (ImGui::IsItemHovered() && m_undoStack.CanUndo())
+		ImGui::SetTooltip("Undo: %s", m_undoStack.PeekUndoDescription().c_str());
+	ImGui::SameLine();
+	if (ImGui::Button("Redo##vsHistory") && m_undoStack.CanRedo())
+		PerformRedo();
+	if (ImGui::IsItemHovered() && m_undoStack.CanRedo())
+		ImGui::SetTooltip("Redo: %s", m_undoStack.PeekRedoDescription().c_str());
 
 	ImGui::SameLine();
 

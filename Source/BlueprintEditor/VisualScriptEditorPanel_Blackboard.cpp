@@ -46,12 +46,17 @@ void VisualScriptEditorPanel::RenderBlackboard()
 
     if (ImGui::Button("+##vsbbAdd"))
     {
+        const std::vector<BlackboardEntry> beforeEdit = m_template.Blackboard;
         BlackboardEntry entry;
         entry.Key      = "NewVariable";
         entry.Type     = VariableType::Int;
         entry.Default  = GetDefaultValueForType(VariableType::Int);
         entry.IsGlobal = false;
         m_template.Blackboard.push_back(entry);
+        m_undoStack.PushCommand(
+            std::unique_ptr<ICommand>(new EditBlackboardCommand(
+                beforeEdit, m_template.Blackboard, "Add local blackboard variable")),
+            m_template);
         m_dirty = true;
     }
     ImGui::SameLine();
@@ -206,12 +211,17 @@ void VisualScriptEditorPanel::RenderLocalVariablesPanel()
 
     if (ImGui::Button("+##vsbbAdd"))
     {
+        const std::vector<BlackboardEntry> beforeEdit = m_template.Blackboard;
         BlackboardEntry entry;
         entry.Key      = "NewVariable";
         entry.Type     = VariableType::Int;
         entry.Default  = GetDefaultValueForType(VariableType::Int);
         entry.IsGlobal = false;
         m_template.Blackboard.push_back(entry);
+        m_undoStack.PushCommand(
+            std::unique_ptr<ICommand>(new EditBlackboardCommand(
+                beforeEdit, m_template.Blackboard, "Add local blackboard variable")),
+            m_template);
         m_dirty = true;
     }
     ImGui::SameLine();
@@ -278,8 +288,13 @@ void VisualScriptEditorPanel::RenderLocalVariablesPanel()
         ImGui::SetNextItemWidth(80.0f);
         if (ImGui::Combo("##bbtype", &curTypeIdx, typeNames, 6))
         {
+            const std::vector<BlackboardEntry> beforeEdit = m_template.Blackboard;
             entry.Type = typeValues[curTypeIdx];
             entry.Default = GetDefaultValueForType(entry.Type);
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(new EditBlackboardCommand(
+                    beforeEdit, m_template.Blackboard, "Change blackboard variable type")),
+                m_template);
             m_dirty = true;
         }
 
@@ -295,7 +310,12 @@ void VisualScriptEditorPanel::RenderLocalVariablesPanel()
         bool isGlobal = entry.IsGlobal;
         if (ImGui::Checkbox("G##bbglobal", &isGlobal))
         {
+            const std::vector<BlackboardEntry> beforeEdit = m_template.Blackboard;
             entry.IsGlobal = isGlobal;
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(new EditBlackboardCommand(
+                    beforeEdit, m_template.Blackboard, "Change blackboard variable scope")),
+                m_template);
             m_dirty = true;
         }
         if (ImGui::IsItemHovered())
@@ -304,8 +324,13 @@ void VisualScriptEditorPanel::RenderLocalVariablesPanel()
         ImGui::SameLine();
         if (ImGui::Button("X##bbdel"))
         {
+            const std::vector<BlackboardEntry> beforeEdit = m_template.Blackboard;
             m_template.Blackboard.erase(m_template.Blackboard.begin() + idx);
             m_pendingBlackboardEdits.erase(idx);
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(new EditBlackboardCommand(
+                    beforeEdit, m_template.Blackboard, "Delete local blackboard variable")),
+                m_template);
             m_dirty = true;
         }
 

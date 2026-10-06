@@ -413,10 +413,21 @@ void VisualScriptEditorPanel::SyncEditorNodesFromTemplate()
         if (posXIt != def.Parameters.end() &&
             posYIt != def.Parameters.end() &&
             posXIt->second.Type == ParameterBindingType::Literal &&
-            posYIt->second.Type == ParameterBindingType::Literal)
+            posYIt->second.Type == ParameterBindingType::Literal &&
+            (posXIt->second.LiteralValue.GetType() == VariableType::Float ||
+             posXIt->second.LiteralValue.GetType() == VariableType::Int) &&
+            (posYIt->second.LiteralValue.GetType() == VariableType::Float ||
+             posYIt->second.LiteralValue.GetType() == VariableType::Int))
         {
-            float paramX = posXIt->second.LiteralValue.AsFloat();
-            float paramY = posYIt->second.LiteralValue.AsFloat();
+            // Older graphs can store editor coordinates as integers.  Avoid a
+            // typed getter until the value has been verified so Undo remains
+            // safe when it restores a legacy snapshot.
+            const TaskValue& xValue = posXIt->second.LiteralValue;
+            const TaskValue& yValue = posYIt->second.LiteralValue;
+            float paramX = xValue.GetType() == VariableType::Float
+                ? xValue.AsFloat() : static_cast<float>(xValue.AsInt());
+            float paramY = yValue.GetType() == VariableType::Float
+                ? yValue.AsFloat() : static_cast<float>(yValue.AsInt());
 
             // Validate parameter positions
             if (std::isfinite(paramX) && std::isfinite(paramY) &&

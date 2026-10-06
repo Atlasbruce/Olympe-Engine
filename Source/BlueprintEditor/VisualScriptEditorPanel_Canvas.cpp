@@ -443,7 +443,9 @@ void VisualScriptEditorPanel::RenderCanvas()
 
         // PHASE 1.5: Detect left-click (for double-click tracking).
         // Used to detect when user double-clicks on a node (e.g., SubGraph).
-        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+            m_canvasEditor &&
+            m_canvasEditor->IsPointInCanvas(ImGui::GetMousePos()))
         {
             if (nodeHovered)
             {
@@ -765,8 +767,11 @@ void VisualScriptEditorPanel::RenderCanvas()
         }
         else
         {
-        // Step 1: on the initial click, snapshot positions of all positioned nodes.
-        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        // Step 1: snapshot only a click that begins inside the canvas.  A
+        // property-panel click must never create a MoveNode history entry.
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+            m_canvasEditor &&
+            m_canvasEditor->IsPointInCanvas(ImGui::GetMousePos()))
         {
             m_nodeDragStartPositions.clear();
             for (size_t i = 0; i < m_editorNodes.size(); ++i)

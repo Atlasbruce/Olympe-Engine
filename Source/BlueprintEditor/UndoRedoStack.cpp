@@ -680,4 +680,74 @@ std::string EditNodePropertiesCommand::GetDescription() const
     return "Edit node properties on node #" + std::to_string(m_nodeID);
 }
 
+// ============================================================================
+// EditNodeDefinitionCommand
+// ============================================================================
+
+EditNodeDefinitionCommand::EditNodeDefinitionCommand(
+    const TaskNodeDefinition& oldNode,
+    const TaskNodeDefinition& newNode)
+    : m_oldNode(oldNode)
+    , m_newNode(newNode)
+{
+}
+
+void EditNodeDefinitionCommand::ApplyNode(TaskGraphTemplate& graph,
+                                          const TaskNodeDefinition& node)
+{
+    for (size_t i = 0; i < graph.Nodes.size(); ++i)
+    {
+        if (graph.Nodes[i].NodeID == node.NodeID)
+        {
+            graph.Nodes[i] = node;
+            graph.BuildLookupCache();
+            return;
+        }
+    }
+}
+
+void EditNodeDefinitionCommand::Execute(TaskGraphTemplate& graph)
+{
+    ApplyNode(graph, m_newNode);
+}
+
+void EditNodeDefinitionCommand::Undo(TaskGraphTemplate& graph)
+{
+    ApplyNode(graph, m_oldNode);
+}
+
+std::string EditNodeDefinitionCommand::GetDescription() const
+{
+    return "Edit conditions on node #" + std::to_string(m_newNode.NodeID);
+}
+
+// ============================================================================
+// EditBlackboardCommand
+// ============================================================================
+
+EditBlackboardCommand::EditBlackboardCommand(
+    const std::vector<BlackboardEntry>& oldEntries,
+    const std::vector<BlackboardEntry>& newEntries,
+    const std::string& description)
+    : m_oldEntries(oldEntries)
+    , m_newEntries(newEntries)
+    , m_description(description)
+{
+}
+
+void EditBlackboardCommand::Execute(TaskGraphTemplate& graph)
+{
+    graph.Blackboard = m_newEntries;
+}
+
+void EditBlackboardCommand::Undo(TaskGraphTemplate& graph)
+{
+    graph.Blackboard = m_oldEntries;
+}
+
+std::string EditBlackboardCommand::GetDescription() const
+{
+    return m_description;
+}
+
 } // namespace Olympe

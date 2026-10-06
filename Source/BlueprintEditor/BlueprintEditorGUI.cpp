@@ -1389,21 +1389,30 @@ void BlueprintEditorGUI::RenderPreferencesDialog()
     {
         ImGuiIO& io = ImGui::GetIO();
         auto& backend = BlueprintEditor::Get();
+
+        // Visual Script owns a dedicated command stack.  Its panel handles
+        // Ctrl+Z/Ctrl+Y itself; sending the same keystroke to the legacy
+        // BlueprintEditor stack can restore an unrelated legacy command.
+        EditorTab* activeTab = TabManager::Get().GetActiveTab();
+        const bool activeTabOwnsHistory = activeTab != nullptr &&
+                                          activeTab->graphType == "VisualScript";
         
         // Don't process shortcuts if typing in a text field
         if (io.WantTextInput)
             return;
         
         // Ctrl+Z : Undo
-        if (io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z) && !io.KeyShift)
+        if (!activeTabOwnsHistory &&
+            io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Z) && !io.KeyShift)
         {
             if (backend.CanUndo())
                 backend.Undo();
         }
         
         // Ctrl+Y or Ctrl+Shift+Z : Redo
-        if ((io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y)) ||
-            (io.KeyCtrl && io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_Z)))
+        if (!activeTabOwnsHistory &&
+            ((io.KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Y)) ||
+            (io.KeyCtrl && io.KeyShift && ImGui::IsKeyPressed(ImGuiKey_Z))))
         {
             if (backend.CanRedo())
                 backend.Redo();
