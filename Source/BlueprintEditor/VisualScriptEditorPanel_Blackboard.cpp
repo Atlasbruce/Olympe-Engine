@@ -22,6 +22,35 @@
 
 namespace Olympe {
 
+namespace {
+
+bool AreTaskValuesEqual(const TaskValue& left, const TaskValue& right)
+{
+    return left.GetType() == right.GetType() &&
+           left.to_string() == right.to_string();
+}
+
+bool AreBlackboardsEqual(const std::vector<BlackboardEntry>& left,
+                         const std::vector<BlackboardEntry>& right)
+{
+    if (left.size() != right.size())
+        return false;
+
+    for (size_t i = 0; i < left.size(); ++i)
+    {
+        if (left[i].Key != right[i].Key ||
+            left[i].Type != right[i].Type ||
+            left[i].IsGlobal != right[i].IsGlobal ||
+            !AreTaskValuesEqual(left[i].Default, right[i].Default))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+} // namespace
+
 void VisualScriptEditorPanel::RenderBlackboard()
 {
     ImGui::TextDisabled("Local Blackboard");
@@ -57,6 +86,8 @@ void VisualScriptEditorPanel::RenderBlackboard()
             std::unique_ptr<ICommand>(new EditBlackboardCommand(
                 beforeEdit, m_template.Blackboard, "Add local blackboard variable")),
             m_template);
+        m_blackboardTextEditActive = false;
+        m_blackboardIdleSnapshot = m_template.Blackboard;
         m_dirty = true;
     }
     ImGui::SameLine();
@@ -189,6 +220,12 @@ void VisualScriptEditorPanel::RenderBlackboard()
 
 void VisualScriptEditorPanel::RenderLocalVariablesPanel()
 {
+    // Preserve the schema from immediately before an editable widget receives
+    // focus.  The transaction is committed only after focus is released, so a
+    // typed name or numeric default remains one Undo operation.
+    if (!m_blackboardTextEditActive && !ImGui::IsAnyItemActive())
+        m_blackboardIdleSnapshot = m_template.Blackboard;
+
     ImGui::TextDisabled("Local Blackboard");
     ImGui::Separator();
 
@@ -222,6 +259,8 @@ void VisualScriptEditorPanel::RenderLocalVariablesPanel()
             std::unique_ptr<ICommand>(new EditBlackboardCommand(
                 beforeEdit, m_template.Blackboard, "Add local blackboard variable")),
             m_template);
+        m_blackboardTextEditActive = false;
+        m_blackboardIdleSnapshot = m_template.Blackboard;
         m_dirty = true;
     }
     ImGui::SameLine();
@@ -295,6 +334,8 @@ void VisualScriptEditorPanel::RenderLocalVariablesPanel()
                 std::unique_ptr<ICommand>(new EditBlackboardCommand(
                     beforeEdit, m_template.Blackboard, "Change blackboard variable type")),
                 m_template);
+            m_blackboardTextEditActive = false;
+            m_blackboardIdleSnapshot = m_template.Blackboard;
             m_dirty = true;
         }
 
@@ -316,6 +357,8 @@ void VisualScriptEditorPanel::RenderLocalVariablesPanel()
                 std::unique_ptr<ICommand>(new EditBlackboardCommand(
                     beforeEdit, m_template.Blackboard, "Change blackboard variable scope")),
                 m_template);
+            m_blackboardTextEditActive = false;
+            m_blackboardIdleSnapshot = m_template.Blackboard;
             m_dirty = true;
         }
         if (ImGui::IsItemHovered())
@@ -331,10 +374,33 @@ void VisualScriptEditorPanel::RenderLocalVariablesPanel()
                 std::unique_ptr<ICommand>(new EditBlackboardCommand(
                     beforeEdit, m_template.Blackboard, "Delete local blackboard variable")),
                 m_template);
+            m_blackboardTextEditActive = false;
+            m_blackboardIdleSnapshot = m_template.Blackboard;
             m_dirty = true;
         }
 
         ImGui::PopID();
+    }
+
+    if (!m_blackboardTextEditActive && ImGui::IsAnyItemActive())
+    {
+        m_blackboardTextEditSnapshot = m_blackboardIdleSnapshot;
+        m_blackboardTextEditActive = true;
+    }
+    else if (m_blackboardTextEditActive && !ImGui::IsAnyItemActive())
+    {
+        if (!AreBlackboardsEqual(m_blackboardTextEditSnapshot,
+                                 m_template.Blackboard))
+        {
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(new EditBlackboardCommand(
+                    m_blackboardTextEditSnapshot,
+                    m_template.Blackboard,
+                    "Edit local blackboard variable")),
+                m_template);
+        }
+        m_blackboardTextEditActive = false;
+        m_blackboardIdleSnapshot = m_template.Blackboard;
     }
 }
 

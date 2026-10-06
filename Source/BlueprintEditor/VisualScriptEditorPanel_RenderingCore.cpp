@@ -72,6 +72,7 @@ void VisualScriptEditorPanel::PerformUndo()
     m_justPerformedUndoRedo      = true;
     m_skipPositionSyncNextFrame  = true;
     m_nodeDragStartPositions.clear();
+    m_nodeDragGestureStarted = false;
     m_condPanelNodeID = -1;
     m_dirty = true;
     m_verificationDone = false;
@@ -103,6 +104,7 @@ void VisualScriptEditorPanel::PerformRedo()
     m_justPerformedUndoRedo      = true;
     m_skipPositionSyncNextFrame  = true;
     m_nodeDragStartPositions.clear();
+    m_nodeDragGestureStarted = false;
     m_condPanelNodeID = -1;
     m_dirty = true;
     m_verificationDone = false;

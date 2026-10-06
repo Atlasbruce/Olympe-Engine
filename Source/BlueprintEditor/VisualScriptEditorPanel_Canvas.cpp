@@ -36,6 +36,7 @@
 #include <cstdlib>
 #include <limits>
 #include <unordered_set>
+#include <vector>
 
 namespace Olympe {
 
@@ -749,9 +750,9 @@ void VisualScriptEditorPanel::RenderCanvas()
     }
 
     // Track node moves for undo/redo using MoveNodeCommand.
-    // Phase 19 — snapshot-at-click approach:
-    //   Step 1 (MouseClicked)  : snapshot current eNode.posX/Y for all positioned nodes.
-    //   Step 2 (MouseDown)     : keep eNode.posX/Y in sync with ImNodes live positions.
+    // Phase 19 — snapshot-at-drag approach:
+    //   Step 1 (MouseClicked)  : snapshot the clicked node and its existing selection.
+    //   Step 2 (MouseDragging) : keep the dragged nodes in sync with ImNodes live positions.
     //   Step 3 (MouseReleased) : for each snapshotted node, push MoveNodeCommand if
     //                            final position differs from snapshot by more than 1px.
     //
@@ -767,31 +768,69 @@ void VisualScriptEditorPanel::RenderCanvas()
         }
         else
         {
-        // Step 1: snapshot only a click that begins inside the canvas.  A
-        // property-panel click must never create a MoveNode history entry.
+        // Step 1: only a click on a node can start a node drag.  In
+        // particular, canvas selection clicks and property-panel clicks must
+        // not snapshot positions: ImNodes may reconcile positions during such
+        // a click, which previously produced phantom Move Node commands.
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
             m_canvasEditor &&
             m_canvasEditor->IsPointInCanvas(ImGui::GetMousePos()))
         {
             m_nodeDragStartPositions.clear();
-            for (size_t i = 0; i < m_editorNodes.size(); ++i)
+            m_nodeDragGestureStarted = false;
+
+            int hoveredNodeID = -1;
+            if (ImNodes::IsNodeHovered(&hoveredNodeID) &&
+                m_positionedNodes.count(hoveredNodeID) != 0)
             {
-                const VSEditorNode& eNode = m_editorNodes[i];
-                if (m_positionedNodes.count(eNode.nodeID) == 0)
-                    continue;
-                m_nodeDragStartPositions[eNode.nodeID] =
-                    std::make_pair(eNode.posX, eNode.posY);
+                // Keep the previous multi-selection together only when the
+                // clicked node already belongs to it.  ImNodes selection is
+                // updated after the click, therefore this is intentionally
+                // based on the pre-click selection.
+                const int selectedCount = ImNodes::NumSelectedNodes();
+                std::vector<int> selectedNodeIDs(static_cast<size_t>(selectedCount));
+                if (selectedCount > 0)
+                    ImNodes::GetSelectedNodes(selectedNodeIDs.data());
+
+                const bool hoveredIsSelected =
+                    std::find(selectedNodeIDs.begin(), selectedNodeIDs.end(), hoveredNodeID) !=
+                    selectedNodeIDs.end();
+                if (!hoveredIsSelected)
+                {
+                    selectedNodeIDs.clear();
+                    selectedNodeIDs.push_back(hoveredNodeID);
+                }
+
+                for (int nodeID : selectedNodeIDs)
+                {
+                    for (const VSEditorNode& eNode : m_editorNodes)
+                    {
+                        if (eNode.nodeID == nodeID && m_positionedNodes.count(nodeID) != 0)
+                        {
+                            // Read the authoritative ImNodes position at the
+                            // beginning of the gesture.  eNode can otherwise
+                            // still hold a pre-layout position, creating a
+                            // false delta on the first click after a load.
+                            const ImVec2 startPosition = ImNodes::GetNodeEditorSpacePos(nodeID);
+                            m_nodeDragStartPositions[nodeID] =
+                                std::make_pair(startPosition.x, startPosition.y);
+                            break;
+                        }
+                    }
+                }
             }
-            //SYSTEM_LOG << "[VSEditor] Mouse clicked: snapshot " << static_cast<size_t>(m_nodeDragStartPositions.size()) << " node positions\n";
         }
 
-        // Step 2: while mouse is held, keep eNode.posX/Y current (live Save support).
-        if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+        // Step 2: do not query/synchronise positions until this is a real
+        // drag.  This prevents click-only interaction from becoming a move.
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
+            !m_nodeDragStartPositions.empty() &&
+            ImGui::IsMouseDragging(ImGuiMouseButton_Left, 2.0f))
         {
-            for (size_t i = 0; i < m_editorNodes.size(); ++i)
+            m_nodeDragGestureStarted = true;
+            for (VSEditorNode& eNode : m_editorNodes)
             {
-                VSEditorNode& eNode = m_editorNodes[i];
-                if (m_positionedNodes.count(eNode.nodeID) == 0)
+                if (m_nodeDragStartPositions.count(eNode.nodeID) == 0)
                     continue;
                 const ImVec2 pos = ImNodes::GetNodeEditorSpacePos(eNode.nodeID);
                 eNode.posX = pos.x;
@@ -800,7 +839,7 @@ void VisualScriptEditorPanel::RenderCanvas()
         }
 
         // Step 3: on release, push MoveNodeCommand for any node that moved > 1px.
-        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left) && m_nodeDragGestureStarted)
         {
             for (const auto& entry : m_nodeDragStartPositions)
             {
@@ -849,6 +888,12 @@ void VisualScriptEditorPanel::RenderCanvas()
                 //}
             }
             m_nodeDragStartPositions.clear();
+            m_nodeDragGestureStarted = false;
+        }
+        else if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+        {
+            m_nodeDragStartPositions.clear();
+            m_nodeDragGestureStarted = false;
         }
         } // end !m_justPerformedUndoRedo
     }

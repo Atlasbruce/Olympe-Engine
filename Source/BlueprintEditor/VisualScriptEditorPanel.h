@@ -832,6 +832,8 @@ private:
     std::string m_propEditOldMathOp;
     std::string m_propEditOldSubGraphPath;
     float       m_propEditOldDelay = 0.0f;
+    bool        m_nodeNameEditActive = false;
+    bool        m_delayEditActive = false;
 
     // Switch-specific edit state (Phase 22-A)
     std::string                       m_propEditSwitchVar;    ///< Live buffer for switchVariable field
@@ -853,6 +855,10 @@ private:
     /// per drag gesture instead of one command per frame.
     /// Key: nodeID  Value: (posX, posY) at the moment the drag was detected.
     std::unordered_map<int, std::pair<float, float> > m_nodeDragStartPositions;
+
+    /// True only after the pointer has actually travelled while dragging a
+    /// node.  A plain canvas/node click must never create move history.
+    bool m_nodeDragGestureStarted = false;
 
     // -----------------------------------------------------------------------
     // Drag & drop pending state (two-phase node creation)
@@ -886,6 +892,12 @@ private:
     /// Deferred key-name edits for blackboard entries: index -> pending new key.
     /// Committed in CommitPendingBlackboardEdits() before Save.
     std::unordered_map<int, std::string> m_pendingBlackboardEdits;
+
+    /// Coalesces a text/numeric blackboard edit into one Undo command when
+    /// its ImGui widget loses focus.
+    bool                         m_blackboardTextEditActive = false;
+    std::vector<BlackboardEntry> m_blackboardIdleSnapshot;
+    std::vector<BlackboardEntry> m_blackboardTextEditSnapshot;
 
     // -----------------------------------------------------------------------
     // Layout state (UX — resizable properties panel)

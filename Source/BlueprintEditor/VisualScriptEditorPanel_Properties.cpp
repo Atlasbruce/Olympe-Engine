@@ -1093,6 +1093,13 @@ void VisualScriptEditorPanel::RenderProperties()
 
     TaskNodeDefinition& def = eNode->def;
 
+    if (m_propEditNodeIDOnFocus != m_selectedNodeID)
+    {
+        m_propEditNodeIDOnFocus = m_selectedNodeID;
+        m_nodeNameEditActive = false;
+        m_delayEditActive = false;
+    }
+
     // Reset focus-node tracking when the selected node changes.
     // Old-value snapshots do NOT need explicit resetting here — they are
     // naturally overwritten by the next IsItemActivated() event.
@@ -1526,13 +1533,29 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
 
     TaskNodeDefinition& def = eNode->def;
 
+    // The live Properties tab uses its own renderer.  A pending edit belongs
+    // to the selected node only; never carry its pre-edit value to another
+    // node when the selection changes.
+    if (m_propEditNodeIDOnFocus != m_selectedNodeID)
+    {
+        m_propEditNodeIDOnFocus = m_selectedNodeID;
+        m_nodeNameEditActive = false;
+        m_delayEditActive = false;
+    }
+
     // ---- ALL node types: standard fields ----
     {
         // Node Name
+        const std::string nodeNameBeforeEdit = def.NodeName;
         char nameBuf[128];
         strncpy_s(nameBuf, sizeof(nameBuf), def.NodeName.c_str(), _TRUNCATE);
         if (ImGui::InputText("Name##nodeprops_name", nameBuf, sizeof(nameBuf)))
         {
+            if (!m_nodeNameEditActive)
+            {
+                m_propEditOldName = nodeNameBeforeEdit;
+                m_nodeNameEditActive = true;
+            }
             def.NodeName = nameBuf;
             for (size_t i = 0; i < m_template.Nodes.size(); ++i)
             {
@@ -1543,6 +1566,22 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
                 }
             }
             m_dirty = true;
+        }
+        // Commit as soon as the field is no longer active.  This is more
+        // reliable than IsItemDeactivatedAfterEdit() for changes entered via
+        // the native text input path.
+        if (m_nodeNameEditActive && !ImGui::IsItemActive())
+        {
+            if (def.NodeName != m_propEditOldName)
+            {
+                m_undoStack.PushCommand(
+                    std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                        m_selectedNodeID, "NodeName",
+                        PropertyValue::FromString(m_propEditOldName),
+                        PropertyValue::FromString(def.NodeName))),
+                    m_template);
+            }
+            m_nodeNameEditActive = false;
         }
 
         ImGui::Separator();
@@ -1560,6 +1599,7 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
         {
             case TaskNodeType::AtomicTask:
             {
+                const TaskNodeDefinition beforeTaskEdit = def;
                 const std::vector<TaskSpec> tasks = AtomicTaskUIRegistry::Get().GetSortedForUI();
                 const std::string& currentTask = def.AtomicTaskID;
                 const char* previewLabel = currentTask.empty() ? "(select task...)" : currentTask.c_str();
@@ -1584,6 +1624,10 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
                                     break;
                                 }
                             }
+                            m_undoStack.PushCommand(
+                                std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
+                                    beforeTaskEdit, def)),
+                                m_template);
                             m_dirty = true;
                         }
                         if (selected)
@@ -1604,6 +1648,11 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
                         for (const auto& param : taskSpec->parameters)
                         {
                             ImGui::PushID(param.name.c_str());
+                            // Parameter bindings are a compound part of the
+                            // node definition.  Keep a complete snapshot so
+                            // every literal edit can be restored reliably.
+                            const TaskNodeDefinition beforeParameterEdit = def;
+                            bool parameterChanged = false;
 
                             // Build label: parameter name + type hint
                             std::string label = param.name + " (" + param.type + ")";
@@ -1660,6 +1709,7 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
                                         }
                                     }
                                     m_dirty = true;
+                                    parameterChanged = true;
                                 }
                             }
                             else if (param.type == "Int")
@@ -1683,6 +1733,7 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
                                         }
                                     }
                                     m_dirty = true;
+                                    parameterChanged = true;
                                 }
                             }
                             else if (param.type == "Float")
@@ -1706,6 +1757,7 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
                                         }
                                     }
                                     m_dirty = true;
+                                    parameterChanged = true;
                                 }
                             }
                             else if (param.type == "String")
@@ -1731,7 +1783,16 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
                                         }
                                     }
                                     m_dirty = true;
+                                    parameterChanged = true;
                                 }
+                            }
+
+                            if (parameterChanged)
+                            {
+                                m_undoStack.PushCommand(
+                                    std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
+                                        beforeParameterEdit, def)),
+                                    m_template);
                             }
 
                             ImGui::Spacing();
@@ -1744,9 +1805,15 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
 
             case TaskNodeType::Delay:
             {
+                const float delayBeforeEdit = def.DelaySeconds;
                 float delay = def.DelaySeconds;
                 if (ImGui::InputFloat("Delay (s)##nodeprops_delay", &delay, 0.1f, 1.0f))
                 {
+                    if (!m_delayEditActive)
+                    {
+                        m_propEditOldDelay = delayBeforeEdit;
+                        m_delayEditActive = true;
+                    }
                     def.DelaySeconds = delay;
                     for (size_t i = 0; i < m_template.Nodes.size(); ++i)
                     {
@@ -1757,6 +1824,21 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
                         }
                     }
                     m_dirty = true;
+                }
+                // Same transaction rule as the node name: retain the value
+                // from before the first change and commit on focus loss.
+                if (m_delayEditActive && !ImGui::IsItemActive())
+                {
+                    if (def.DelaySeconds != m_propEditOldDelay)
+                    {
+                        m_undoStack.PushCommand(
+                            std::unique_ptr<ICommand>(new EditNodePropertyCommand(
+                                m_selectedNodeID, "DelaySeconds",
+                                PropertyValue::FromFloat(m_propEditOldDelay),
+                                PropertyValue::FromFloat(def.DelaySeconds))),
+                            m_template);
+                    }
+                    m_delayEditActive = false;
                 }
                 break;
             }
