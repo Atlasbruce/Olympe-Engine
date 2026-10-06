@@ -1,7 +1,46 @@
 {
     "presets": [
         {
-            "id": "preset_d4838679-1787-4803-87ce-3638f138f82d",
+            "id": "preset_ed2171ef-9ad8-4f83-9115-70da9a127130",
+            "left": {
+                "mode": "Variable",
+                "value": "mHealth"
+            },
+            "name": "Condition",
+            "op": "<=",
+            "right": {
+                "mode": "Const",
+                "value": 4
+            }
+        },
+        {
+            "id": "preset_6635e4f2-2468-4333-8deb-bb00c79ec3c5",
+            "left": {
+                "mode": "Pin",
+                "value": "[Pin-in]"
+            },
+            "name": "Condition",
+            "op": ">=",
+            "right": {
+                "mode": "Const",
+                "value": 10
+            }
+        },
+        {
+            "id": "preset_53cfd155-5b07-4d9d-a77c-152f60c26fdc",
+            "left": {
+                "mode": "Variable",
+                "value": "mFatigue"
+            },
+            "name": "Condition",
+            "op": ">=",
+            "right": {
+                "mode": "Const",
+                "value": 10
+            }
+        },
+        {
+            "id": "preset_c108f39f-448c-4dfb-8022-1b3f97759c92",
             "left": {
                 "mode": "Variable",
                 "value": ""

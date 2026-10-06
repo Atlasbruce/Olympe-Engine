@@ -314,6 +314,9 @@ void VisualScriptEditorPanel::RenderSwitchNodeProperties(VSEditorNode& eNode,
         // If the user confirmed changes (clicked Apply), sync them back
         if (m_switchCaseModal->IsConfirmed())
         {
+            // Cases and their derived exec pins form one atomic edit.  Take
+            // the snapshot immediately before applying the modal result.
+            const TaskNodeDefinition beforeSwitchCasesEdit = def;
             def.switchCases = m_switchCaseModal->GetSwitchCases();
 
             // ── PHASE 1 FIX: Regenerate DynamicExecOutputPins from switchCases ──
@@ -337,6 +340,10 @@ void VisualScriptEditorPanel::RenderSwitchNodeProperties(VSEditorNode& eNode,
             }
 
             m_dirty = true;
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
+                    beforeSwitchCasesEdit, def)),
+                m_template);
             m_switchCaseModal->Close();
         }
     }
@@ -393,6 +400,8 @@ void VisualScriptEditorPanel::RenderNodeDataParameters(TaskNodeDefinition& def)
         if (paramIt == def.Parameters.end())
             continue;
 
+        const TaskNodeDefinition beforeParameterEdit = def;
+        bool parameterChanged = false;
         ParameterBinding& binding = paramIt->second;
 
         ImGui::PushID(paramName.c_str());
@@ -444,6 +453,7 @@ void VisualScriptEditorPanel::RenderNodeDataParameters(TaskNodeDefinition& def)
                     }
                 }
                 m_dirty = true;
+                parameterChanged = true;
             }
         }
         else if (binding.Type == ParameterBindingType::LocalVariable)
@@ -474,6 +484,7 @@ void VisualScriptEditorPanel::RenderNodeDataParameters(TaskNodeDefinition& def)
                             }
                         }
                         m_dirty = true;
+                        parameterChanged = true;
                     }
                     if (selected)
                         ImGui::SetItemDefaultFocus();
@@ -501,7 +512,16 @@ void VisualScriptEditorPanel::RenderNodeDataParameters(TaskNodeDefinition& def)
                     }
                 }
                 m_dirty = true;
+                parameterChanged = true;
             }
+        }
+
+        if (parameterChanged)
+        {
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
+                    beforeParameterEdit, def)),
+                m_template);
         }
 
         ImGui::PopID();
@@ -517,6 +537,7 @@ void VisualScriptEditorPanel::RenderNodeDataParameters(TaskNodeDefinition& def)
     ImGui::SameLine();
     if (ImGui::Button("Add", ImVec2(70.0f, 0.0f)))
     {
+        const TaskNodeDefinition beforeAddParameter = def;
         std::string newParamName(paramNameBuf);
         if (!newParamName.empty() && def.Parameters.find(newParamName) == def.Parameters.end())
         {
@@ -538,6 +559,10 @@ void VisualScriptEditorPanel::RenderNodeDataParameters(TaskNodeDefinition& def)
             }
 
             m_dirty = true;
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
+                    beforeAddParameter, def)),
+                m_template);
             paramNameBuf[0] = '\0';  // Clear the input field
         }
     }
@@ -578,6 +603,8 @@ void VisualScriptEditorPanel::RenderForEachNodeProperties()
     if (!nodePtr || nodePtr->Type != TaskNodeType::ForEach)
         return;
 
+    const TaskNodeDefinition beforeForEachEdit = *nodePtr;
+
     ImGui::TextDisabled("ForEach Loop Configuration");
     ImGui::Separator();
 
@@ -589,7 +616,19 @@ void VisualScriptEditorPanel::RenderForEachNodeProperties()
     if (ImGui::InputText("##foreach_name", nodeName, sizeof(nodeName)))
     {
         nodePtr->NodeName = nodeName;
+        for (VSEditorNode& editorNode : m_editorNodes)
+        {
+            if (editorNode.nodeID == m_selectedNodeID)
+            {
+                editorNode.def.NodeName = nodePtr->NodeName;
+                break;
+            }
+        }
         m_dirty = true;
+        m_undoStack.PushCommand(
+            std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
+                beforeForEachEdit, *nodePtr)),
+            m_template);
     }
 
     ImGui::Separator();
@@ -636,6 +675,10 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
 
     if (!nodePtr || nodePtr->Type != TaskNodeType::SubGraph)
         return;
+
+    // A SubGraph path affects both the explicit path field and its serialized
+    // parameter binding.  Preserve the whole definition for Undo/Redo.
+    const TaskNodeDefinition beforeSubGraphEdit = *nodePtr;
 
     // ========================================================================
     // SubGraph File Path - stored as editable parameter (Phase 24)
@@ -706,6 +749,8 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
                  c = '\\';
          }
 
+         const bool subGraphChanged = (nodePtr->SubGraphPath != newPath);
+
          // Update BOTH storage locations immediately when user types
          pathBinding->LiteralValue = TaskValue(newPath);
          nodePtr->SubGraphPath = newPath;
@@ -738,7 +783,14 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
          SYSTEM_LOG << "[RenderSubGraphNodeProperties] Updated SubGraphPath for node " 
                     << nodePtr->NodeID << " = '" << newPath << "'\n";
 
-        m_dirty = true;
+        if (subGraphChanged)
+        {
+            m_dirty = true;
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
+                    beforeSubGraphEdit, *nodePtr)),
+                m_template);
+        }
     }
     else
     {
@@ -783,6 +835,8 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
                 c = '\\';
         }
 
+        const bool subGraphChanged = (nodePtr->SubGraphPath != relativePath);
+
         // Update path binding and definition in BOTH storage locations
         pathBinding->LiteralValue = TaskValue(relativePath);
         nodePtr->SubGraphPath = relativePath;
@@ -816,7 +870,14 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
 
         SYSTEM_LOG << "[RenderSubGraphNodeProperties] Selected SubGraph file: " << relativePath << "\n";
 
-        m_dirty = true;
+        if (subGraphChanged)
+        {
+            m_dirty = true;
+            m_undoStack.PushCommand(
+                std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
+                    beforeSubGraphEdit, *nodePtr)),
+                m_template);
+        }
         m_subGraphModal->Close();
     }
 

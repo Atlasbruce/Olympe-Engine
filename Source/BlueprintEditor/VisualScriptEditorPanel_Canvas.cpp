@@ -811,7 +811,7 @@ void VisualScriptEditorPanel::RenderCanvas()
                             // beginning of the gesture.  eNode can otherwise
                             // still hold a pre-layout position, creating a
                             // false delta on the first click after a load.
-                            const ImVec2 startPosition = ImNodes::GetNodeEditorSpacePos(nodeID);
+                            const ImVec2 startPosition = ImNodes::GetNodeGridSpacePos(nodeID);
                             m_nodeDragStartPositions[nodeID] =
                                 std::make_pair(startPosition.x, startPosition.y);
                             break;
@@ -832,7 +832,7 @@ void VisualScriptEditorPanel::RenderCanvas()
             {
                 if (m_nodeDragStartPositions.count(eNode.nodeID) == 0)
                     continue;
-                const ImVec2 pos = ImNodes::GetNodeEditorSpacePos(eNode.nodeID);
+                const ImVec2 pos = ImNodes::GetNodeGridSpacePos(eNode.nodeID);
                 eNode.posX = pos.x;
                 eNode.posY = pos.y;
             }
@@ -849,11 +849,11 @@ void VisualScriptEditorPanel::RenderCanvas()
 
                 // CRITICAL FIX: Check if node still exists before querying ImNodes
                 // The node could have been deleted or the canvas reloaded between mouse click and release.
-                // Without this check, GetNodeEditorSpacePos() will assert on a non-existent node.
+                // Without this check, GetNodeGridSpacePos() will assert on a non-existent node.
                 if (m_positionedNodes.count(nodeID) == 0)
                     continue;  // Skip this node, it was deleted or canvas state changed
 
-                const ImVec2 finalPos = ImNodes::GetNodeEditorSpacePos(nodeID);
+                const ImVec2 finalPos = ImNodes::GetNodeGridSpacePos(nodeID);
 
                 // Update eNode with final position
                 for (size_t i = 0; i < m_editorNodes.size(); ++i)
