@@ -558,8 +558,8 @@
       "loop": true,
       "name": "State 1 Zombie",
       "priority": 0,
-      "x": 79,
-      "y": 53
+      "x": 163,
+      "y": -61
     },
     {
       "blendTime": 0.1,
@@ -602,8 +602,8 @@
       "loop": true,
       "name": "ani_zombie_idle_e",
       "priority": 0,
-      "x": 839.8,
-      "y": 131
+      "x": 720.8,
+      "y": 127
     },
     {
       "blendTime": 0.1,
@@ -646,8 +646,8 @@
       "loop": true,
       "name": "ani_zombie_idle_w_3",
       "priority": 0,
-      "x": 443.4,
-      "y": 68.9
+      "x": 450.4,
+      "y": 40.9
     },
     {
       "blendTime": 0.1,
@@ -690,8 +690,8 @@
       "loop": true,
       "name": "ani_zombie_idle_nw",
       "priority": 0,
-      "x": 1182.8,
-      "y": 52
+      "x": 1051.8,
+      "y": 3
     },
     {
       "blendTime": 0.1,
@@ -732,9 +732,9 @@
       ],
       "events": [],
       "loop": true,
-      "name": "Thesee_Idle_n",
+      "name": "Thesee_Idle_n long title test to check if the node lenght auto adjust",
       "priority": 0,
-      "x": 824.182,
+      "x": 803.182,
       "y": -157.364
     },
     {
@@ -778,8 +778,8 @@
       "loop": true,
       "name": "Thesee_Idle_n_1",
       "priority": 0,
-      "x": 423.678,
-      "y": 255.755
+      "x": 453.678,
+      "y": 257.755
     }
   ],
   "transitions": [
@@ -792,7 +792,7 @@
       "to": "ani_zombie_idle_w_3"
     },
     {
-      "condition": "",
+      "condition": "false",
       "duration": 0.1,
       "from": "ani_zombie_idle_w_3",
       "interruptible": true,
@@ -800,7 +800,7 @@
       "to": "ani_zombie_idle_e"
     },
     {
-      "condition": "",
+      "condition": "HAHAAHHAHAHA TEST",
       "duration": 0.1,
       "from": "ani_zombie_idle_e",
       "interruptible": true,
@@ -808,8 +808,8 @@
       "to": "ani_zombie_idle_nw"
     },
     {
-      "condition": "",
-      "duration": 0.1,
+      "condition": "FALSE",
+      "duration": 12455.6,
       "from": "State 1 Zombie",
       "interruptible": true,
       "priority": 0,
@@ -821,7 +821,7 @@
       "from": "ani_zombie_idle_w_3",
       "interruptible": true,
       "priority": 0,
-      "to": "Thesee_Idle_n"
+      "to": "Thesee_Idle_n long title test to check if the node lenght auto adjust"
     },
     {
       "condition": "false",

@@ -9,6 +9,8 @@
 #include "Utilities/CanvasMinimapRenderer.h"
 #include "../third_party/imgui/imgui.h"
 #include "../system/system_utils.h"
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <sstream>
 #include <tuple>
@@ -32,6 +34,7 @@ AnimationGraphRenderer::AnimationGraphRenderer()
     , m_draggedStateIndex(-1)
     , m_selectedStateIndex(-1)
     , m_selectedTransitionIndex(-1)
+    , m_contextTransitionIndex(-1)
     , m_selectedEventIndex(-1)
     , m_linkStartStateIndex(-1)
     , m_hasPendingTransitionDrag(false)
@@ -153,12 +156,16 @@ void AnimationGraphRenderer::RenderToolbar()
     {
         ImGui::SameLine(0.0f, 12.0f);
         if (ImGui::Button("Undo##animation_history") && m_framework->CanUndo())
-            m_framework->Undo();
+        {
+            if (m_framework->Undo()) RefreshSelectedTransitionEditor();
+        }
         if (ImGui::IsItemHovered() && m_framework->CanUndo())
             ImGui::SetTooltip("Undo: %s", m_framework->GetUndoDescription().c_str());
         ImGui::SameLine();
         if (ImGui::Button("Redo##animation_history") && m_framework->CanRedo())
-            m_framework->Redo();
+        {
+            if (m_framework->Redo()) RefreshSelectedTransitionEditor();
+        }
         if (ImGui::IsItemHovered() && m_framework->CanRedo())
             ImGui::SetTooltip("Redo: %s", m_framework->GetRedoDescription().c_str());
     }
@@ -191,14 +198,45 @@ void AnimationGraphRenderer::HandleKeyboardShortcuts()
     if (ImGui::IsKeyPressed(ImGuiKey_Z))
     {
         if (ImGui::GetIO().KeyShift)
-            m_framework->Redo();
+        {
+            if (m_framework->Redo()) RefreshSelectedTransitionEditor();
+        }
         else
-            m_framework->Undo();
+        {
+            if (m_framework->Undo()) RefreshSelectedTransitionEditor();
+        }
     }
     else if (ImGui::IsKeyPressed(ImGuiKey_Y))
     {
-        m_framework->Redo();
+        if (m_framework->Redo()) RefreshSelectedTransitionEditor();
     }
+    else if (ImGui::IsKeyPressed(ImGuiKey_A) && m_document)
+    {
+        const nlohmann::json& data = m_document->GetData();
+        if (data.contains("states") && data["states"].is_array())
+        {
+            m_selectedStateIndices.clear();
+            for (size_t index = 0; index < data["states"].size(); ++index)
+                m_selectedStateIndices.push_back(static_cast<int>(index));
+            m_selectedStateIndex = m_selectedStateIndices.empty() ? -1 : m_selectedStateIndices.front();
+            if (m_selectedStateIndex >= 0)
+                strncpy_s(m_stateNameBuffer, sizeof(m_stateNameBuffer), data["states"][m_selectedStateIndex].value("name", "").c_str(), _TRUNCATE);
+        }
+    }
+}
+
+void AnimationGraphRenderer::RefreshSelectedTransitionEditor()
+{
+    if (!m_document || m_selectedTransitionIndex < 0)
+        return;
+    const nlohmann::json& data = m_document->GetData();
+    if (!data.contains("transitions") || !data["transitions"].is_array() ||
+        static_cast<size_t>(m_selectedTransitionIndex) >= data["transitions"].size())
+        return;
+    const nlohmann::json& transition = data["transitions"][m_selectedTransitionIndex];
+    const std::string condition = transition.value("condition", "true");
+    strncpy_s(m_eventNameBuffer, sizeof(m_eventNameBuffer), condition.c_str(), _TRUNCATE);
+    m_transitionTimeBuffer = static_cast<float>(transition.value("duration", 0.1));
 }
 
 void AnimationGraphRenderer::RenderMainPanel()
@@ -355,24 +393,6 @@ void AnimationGraphRenderer::RenderTransitionEditorPanel()
 {
     ImGui::Text("Transitions");
     ImGui::Separator();
-    if (ImGui::Button("Add Transition"))
-    {
-        if (m_selectedStateIndex >= 0 && m_document->GetData().contains("states") && m_document->GetData()["states"].is_array())
-        {
-            const auto& states = m_document->GetData()["states"];
-            if (static_cast<size_t>(m_selectedStateIndex) < states.size())
-            {
-                std::string fromState = states[m_selectedStateIndex].value("name", "");
-                if (!fromState.empty())
-                {
-                    ExecuteDocumentCommand("Create Animation Transition",
-                        [document = m_document.get(), fromState, this]() -> bool {
-                            return document->AddTransition(fromState, fromState, "true", m_transitionTimeBuffer);
-                        });
-                }
-            }
-        }
-    }
     const nlohmann::json& data = m_document->GetData();
     if (data.contains("transitions") && data["transitions"].is_array())
     {
@@ -382,9 +402,12 @@ void AnimationGraphRenderer::RenderTransitionEditorPanel()
             if (ImGui::Selectable(label.c_str(), m_selectedTransitionIndex == static_cast<int>(i)))
             {
                 m_selectedTransitionIndex = static_cast<int>(i);
-                const std::string condition = data["transitions"][i].value("condition", "true");
-                strncpy_s(m_eventNameBuffer, sizeof(m_eventNameBuffer), condition.c_str(), _TRUNCATE);
-                m_transitionTimeBuffer = static_cast<float>(data["transitions"][i].value("duration", 0.1));
+                RefreshSelectedTransitionEditor();
+            }
+            if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+            {
+                m_contextTransitionIndex = static_cast<int>(i);
+                ImGui::OpenPopup("AnimationTransitionListContext");
             }
         }
 
@@ -398,8 +421,10 @@ void AnimationGraphRenderer::RenderTransitionEditorPanel()
             ImGui::Separator();
             ImGui::Text("%s -> %s", fromState.c_str(), toState.c_str());
             ImGui::InputText("Condition", m_eventNameBuffer, sizeof(m_eventNameBuffer));
+            const bool conditionCommitted = ImGui::IsItemDeactivatedAfterEdit();
             ImGui::DragFloat("Blend (s)", &m_transitionTimeBuffer, 0.01f, 0.0f, 10.0f, "%.2f");
-            if (ImGui::Button("Apply Transition"))
+            const bool blendCommitted = ImGui::IsItemDeactivatedAfterEdit();
+            if (conditionCommitted || blendCommitted)
             {
                 const int transitionIndex = m_selectedTransitionIndex;
                 const std::string beforeCondition = selected.value("condition", "true");
@@ -418,18 +443,23 @@ void AnimationGraphRenderer::RenderTransitionEditorPanel()
                             })));
                 }
             }
-            ImGui::SameLine();
-            if (ImGui::Button("Delete Transition"))
+        }
+        if (ImGui::BeginPopup("AnimationTransitionListContext"))
+        {
+            if (ImGui::MenuItem("Delete Transition") && m_contextTransitionIndex >= 0)
             {
-                const int transitionIndex = m_selectedTransitionIndex;
+                const int transitionIndex = m_contextTransitionIndex;
                 if (ExecuteDocumentCommand("Delete Animation Transition",
                     [document = m_document.get(), transitionIndex]() -> bool {
                         return document->RemoveTransition(static_cast<size_t>(transitionIndex));
                     }))
                 {
-                    m_selectedTransitionIndex = -1;
+                    if (m_selectedTransitionIndex == transitionIndex)
+                        m_selectedTransitionIndex = -1;
+                    m_contextTransitionIndex = -1;
                 }
             }
+            ImGui::EndPopup();
         }
     }
 }
@@ -452,7 +482,6 @@ void AnimationGraphRenderer::Render()
     RenderToolbar();
     ImGui::Separator();
     RenderMainPanel();
-    if (m_framework) m_framework->RenderModals();
 }
 
 void AnimationGraphRenderer::RenderRightPanelTabs()
@@ -661,6 +690,8 @@ void AnimationGraphRenderer::RenderGraphCanvas()
     float graphMinY = 0.0f;
     float graphMaxY = 0.0f;
     bool hasGraphBounds = false;
+    bool canvasNodeInteraction = false;
+    bool canvasLinkInteraction = false;
 
     // Connections are deliberately rendered before state cards, so cards remain the
     // primary hit targets while their transition flow stays readable at every zoom.
@@ -693,11 +724,55 @@ void AnimationGraphRenderer::RenderGraphCanvas()
                 !findTransitionAnchor(transition.value("to", ""), false, to))
                 continue;
 
-            const float controlOffset = (to.x >= from.x ? 1.0f : -1.0f) * 80.0f * zoom;
+            // Keep tangents consistent (outgoing right, incoming left) and
+            // adapt their length to the horizontal separation.  This avoids
+            // the accidental S-curves produced by direction-sign inversion.
+            const float horizontalDistance = fabsf(to.x - from.x);
+            const float controlOffset = std::max(40.0f * zoom, std::min(160.0f * zoom, horizontalDistance * 0.5f));
+            const ImVec2 controlA(from.x + controlOffset, from.y);
+            const ImVec2 controlB(to.x - controlOffset, to.y);
+            const bool isSelectedTransition = m_selectedTransitionIndex == static_cast<int>(transitionIndex);
             drawList->AddBezierCubic(from,
-                ImVec2(from.x + controlOffset, from.y),
-                ImVec2(to.x - controlOffset, to.y),
-                to, IM_COL32(120, 185, 255, 220), 2.0f, 24);
+                controlA, controlB, to,
+                isSelectedTransition ? IM_COL32(0, 220, 255, 255) : IM_COL32(120, 185, 255, 220),
+                isSelectedTransition ? 3.0f : 2.0f, 24);
+
+            const auto bezierPoint = [&](float t) -> ImVec2 {
+                const float u = 1.0f - t;
+                return ImVec2(
+                    u * u * u * from.x + 3.0f * u * u * t * controlA.x + 3.0f * u * t * t * controlB.x + t * t * t * to.x,
+                    u * u * u * from.y + 3.0f * u * u * t * controlA.y + 3.0f * u * t * t * controlB.y + t * t * t * to.y);
+            };
+            const ImVec2 labelPosition = bezierPoint(0.5f);
+            const std::string condition = transition.value("condition", "true");
+            drawList->AddText(ImVec2(labelPosition.x + 6.0f, labelPosition.y - 16.0f),
+                IM_COL32(170, 220, 255, 255), condition.c_str());
+
+            float closestDistanceSquared = 9.0f * 9.0f;
+            const ImVec2 mouse = ImGui::GetIO().MousePos;
+            for (int sample = 0; sample <= 24; ++sample)
+            {
+                const ImVec2 curvePoint = bezierPoint(static_cast<float>(sample) / 24.0f);
+                const float dx = mouse.x - curvePoint.x;
+                const float dy = mouse.y - curvePoint.y;
+                const float distanceSquared = dx * dx + dy * dy;
+                if (distanceSquared <= closestDistanceSquared)
+                    closestDistanceSquared = distanceSquared;
+            }
+            if (closestDistanceSquared < 9.0f * 9.0f && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+            {
+                canvasLinkInteraction = true;
+                m_selectedTransitionIndex = static_cast<int>(transitionIndex);
+                RefreshSelectedTransitionEditor();
+            }
+            if (closestDistanceSquared < 9.0f * 9.0f && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+            {
+                canvasLinkInteraction = true;
+                // Context operations intentionally do not change the current
+                // selection: a right click must not discard an active edit.
+                m_contextTransitionIndex = static_cast<int>(transitionIndex);
+                ImGui::OpenPopup("AnimationTransitionCanvasContext");
+            }
         }
     }
     for (size_t i = 0; i < data["states"].size(); ++i)
@@ -722,7 +797,7 @@ void AnimationGraphRenderer::RenderGraphCanvas()
             graphMinY = (y < graphMinY) ? y : graphMinY;
             graphMaxY = (y + nodeHeight > graphMaxY) ? y + nodeHeight : graphMaxY;
         }
-        const bool isSelected = m_selectedStateIndex == static_cast<int>(i);
+        const bool isSelected = std::find(m_selectedStateIndices.begin(), m_selectedStateIndices.end(), static_cast<int>(i)) != m_selectedStateIndices.end();
         drawList->AddRectFilled(nodePos, nodeEnd, IM_COL32(44, 50, 66, 255), 6.0f);
         drawList->AddRect(nodePos, nodeEnd,
             isSelected ? IM_COL32(0, 210, 255, 255) : IM_COL32(90, 120, 180, 255),
@@ -746,11 +821,13 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         const float inputDy = mouse.y - inputPin.y;
         const float outputDx = mouse.x - outputPin.x;
         const float outputDy = mouse.y - outputPin.y;
-        const bool inputHovered = inputDx * inputDx + inputDy * inputDy <= pinRadius * pinRadius;
-        const bool outputHovered = outputDx * outputDx + outputDy * outputDy <= pinRadius * pinRadius;
+        const float pinHitRadius = pinRadius + 5.0f;
+        const bool inputHovered = inputDx * inputDx + inputDy * inputDy <= pinHitRadius * pinHitRadius;
+        const bool outputHovered = outputDx * outputDx + outputDy * outputDy <= pinHitRadius * pinHitRadius;
 
         if (outputHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
         {
+            canvasNodeInteraction = true;
             m_linkStartStateIndex = static_cast<int>(i);
             m_linkDragStartPos = outputPin;
         }
@@ -758,6 +835,7 @@ void AnimationGraphRenderer::RenderGraphCanvas()
                  m_linkStartStateIndex != static_cast<int>(i) &&
                  static_cast<size_t>(m_linkStartStateIndex) < data["states"].size())
         {
+            canvasNodeInteraction = true;
             const std::string fromState = data["states"][m_linkStartStateIndex].value("name", "");
             const std::string toState = stateName;
             ExecuteDocumentCommand("Create Animation Transition",
@@ -768,7 +846,22 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         }
         else if (nodeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
         {
-            m_selectedStateIndex = static_cast<int>(i);
+            canvasNodeInteraction = true;
+            const bool appendSelection = ImGui::GetIO().KeyCtrl;
+            std::vector<int>::iterator selectedIt = std::find(m_selectedStateIndices.begin(), m_selectedStateIndices.end(), static_cast<int>(i));
+            if (appendSelection)
+            {
+                if (selectedIt == m_selectedStateIndices.end())
+                    m_selectedStateIndices.push_back(static_cast<int>(i));
+                else
+                    m_selectedStateIndices.erase(selectedIt);
+            }
+            else
+            {
+                m_selectedStateIndices.clear();
+                m_selectedStateIndices.push_back(static_cast<int>(i));
+            }
+            m_selectedStateIndex = m_selectedStateIndices.empty() ? -1 : static_cast<int>(i);
             strncpy_s(m_stateNameBuffer, sizeof(m_stateNameBuffer), stateName.c_str(), _TRUNCATE);
             m_draggedStateIndex = static_cast<int>(i);
             m_draggedStateName = stateName;
@@ -783,6 +876,7 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         }
         if (nodeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
         {
+            canvasNodeInteraction = true;
             m_selectedStateIndex = static_cast<int>(i);
             strncpy_s(m_stateNameBuffer, sizeof(m_stateNameBuffer), stateName.c_str(), _TRUNCATE);
             ImGui::OpenPopup((stateName + "##anim_node_context").c_str());
@@ -800,6 +894,60 @@ void AnimationGraphRenderer::RenderGraphCanvas()
             }
             ImGui::EndPopup();
         }
+    }
+
+    // Empty-canvas drag selects every intersecting node. Ctrl keeps the
+    // existing selection, matching the interaction contract of the other graph editors.
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !canvasNodeInteraction && !canvasLinkInteraction &&
+        m_canvasEditor->IsPointInCanvas(ImGui::GetIO().MousePos))
+    {
+        m_isSelectingRectangle = true;
+        m_selectionRectStart = m_canvasEditor->ScreenToCanvas(ImGui::GetIO().MousePos);
+        m_selectionRectEnd = m_selectionRectStart;
+        if (!ImGui::GetIO().KeyCtrl)
+        {
+            m_selectedStateIndices.clear();
+            m_selectedStateIndex = -1;
+        }
+    }
+    if (m_isSelectingRectangle)
+    {
+        m_selectionRectEnd = m_canvasEditor->ScreenToCanvas(ImGui::GetIO().MousePos);
+        const ImVec2 selectionStartScreen = m_canvasEditor->CanvasToScreen(m_selectionRectStart);
+        const ImVec2 selectionEndScreen = m_canvasEditor->CanvasToScreen(m_selectionRectEnd);
+        const ImVec2 selectionMin(std::min(selectionStartScreen.x, selectionEndScreen.x), std::min(selectionStartScreen.y, selectionEndScreen.y));
+        const ImVec2 selectionMax(std::max(selectionStartScreen.x, selectionEndScreen.x), std::max(selectionStartScreen.y, selectionEndScreen.y));
+        drawList->AddRectFilled(selectionMin, selectionMax, IM_COL32(0, 190, 255, 35));
+        drawList->AddRect(selectionMin, selectionMax, IM_COL32(0, 210, 255, 230), 0.0f, 0, 1.5f);
+
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+        {
+            const float minX = std::min(m_selectionRectStart.x, m_selectionRectEnd.x);
+            const float maxX = std::max(m_selectionRectStart.x, m_selectionRectEnd.x);
+            const float minY = std::min(m_selectionRectStart.y, m_selectionRectEnd.y);
+            const float maxY = std::max(m_selectionRectStart.y, m_selectionRectEnd.y);
+            for (size_t stateIndex = 0; stateIndex < data["states"].size(); ++stateIndex)
+            {
+                const nlohmann::json& state = data["states"][stateIndex];
+                const float stateX = static_cast<float>(state.value("x", 0.0));
+                const float stateY = static_cast<float>(state.value("y", 0.0));
+                if (stateX <= maxX && stateX + nodeWidth >= minX && stateY <= maxY && stateY + nodeHeight >= minY)
+                {
+                    const int index = static_cast<int>(stateIndex);
+                    if (std::find(m_selectedStateIndices.begin(), m_selectedStateIndices.end(), index) == m_selectedStateIndices.end())
+                        m_selectedStateIndices.push_back(index);
+                    m_selectedStateIndex = index;
+                    strncpy_s(m_stateNameBuffer, sizeof(m_stateNameBuffer), state.value("name", "").c_str(), _TRUNCATE);
+                }
+            }
+            m_isSelectingRectangle = false;
+        }
+    }
+
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && !canvasNodeInteraction && !canvasLinkInteraction &&
+        m_canvasEditor->IsPointInCanvas(ImGui::GetIO().MousePos))
+    {
+        ImGui::OpenPopup("AnimationCanvasContext");
     }
 
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Left) && m_draggedStateIndex >= 0)
@@ -850,6 +998,66 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         m_canvasEditor->UpdateMinimapNodes(minimapNodes, graphMinX, graphMaxX, graphMinY, graphMaxY);
         m_canvasEditor->UpdateMinimapViewport(visibleMin.x, visibleMax.x, visibleMin.y, visibleMax.y,
             graphMinX, graphMaxX, graphMinY, graphMaxY);
+    }
+    if (ImGui::BeginPopup("AnimationTransitionCanvasContext"))
+    {
+        ImGui::Text("Transition %d", m_contextTransitionIndex + 1);
+        if (ImGui::MenuItem("Delete Transition") && m_contextTransitionIndex >= 0)
+        {
+            const int transitionIndex = m_contextTransitionIndex;
+            if (ExecuteDocumentCommand("Delete Animation Transition",
+                [document = m_document.get(), transitionIndex]() -> bool {
+                    return document->RemoveTransition(static_cast<size_t>(transitionIndex));
+                }))
+            {
+                if (m_selectedTransitionIndex == transitionIndex)
+                    m_selectedTransitionIndex = -1;
+                m_contextTransitionIndex = -1;
+            }
+        }
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopup("AnimationCanvasContext"))
+    {
+        if (ImGui::MenuItem("Select All", "Ctrl+A"))
+        {
+            m_selectedStateIndices.clear();
+            for (size_t stateIndex = 0; stateIndex < data["states"].size(); ++stateIndex)
+                m_selectedStateIndices.push_back(static_cast<int>(stateIndex));
+            m_selectedStateIndex = m_selectedStateIndices.empty() ? -1 : m_selectedStateIndices.front();
+            if (m_selectedStateIndex >= 0)
+                strncpy_s(m_stateNameBuffer, sizeof(m_stateNameBuffer), data["states"][m_selectedStateIndex].value("name", "").c_str(), _TRUNCATE);
+        }
+        if (ImGui::MenuItem("Clear Selection"))
+        {
+            m_selectedStateIndices.clear();
+            m_selectedStateIndex = -1;
+        }
+        if (!m_selectedStateIndices.empty() && ImGui::MenuItem("Delete Selected"))
+        {
+            std::vector<std::string> stateNames;
+            for (size_t selectedIndex = 0; selectedIndex < m_selectedStateIndices.size(); ++selectedIndex)
+            {
+                const int index = m_selectedStateIndices[selectedIndex];
+                if (index >= 0 && static_cast<size_t>(index) < data["states"].size())
+                    stateNames.push_back(data["states"][index].value("name", ""));
+            }
+            if (ExecuteDocumentCommand("Delete Animation States",
+                [document = m_document.get(), stateNames]() -> bool {
+                    bool deletedAny = false;
+                    for (size_t nameIndex = 0; nameIndex < stateNames.size(); ++nameIndex)
+                        deletedAny = document->RemoveState(stateNames[nameIndex]) || deletedAny;
+                    return deletedAny;
+                }))
+            {
+                m_selectedStateIndices.clear();
+                m_selectedStateIndex = -1;
+            }
+        }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Reset View"))
+            ResetView();
+        ImGui::EndPopup();
     }
     m_canvasEditor->RenderMinimap();
     m_canvasEditor->EndRender();

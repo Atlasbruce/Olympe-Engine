@@ -73,6 +73,7 @@ private:
     void RenderGraphNodePorts(const nlohmann::json& state, int stateIndex, bool isSelected);
     bool ExecuteDocumentCommand(const std::string& description, const std::function<bool()>& edit);
     void HandleKeyboardShortcuts();
+    void RefreshSelectedTransitionEditor();
     int FindStateIndexByName(const std::string& name) const;
     int FindEventIndexByState(const std::string& stateName) const;
     std::string MakeUniqueStateName(const std::string& baseName) const;
@@ -105,6 +106,7 @@ private:
     std::string m_draggedStateName;
     int m_selectedStateIndex;
     int m_selectedTransitionIndex;
+    int m_contextTransitionIndex;
     int m_selectedEventIndex;
     std::vector<int> m_selectedStateIndices;
     int m_linkStartStateIndex;
