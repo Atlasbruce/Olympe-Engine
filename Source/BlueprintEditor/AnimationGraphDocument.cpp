@@ -2,6 +2,7 @@
 #include "../../Source/json_helper.h"
 #include "../../Source/system/system_utils.h"
 #include <algorithm>
+#include <set>
 #include <fstream>
 #include <sstream>
 #ifdef _WIN32
@@ -273,6 +274,37 @@ bool AnimationGraphDocument::RemoveState(const std::string& stateName)
     m_states.erase(m_states.begin() + index);
     m_transitions.erase(std::remove_if(m_transitions.begin(), m_transitions.end(), [&](const TransitionDefinition& t) { return t.fromState == stateName || t.toState == stateName; }), m_transitions.end());
     if (m_defaultState == stateName) m_defaultState = m_states.empty() ? "Idle" : m_states.front().name;
+    m_isDirty = true;
+    m_data = BuildJson();
+    return true;
+}
+
+bool AnimationGraphDocument::RemoveStates(const std::vector<std::string>& stateNames)
+{
+    if (stateNames.empty())
+        return false;
+
+    const std::set<std::string> namesToRemove(stateNames.begin(), stateNames.end());
+    if (namesToRemove.empty())
+        return false;
+
+    const size_t stateCountBefore = m_states.size();
+    m_states.erase(std::remove_if(m_states.begin(), m_states.end(),
+        [&namesToRemove](const StateDefinition& state) {
+            return namesToRemove.find(state.name) != namesToRemove.end();
+        }), m_states.end());
+    if (m_states.size() == stateCountBefore)
+        return false;
+
+    m_transitions.erase(std::remove_if(m_transitions.begin(), m_transitions.end(),
+        [&namesToRemove](const TransitionDefinition& transition) {
+            return namesToRemove.find(transition.fromState) != namesToRemove.end() ||
+                   namesToRemove.find(transition.toState) != namesToRemove.end();
+        }), m_transitions.end());
+
+    if (namesToRemove.find(m_defaultState) != namesToRemove.end())
+        m_defaultState = m_states.empty() ? "Idle" : m_states.front().name;
+
     m_isDirty = true;
     m_data = BuildJson();
     return true;

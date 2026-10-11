@@ -2,11 +2,11 @@
 
 #include "Framework/IGraphDocument.h"
 #include "Framework/CanvasFramework.h"
-#include "Framework/AnimationGraphFrameworkDocument.h"
 #include "IGraphRenderer.h"
 #include "AnimationGraphDocument.h"
 #include "Utilities/CustomCanvasEditor.h"
 #include "Utilities/CanvasMinimapRenderer.h"
+#include "Utilities/CanvasContextMenu.h"
 #include "../third_party/imgui/imgui.h"
 #include <memory>
 #include <functional>
@@ -16,7 +16,6 @@
 namespace Olympe {
 
 class AnimationGraphDocument;
-class AnimationGraphFrameworkDocument;
 
 class AnimationGraphRenderer : public IGraphRenderer
 {
@@ -72,6 +71,7 @@ private:
     void EnsureStatePositions();
     void RenderGraphNodePorts(const nlohmann::json& state, int stateIndex, bool isSelected);
     bool ExecuteDocumentCommand(const std::string& description, const std::function<bool()>& edit);
+    bool DeleteSelectedStates();
     void HandleKeyboardShortcuts();
     void RefreshSelectedTransitionEditor();
     int FindStateIndexByName(const std::string& name) const;
@@ -104,6 +104,12 @@ private:
     int m_draggedStateIndex;
     ImVec2 m_dragStartPos;
     std::string m_draggedStateName;
+    struct StatePosition
+    {
+        std::string name;
+        ImVec2 position;
+    };
+    std::vector<StatePosition> m_draggedStateStartPositions;
     int m_selectedStateIndex;
     int m_selectedTransitionIndex;
     int m_contextTransitionIndex;
@@ -117,9 +123,18 @@ private:
     bool m_isSelectingRectangle = false;
     ImVec2 m_selectionRectStart = ImVec2(0.0f, 0.0f);
     ImVec2 m_selectionRectEnd = ImVec2(0.0f, 0.0f);
+    // Shared canvas context routing.  A right click has exactly one target:
+    // state, transition, or empty canvas (same contract as Placeholder).
+    // Never share ImGui popup IDs with other graph renderers.  Animation
+    // Graph lives inside a nested split layout and therefore needs an
+    // explicit identity even when another editor is alive in the tab host.
+    CanvasContextMenu m_canvasContextMenu{"##AnimationGraphCanvasContextMenu"};
+    // A renderer may only emit its interactive canvas once per ImGui frame.
+    // This defensive guard exposes/prevents a host-level double render from
+    // opening two independent context popup stacks.
+    int m_lastGraphCanvasFrame = -1;
     std::vector<std::string> m_logs;
 
-    std::unique_ptr<AnimationGraphFrameworkDocument> m_frameworkDocument;
     std::unique_ptr<CanvasFramework> m_framework;
     std::unique_ptr<CustomCanvasEditor> m_canvasEditor;
 };

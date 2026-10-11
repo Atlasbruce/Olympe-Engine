@@ -1,6 +1,5 @@
 #include "AnimationGraphRenderer.h"
 #include "AnimationGraphDocument.h"
-#include "Framework/AnimationGraphFrameworkDocument.h"
 #include "Framework/CanvasFramework.h"
 #include "Framework/CanvasToolbarRenderer.h"
 #include "Framework/CanvasModalRenderer.h"
@@ -60,17 +59,37 @@ void AnimationGraphRenderer::EnsureDocument()
         m_document = std::make_unique<AnimationGraphDocument>();
         m_document->SetRenderer(this);
     }
-    if (!m_frameworkDocument)
-    {
-        m_frameworkDocument = std::make_unique<AnimationGraphFrameworkDocument>(this);
-    }
     if (!m_framework)
     {
-        m_framework = std::make_unique<CanvasFramework>(m_frameworkDocument.get());
+        // AnimationGraphDocument already implements IGraphDocument.  Keeping
+        // a second adapter here created two competing lifecycle paths (the
+        // exact anti-pattern absent from VS/BT/Prefab).  The framework and
+        // this renderer now operate on the same authoritative document.
+        m_framework = std::make_unique<CanvasFramework>(m_document.get());
+        SYSTEM_LOG << "[AnimationGraphRenderer][ContextMenu-v6] Dedicated popup routing enabled\n";
     }
 }
 
-bool AnimationGraphRenderer::Load(const std::string& path) { EnsureDocument(); if (!m_document->Load(path)) return false; m_currentPath = path; return true; }
+bool AnimationGraphRenderer::Load(const std::string& path)
+{
+    EnsureDocument();
+    if (!m_document->Load(path))
+        return false;
+
+    m_currentPath = path;
+    // A loaded graph starts a new document session.  Keeping commands from a
+    // previous file is a legacy source of mutations against stale state.
+    if (m_framework)
+        m_framework->ClearCommandHistory();
+    m_selectedStateIndices.clear();
+    m_selectedStateIndex = -1;
+    m_selectedTransitionIndex = -1;
+    m_contextTransitionIndex = -1;
+    m_draggedStateIndex = -1;
+    m_draggedStateStartPositions.clear();
+    m_canvasContextMenu.Clear();
+    return true;
+}
 bool AnimationGraphRenderer::Save(const std::string& path) { EnsureDocument(); const std::string target = path.empty() ? m_currentPath : path; if (!m_document->Save(target)) return false; m_currentPath = target; return true; }
 void AnimationGraphRenderer::SetCurrentPath(const std::string& path) { m_currentPath = path; }
 void AnimationGraphRenderer::SaveCanvasState()
@@ -186,10 +205,50 @@ bool AnimationGraphRenderer::ExecuteDocumentCommand(
             })));
 }
 
+bool AnimationGraphRenderer::DeleteSelectedStates()
+{
+    if (!m_document || m_selectedStateIndices.empty())
+        return false;
+
+    const nlohmann::json& data = m_document->GetData();
+    std::vector<std::string> stateNames;
+    stateNames.reserve(m_selectedStateIndices.size());
+    for (size_t selectedIndex = 0; selectedIndex < m_selectedStateIndices.size(); ++selectedIndex)
+    {
+        const int index = m_selectedStateIndices[selectedIndex];
+        if (index < 0 || static_cast<size_t>(index) >= data["states"].size())
+            continue;
+        const std::string stateName = data["states"][index].value("name", "");
+        if (!stateName.empty() && std::find(stateNames.begin(), stateNames.end(), stateName) == stateNames.end())
+            stateNames.push_back(stateName);
+    }
+    if (stateNames.empty())
+        return false;
+
+    const bool deleted = ExecuteDocumentCommand("Delete Animation States",
+        [document = m_document.get(), stateNames]() -> bool {
+            return document && document->RemoveStates(stateNames);
+        });
+    if (deleted)
+    {
+        m_selectedStateIndices.clear();
+        m_selectedStateIndex = -1;
+        m_selectedTransitionIndex = -1;
+        m_contextTransitionIndex = -1;
+    }
+    return deleted;
+}
+
 void AnimationGraphRenderer::HandleKeyboardShortcuts()
 {
     if (!m_framework || ImGui::GetIO().WantTextInput)
         return;
+
+    if (m_canvasEditor && m_canvasEditor->IsCanvasHovered() && ImGui::IsKeyPressed(ImGuiKey_Delete))
+    {
+        DeleteSelectedStates();
+        return;
+    }
 
     const bool ctrlDown = ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl);
     if (!ctrlDown)
@@ -612,6 +671,15 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         ImGui::TextDisabled("No Animation Graph document");
         return;
     }
+
+    const int frameNumber = ImGui::GetFrameCount();
+    if (m_lastGraphCanvasFrame == frameNumber)
+    {
+        SYSTEM_LOG << "[AnimationGraphRenderer] Ignored duplicate canvas render in frame "
+                   << frameNumber << "\n";
+        return;
+    }
+    m_lastGraphCanvasFrame = frameNumber;
     ImVec2 canvasPos = ImGui::GetCursorScreenPos();
     ImVec2 canvasSize = ImGui::GetContentRegionAvail();
     if (canvasSize.x < 50.0f) canvasSize.x = 50.0f;
@@ -683,6 +751,11 @@ void AnimationGraphRenderer::RenderGraphCanvas()
     const float nodeHeight = 72.0f;
     const float zoom = m_canvasEditor->GetZoom();
     const float pinRadius = 7.0f;
+    // Popup widgets are rendered below, but their left-click must not also
+    // be handled by this canvas first.  Otherwise a click on "Delete
+    // Selected" clears the selection as an empty-canvas click and shifts the
+    // menu entries underneath the pointer.
+    const bool canvasInputCapturedByContextMenu = m_canvasContextMenu.IsOpen();
     std::vector<std::tuple<int, float, float, float, float>> minimapNodes;
     minimapNodes.reserve(data["states"].size());
     float graphMinX = 0.0f;
@@ -692,6 +765,8 @@ void AnimationGraphRenderer::RenderGraphCanvas()
     bool hasGraphBounds = false;
     bool canvasNodeInteraction = false;
     bool canvasLinkInteraction = false;
+    int contextNodeIndex = -1;
+    int contextTransitionIndex = -1;
 
     // Connections are deliberately rendered before state cards, so cards remain the
     // primary hit targets while their transition flow stays readable at every zoom.
@@ -759,7 +834,7 @@ void AnimationGraphRenderer::RenderGraphCanvas()
                 if (distanceSquared <= closestDistanceSquared)
                     closestDistanceSquared = distanceSquared;
             }
-            if (closestDistanceSquared < 9.0f * 9.0f && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+            if (!canvasInputCapturedByContextMenu && closestDistanceSquared < 9.0f * 9.0f && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
             {
                 canvasLinkInteraction = true;
                 m_selectedTransitionIndex = static_cast<int>(transitionIndex);
@@ -768,10 +843,10 @@ void AnimationGraphRenderer::RenderGraphCanvas()
             if (closestDistanceSquared < 9.0f * 9.0f && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
             {
                 canvasLinkInteraction = true;
-                // Context operations intentionally do not change the current
-                // selection: a right click must not discard an active edit.
-                m_contextTransitionIndex = static_cast<int>(transitionIndex);
-                ImGui::OpenPopup("AnimationTransitionCanvasContext");
+                // The node pass below can still override this hit.  A state
+                // always takes priority over a link, as in the other editors.
+                if (contextTransitionIndex < 0)
+                    contextTransitionIndex = static_cast<int>(transitionIndex);
             }
         }
     }
@@ -825,13 +900,13 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         const bool inputHovered = inputDx * inputDx + inputDy * inputDy <= pinHitRadius * pinHitRadius;
         const bool outputHovered = outputDx * outputDx + outputDy * outputDy <= pinHitRadius * pinHitRadius;
 
-        if (outputHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        if (!canvasInputCapturedByContextMenu && outputHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
         {
             canvasNodeInteraction = true;
             m_linkStartStateIndex = static_cast<int>(i);
             m_linkDragStartPos = outputPin;
         }
-        else if (inputHovered && m_linkStartStateIndex >= 0 && ImGui::IsMouseReleased(ImGuiMouseButton_Left) &&
+        else if (!canvasInputCapturedByContextMenu && inputHovered && m_linkStartStateIndex >= 0 && ImGui::IsMouseReleased(ImGuiMouseButton_Left) &&
                  m_linkStartStateIndex != static_cast<int>(i) &&
                  static_cast<size_t>(m_linkStartStateIndex) < data["states"].size())
         {
@@ -844,61 +919,72 @@ void AnimationGraphRenderer::RenderGraphCanvas()
                 });
             m_linkStartStateIndex = -1;
         }
-        else if (nodeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        else if (!canvasInputCapturedByContextMenu && nodeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
         {
             canvasNodeInteraction = true;
             const bool appendSelection = ImGui::GetIO().KeyCtrl;
             std::vector<int>::iterator selectedIt = std::find(m_selectedStateIndices.begin(), m_selectedStateIndices.end(), static_cast<int>(i));
+            const bool wasSelected = selectedIt != m_selectedStateIndices.end();
             if (appendSelection)
             {
-                if (selectedIt == m_selectedStateIndices.end())
+                if (!wasSelected)
                     m_selectedStateIndices.push_back(static_cast<int>(i));
                 else
                     m_selectedStateIndices.erase(selectedIt);
             }
-            else
+            else if (!wasSelected)
             {
+                // A click on an already selected state preserves a group so
+                // the whole selection can be moved together.
                 m_selectedStateIndices.clear();
                 m_selectedStateIndices.push_back(static_cast<int>(i));
             }
-            m_selectedStateIndex = m_selectedStateIndices.empty() ? -1 : static_cast<int>(i);
+            const bool stateIsSelected = std::find(m_selectedStateIndices.begin(), m_selectedStateIndices.end(), static_cast<int>(i)) != m_selectedStateIndices.end();
+            m_selectedStateIndex = m_selectedStateIndices.empty() ? -1 :
+                (stateIsSelected ? static_cast<int>(i) : m_selectedStateIndices.front());
             strncpy_s(m_stateNameBuffer, sizeof(m_stateNameBuffer), stateName.c_str(), _TRUNCATE);
-            m_draggedStateIndex = static_cast<int>(i);
+            m_draggedStateIndex = stateIsSelected ? static_cast<int>(i) : -1;
             m_draggedStateName = stateName;
             m_dragStartPos = ImVec2(x, y);
+            m_draggedStateStartPositions.clear();
+            for (size_t selectedIndex = 0; selectedIndex < m_selectedStateIndices.size(); ++selectedIndex)
+            {
+                const int index = m_selectedStateIndices[selectedIndex];
+                if (index < 0 || static_cast<size_t>(index) >= data["states"].size())
+                    continue;
+                const nlohmann::json& selectedState = data["states"][index];
+                m_draggedStateStartPositions.push_back({
+                    selectedState.value("name", ""),
+                    ImVec2(static_cast<float>(selectedState.value("x", 0.0)),
+                           static_cast<float>(selectedState.value("y", 0.0))) });
+            }
         }
         if (m_draggedStateIndex == static_cast<int>(i) && ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
             ImGui::IsMouseDragging(ImGuiMouseButton_Left))
         {
             const ImVec2 delta = ImGui::GetIO().MouseDelta;
-            m_document->SetStatePosition(stateName, x + delta.x / zoom, y + delta.y / zoom);
+            for (size_t positionIndex = 0; positionIndex < m_draggedStateStartPositions.size(); ++positionIndex)
+            {
+                const std::string& draggedName = m_draggedStateStartPositions[positionIndex].name;
+                AnimationGraphDocument::StateDefinition* draggedState = m_document->GetState(draggedName);
+                if (draggedState)
+                    m_document->SetStatePosition(draggedName,
+                        draggedState->x + delta.x / zoom,
+                        draggedState->y + delta.y / zoom);
+            }
             m_canvasEditor->UpdateAutoPanning(true);
         }
         if (nodeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
         {
             canvasNodeInteraction = true;
-            m_selectedStateIndex = static_cast<int>(i);
-            strncpy_s(m_stateNameBuffer, sizeof(m_stateNameBuffer), stateName.c_str(), _TRUNCATE);
-            ImGui::OpenPopup((stateName + "##anim_node_context").c_str());
-        }
-        if (ImGui::BeginPopup((stateName + "##anim_node_context").c_str()))
-        {
-            if (ImGui::MenuItem("Delete"))
-            {
-                ExecuteDocumentCommand("Delete Animation State",
-                    [document = m_document.get(), stateName]() -> bool {
-                        return document->RemoveState(stateName);
-                    });
-                ImGui::EndPopup();
-                break;
-            }
-            ImGui::EndPopup();
+            // Context actions intentionally preserve the active selection.
+            contextNodeIndex = static_cast<int>(i);
         }
     }
 
     // Empty-canvas drag selects every intersecting node. Ctrl keeps the
     // existing selection, matching the interaction contract of the other graph editors.
-    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !canvasNodeInteraction && !canvasLinkInteraction &&
+    if (!canvasInputCapturedByContextMenu && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !canvasNodeInteraction && !canvasLinkInteraction &&
         m_canvasEditor->IsPointInCanvas(ImGui::GetIO().MousePos))
     {
         m_isSelectingRectangle = true;
@@ -944,31 +1030,53 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         }
     }
 
-    if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && !canvasNodeInteraction && !canvasLinkInteraction &&
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) &&
         m_canvasEditor->IsPointInCanvas(ImGui::GetIO().MousePos))
     {
-        ImGui::OpenPopup("AnimationCanvasContext");
+        // CanvasContextMenu owns the popup identity and target priority.  This
+        // replaces the former independent state/link/canvas popups.
+        m_canvasContextMenu.OpenForHitTest(contextNodeIndex, contextTransitionIndex);
+        SYSTEM_LOG << "[AnimationGraphRenderer][ContextMenu-v6] Open frame="
+                   << frameNumber << " node=" << contextNodeIndex
+                   << " transition=" << contextTransitionIndex << "\n";
     }
 
     if (!ImGui::IsMouseDown(ImGuiMouseButton_Left) && m_draggedStateIndex >= 0)
     {
-        const std::string movedStateName = m_draggedStateName;
-        const AnimationGraphDocument::StateDefinition* movedState = m_document->GetState(movedStateName);
-        if (movedState && (movedState->x != m_dragStartPos.x || movedState->y != m_dragStartPos.y))
+        const std::vector<StatePosition> before = m_draggedStateStartPositions;
+        std::vector<StatePosition> after;
+        bool didMove = false;
+        for (size_t positionIndex = 0; positionIndex < before.size(); ++positionIndex)
         {
-            const ImVec2 before = m_dragStartPos;
-            const ImVec2 after(static_cast<float>(movedState->x), static_cast<float>(movedState->y));
+            const AnimationGraphDocument::StateDefinition* movedState = m_document->GetState(before[positionIndex].name);
+            if (!movedState)
+                continue;
+            const ImVec2 position(static_cast<float>(movedState->x), static_cast<float>(movedState->y));
+            after.push_back({ before[positionIndex].name, position });
+            didMove = didMove || position.x != before[positionIndex].position.x || position.y != before[positionIndex].position.y;
+        }
+        if (didMove)
+        {
             m_framework->ExecuteCommand(std::unique_ptr<GraphCommand>(
-                new CallbackGraphCommand("Move Animation State",
-                    [document = m_document.get(), movedStateName, after]() -> bool {
-                        return document->SetStatePosition(movedStateName, after.x, after.y);
+                new CallbackGraphCommand("Move Animation States",
+                    [document = m_document.get(), after]() -> bool {
+                        bool movedAny = false;
+                        for (size_t positionIndex = 0; positionIndex < after.size(); ++positionIndex)
+                            movedAny = document->SetStatePosition(after[positionIndex].name,
+                                after[positionIndex].position.x, after[positionIndex].position.y) || movedAny;
+                        return movedAny;
                     },
-                    [document = m_document.get(), movedStateName, before]() -> bool {
-                        return document->SetStatePosition(movedStateName, before.x, before.y);
+                    [document = m_document.get(), before]() -> bool {
+                        bool movedAny = false;
+                        for (size_t positionIndex = 0; positionIndex < before.size(); ++positionIndex)
+                            movedAny = document->SetStatePosition(before[positionIndex].name,
+                                before[positionIndex].position.x, before[positionIndex].position.y) || movedAny;
+                        return movedAny;
                     })));
         }
         m_draggedStateIndex = -1;
         m_draggedStateName.clear();
+        m_draggedStateStartPositions.clear();
     }
     if (m_linkStartStateIndex >= 0)
     {
@@ -999,27 +1107,87 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         m_canvasEditor->UpdateMinimapViewport(visibleMin.x, visibleMax.x, visibleMin.y, visibleMax.y,
             graphMinX, graphMaxX, graphMinY, graphMaxY);
     }
-    if (ImGui::BeginPopup("AnimationTransitionCanvasContext"))
+    // Exactly like PlaceholderCanvas, menu widgets only choose an action.
+    // The mutation is deliberately applied after EndPopup(): changing the
+    // graph or the selection while ImGui is iterating the popup was the last
+    // remaining legacy interaction path and produced a second canvas popup.
+    enum class ContextAction { None, DeleteState, DeleteTransition, SelectAll, ClearSelection, DeleteSelected, ResetView };
+    ContextAction contextAction = ContextAction::None;
+    int contextActionIndex = -1;
+    std::string contextActionStateName;
+    if (m_canvasContextMenu.Begin())
     {
-        ImGui::Text("Transition %d", m_contextTransitionIndex + 1);
-        if (ImGui::MenuItem("Delete Transition") && m_contextTransitionIndex >= 0)
+        const CanvasContextTargetType targetType = m_canvasContextMenu.GetTargetType();
+        const int targetIndex = m_canvasContextMenu.GetTargetId();
+        if (targetType == CanvasContextTargetType::Node)
         {
-            const int transitionIndex = m_contextTransitionIndex;
-            if (ExecuteDocumentCommand("Delete Animation Transition",
-                [document = m_document.get(), transitionIndex]() -> bool {
-                    return document->RemoveTransition(static_cast<size_t>(transitionIndex));
-                }))
+            if (targetIndex >= 0 && static_cast<size_t>(targetIndex) < data["states"].size() &&
+                ImGui::MenuItem("Delete State"))
             {
-                if (m_selectedTransitionIndex == transitionIndex)
-                    m_selectedTransitionIndex = -1;
-                m_contextTransitionIndex = -1;
+                contextAction = ContextAction::DeleteState;
+                contextActionStateName = data["states"][targetIndex].value("name", "");
             }
+        }
+        else if (targetType == CanvasContextTargetType::Link)
+        {
+            if (targetIndex >= 0 && static_cast<size_t>(targetIndex) < data["transitions"].size() &&
+                ImGui::MenuItem("Delete Transition"))
+            {
+                contextAction = ContextAction::DeleteTransition;
+                contextActionIndex = targetIndex;
+            }
+        }
+        else if (targetType == CanvasContextTargetType::Canvas)
+        {
+            if (ImGui::MenuItem("Select All", "Ctrl+A"))
+                contextAction = ContextAction::SelectAll;
+            if (ImGui::MenuItem("Clear Selection"))
+                contextAction = ContextAction::ClearSelection;
+            if (!m_selectedStateIndices.empty() && ImGui::MenuItem("Delete Selected"))
+                contextAction = ContextAction::DeleteSelected;
+            ImGui::Separator();
+            if (ImGui::MenuItem("Reset View"))
+                contextAction = ContextAction::ResetView;
+        }
+        // MenuItem does not reliably close a plain popup in every ImGui
+        // configuration used by the editor.  Close the *current* popup while
+        // it is still active, but defer the graph mutation until after
+        // EndPopup below.  This prevents the residual, selection-less canvas
+        // menu that looked like a second context menu.
+        if (contextAction != ContextAction::None)
+        {
+            SYSTEM_LOG << "[AnimationGraphRenderer][ContextMenu-v6] Action="
+                       << static_cast<int>(contextAction) << " frame=" << frameNumber << "\n";
+            ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
     }
-    if (ImGui::BeginPopup("AnimationCanvasContext"))
+
+    if (contextAction != ContextAction::None)
     {
-        if (ImGui::MenuItem("Select All", "Ctrl+A"))
+        if (contextAction == ContextAction::DeleteState)
+        {
+            if (ExecuteDocumentCommand("Delete Animation State",
+                [document = m_document.get(), contextActionStateName]() -> bool {
+                    return document && !contextActionStateName.empty() && document->RemoveState(contextActionStateName);
+                }))
+            {
+                m_selectedStateIndices.clear();
+                m_selectedStateIndex = -1;
+                m_selectedTransitionIndex = -1;
+            }
+        }
+        else if (contextAction == ContextAction::DeleteTransition)
+        {
+            if (ExecuteDocumentCommand("Delete Animation Transition",
+                [document = m_document.get(), contextActionIndex]() -> bool {
+                    return document && contextActionIndex >= 0 && document->RemoveTransition(static_cast<size_t>(contextActionIndex));
+                }) && m_selectedTransitionIndex == contextActionIndex)
+            {
+                m_selectedTransitionIndex = -1;
+            }
+        }
+        else if (contextAction == ContextAction::SelectAll)
         {
             m_selectedStateIndices.clear();
             for (size_t stateIndex = 0; stateIndex < data["states"].size(); ++stateIndex)
@@ -1028,37 +1196,25 @@ void AnimationGraphRenderer::RenderGraphCanvas()
             if (m_selectedStateIndex >= 0)
                 strncpy_s(m_stateNameBuffer, sizeof(m_stateNameBuffer), data["states"][m_selectedStateIndex].value("name", "").c_str(), _TRUNCATE);
         }
-        if (ImGui::MenuItem("Clear Selection"))
+        else if (contextAction == ContextAction::ClearSelection)
         {
             m_selectedStateIndices.clear();
             m_selectedStateIndex = -1;
         }
-        if (!m_selectedStateIndices.empty() && ImGui::MenuItem("Delete Selected"))
+        else if (contextAction == ContextAction::DeleteSelected)
         {
-            std::vector<std::string> stateNames;
-            for (size_t selectedIndex = 0; selectedIndex < m_selectedStateIndices.size(); ++selectedIndex)
-            {
-                const int index = m_selectedStateIndices[selectedIndex];
-                if (index >= 0 && static_cast<size_t>(index) < data["states"].size())
-                    stateNames.push_back(data["states"][index].value("name", ""));
-            }
-            if (ExecuteDocumentCommand("Delete Animation States",
-                [document = m_document.get(), stateNames]() -> bool {
-                    bool deletedAny = false;
-                    for (size_t nameIndex = 0; nameIndex < stateNames.size(); ++nameIndex)
-                        deletedAny = document->RemoveState(stateNames[nameIndex]) || deletedAny;
-                    return deletedAny;
-                }))
-            {
-                m_selectedStateIndices.clear();
-                m_selectedStateIndex = -1;
-            }
+            DeleteSelectedStates();
         }
-        ImGui::Separator();
-        if (ImGui::MenuItem("Reset View"))
+        else if (contextAction == ContextAction::ResetView)
+        {
             ResetView();
-        ImGui::EndPopup();
+        }
+
+        // Clear the routing target after the action.  The popup itself was
+        // closed above while it was active.
+        m_canvasContextMenu.Clear();
     }
+
     m_canvasEditor->RenderMinimap();
     m_canvasEditor->EndRender();
 }

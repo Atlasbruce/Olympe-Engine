@@ -113,6 +113,11 @@ public:
     bool AddStateFromClip(const std::string& stateName, const std::string& clipName);
     bool RenameState(const std::string& oldName, const std::string& newName);
     bool RemoveState(const std::string& stateName);
+    // Removes a selection as one model mutation.  This is intentionally not
+    // implemented by repeatedly calling RemoveState from a renderer: all
+    // incident transitions and the default-state fallback must be resolved
+    // against the same pre-edit model for an undoable multi-selection delete.
+    bool RemoveStates(const std::vector<std::string>& stateNames);
     bool SetStatePosition(const std::string& stateName, double x, double y);
     bool SetStateDefaultClip(const std::string& stateName, const std::string& clipName);
     bool SetStateDirectionClip(const std::string& stateName, Direction direction, const std::string& clipName);

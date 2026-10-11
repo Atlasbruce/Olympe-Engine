@@ -558,8 +558,8 @@
       "loop": true,
       "name": "State 1 Zombie",
       "priority": 0,
-      "x": 163,
-      "y": -61
+      "x": -48.394,
+      "y": 237.034
     },
     {
       "blendTime": 0.1,
@@ -602,8 +602,8 @@
       "loop": true,
       "name": "ani_zombie_idle_e",
       "priority": 0,
-      "x": 723.8,
-      "y": 133
+      "x": 584.054,
+      "y": 111.312
     },
     {
       "blendTime": 0.1,
@@ -646,8 +646,8 @@
       "loop": true,
       "name": "ani_zombie_idle_w_3",
       "priority": 0,
-      "x": 450.4,
-      "y": 40.9
+      "x": 287.535,
+      "y": 293.095
     },
     {
       "blendTime": 0.1,
@@ -690,8 +690,8 @@
       "loop": true,
       "name": "ani_zombie_idle_nw",
       "priority": 0,
-      "x": 1051.8,
-      "y": 3
+      "x": 925.8,
+      "y": 194
     },
     {
       "blendTime": 0.1,
@@ -734,8 +734,8 @@
       "loop": true,
       "name": "Thesee_Idle_n long title test to check if the node lenght auto adjust",
       "priority": 0,
-      "x": 803.182,
-      "y": -157.364
+      "x": 592.182,
+      "y": 407.636
     },
     {
       "blendTime": 0.1,
@@ -778,8 +778,8 @@
       "loop": true,
       "name": "Thesee_Idle_n_1",
       "priority": 0,
-      "x": 453.678,
-      "y": 257.755
+      "x": 192.678,
+      "y": 66.755
     },
     {
       "blendTime": 0.1,
@@ -822,8 +822,8 @@
       "loop": true,
       "name": "Thesee_Idle_s",
       "priority": 0,
-      "x": 1042,
-      "y": -247
+      "x": 917,
+      "y": 500
     }
   ],
   "transitions": [
