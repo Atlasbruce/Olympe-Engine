@@ -56,9 +56,25 @@ public:
 
     struct SourceDefinition
     {
+        struct FrameDefinition
+        {
+            int tileId = 0;
+            int durationMs = 0;
+        };
+
+        struct ClipDefinition
+        {
+            std::string id;
+            std::string group;
+            std::string direction;
+            bool loop = true;
+            int sourceTileId = -1;
+            std::vector<FrameDefinition> frames;
+        };
+
         std::string filePath;
         std::string sourceName;
-        std::vector<std::string> clips;
+        std::vector<ClipDefinition> clips;
     };
 
     AnimationGraphDocument();
@@ -104,6 +120,7 @@ public:
     bool RemoveStateEvent(const std::string& stateName, const std::string& eventName);
 
     bool AddTransition(const std::string& fromState, const std::string& toState, const std::string& condition, double duration);
+    bool UpdateTransition(size_t index, const std::string& condition, double duration, int priority, bool interruptible);
     bool RemoveTransition(size_t index);
 
     int FindStateIndex(const std::string& stateName) const;
@@ -125,6 +142,10 @@ public:
     bool ImportTSXFile(const std::string& filePath, std::vector<std::string>* errors = nullptr);
     std::vector<std::string> ValidateImportedSources() const;
     std::vector<std::string> GetAllKnownClips() const;
+
+    /** Complete document snapshots are used by the shared command history. */
+    nlohmann::json CreateSnapshot() const;
+    bool RestoreSnapshot(const nlohmann::json& snapshot);
 
 private:
     bool LoadFromJson(const nlohmann::json& root);

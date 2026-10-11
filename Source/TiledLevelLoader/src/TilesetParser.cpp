@@ -128,6 +128,38 @@ namespace Tiled {
                 ParsePropertiesFromXML(propertiesElement, tile.properties);
             }
 
+            // Animated tiles carry their own frame sequence and timing.  Do
+            // not collapse this information to the tileset-level grid: each
+            // tile can have a different frame count and duration.
+            tinyxml2::XMLElement* animationElement = tileElement->FirstChildElement("animation");
+            if (animationElement) {
+                for (tinyxml2::XMLElement* frameElement = animationElement->FirstChildElement("frame");
+                     frameElement != nullptr;
+                     frameElement = frameElement->NextSiblingElement("frame"))
+                {
+                    tile.animationFrames.push_back(TiledAnimationFrame(
+                        frameElement->IntAttribute("tileid", 0),
+                        frameElement->IntAttribute("duration", 0)));
+                }
+            }
+
+            // Several existing Olympe TSX files predate explicit animation
+            // properties and name their clips through collision objects.
+            // Retain those names as import metadata; higher-level importers
+            // can use them as a fallback while preferring explicit properties.
+            tinyxml2::XMLElement* objectGroupElement = tileElement->FirstChildElement("objectgroup");
+            if (objectGroupElement) {
+                for (tinyxml2::XMLElement* objectElement = objectGroupElement->FirstChildElement("object");
+                     objectElement != nullptr;
+                     objectElement = objectElement->NextSiblingElement("object"))
+                {
+                    const char* objectName = objectElement->Attribute("name");
+                    if (objectName && *objectName) {
+                        tile.objectNames.push_back(objectName);
+                    }
+                }
+            }
+
             tileset.tiles.push_back(tile);
         }
 
@@ -308,6 +340,26 @@ namespace Tiled {
 
         if (HasKey(j, "properties")) {
             ParsePropertiesFromJSON(j["properties"], tile.properties);
+        }
+
+        if (HasKey(j, "animation") && j["animation"].is_array()) {
+            for (const auto& frameJson : j["animation"]) {
+                tile.animationFrames.push_back(TiledAnimationFrame(
+                    GetInt(frameJson, "tileid"),
+                    GetInt(frameJson, "duration")));
+            }
+        }
+
+        if (HasKey(j, "objectgroup") && j["objectgroup"].is_object()) {
+            const auto& objectGroup = j["objectgroup"];
+            if (HasKey(objectGroup, "objects") && objectGroup["objects"].is_array()) {
+                for (const auto& objectJson : objectGroup["objects"]) {
+                    const std::string objectName = GetString(objectJson, "name");
+                    if (!objectName.empty()) {
+                        tile.objectNames.push_back(objectName);
+                    }
+                }
+            }
         }
     }
 

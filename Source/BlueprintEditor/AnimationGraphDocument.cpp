@@ -30,6 +30,108 @@ namespace {
         return file.good();
 #endif
     }
+
+    static std::string GetTileStringProperty(const Olympe::Tiled::TiledTile& tile,
+                                             const char* propertyName)
+    {
+        const auto propertyIt = tile.properties.find(propertyName);
+        if (propertyIt == tile.properties.end())
+        {
+            return "";
+        }
+
+        const Olympe::Tiled::TiledProperty& property = propertyIt->second;
+        switch (property.type)
+        {
+            case Olympe::Tiled::PropertyType::String:
+            case Olympe::Tiled::PropertyType::File:
+                return property.stringValue;
+            default:
+                return "";
+        }
+    }
+
+    static std::string MakeImportedClipName(const Olympe::Tiled::TiledTile& tile,
+                                            const std::string& sourceName)
+    {
+        // Explicit asset metadata is authoritative.  Accept the two spellings
+        // used by the existing content and the proposed animation pipeline.
+        static const char* kClipIdProperties[] = {
+            "anim.clip_id", "animation.clip_id", "clip_id", "clip", "name"
+        };
+        for (const char* propertyName : kClipIdProperties)
+        {
+            const std::string value = GetTileStringProperty(tile, propertyName);
+            if (!value.empty())
+            {
+                return value;
+            }
+        }
+
+        // Legacy Olympe TSX files label an animated tile through the first
+        // object in its collision object-group.  Keep that content usable
+        // while making the fallback explicit in the importer design.
+        if (!tile.objectNames.empty() && !tile.objectNames.front().empty())
+        {
+            return tile.objectNames.front();
+        }
+
+        if (!tile.type.empty())
+        {
+            return tile.type;
+        }
+
+        return sourceName + "_tile_" + std::to_string(tile.id);
+    }
+
+    static bool GetTileBoolProperty(const Olympe::Tiled::TiledTile& tile,
+                                    const char* propertyName,
+                                    bool defaultValue)
+    {
+        const auto propertyIt = tile.properties.find(propertyName);
+        if (propertyIt == tile.properties.end() ||
+            propertyIt->second.type != Olympe::Tiled::PropertyType::Bool)
+        {
+            return defaultValue;
+        }
+        return propertyIt->second.boolValue;
+    }
+
+    static std::string GetTileAnimationProperty(const Olympe::Tiled::TiledTile& tile,
+                                                const char* preferredName,
+                                                const char* alternateName = nullptr)
+    {
+        std::string value = GetTileStringProperty(tile, preferredName);
+        if (value.empty() && alternateName)
+        {
+            value = GetTileStringProperty(tile, alternateName);
+        }
+        return value;
+    }
+
+    static std::string MakeUniqueClipName(
+        const std::vector<AnimationGraphDocument::SourceDefinition::ClipDefinition>& clips,
+        const std::string& baseName)
+    {
+        const std::string normalizedBaseName = baseName.empty() ? "clip" : baseName;
+        std::string candidate = normalizedBaseName;
+        int suffix = 2;
+        bool isDuplicate = true;
+        while (isDuplicate)
+        {
+            isDuplicate = false;
+            for (const AnimationGraphDocument::SourceDefinition::ClipDefinition& clip : clips)
+            {
+                if (clip.id == candidate)
+                {
+                    isDuplicate = true;
+                    candidate = normalizedBaseName + "_" + std::to_string(suffix++);
+                    break;
+                }
+            }
+        }
+        return candidate;
+    }
 }
 
 AnimationGraphDocument::AnimationGraphDocument()
@@ -78,7 +180,12 @@ std::vector<std::string> AnimationGraphDocument::GetSourceClipNames(size_t index
     {
         return std::vector<std::string>();
     }
-    return m_sources[index].clips;
+    std::vector<std::string> clipNames;
+    for (const SourceDefinition::ClipDefinition& clip : m_sources[index].clips)
+    {
+        clipNames.push_back(clip.id);
+    }
+    return clipNames;
 }
 
 void AnimationGraphDocument::SetName(const std::string& name) { m_name = name.empty() ? "Untitled Animation Graph" : name; m_isDirty = true; m_data = BuildJson(); }
@@ -177,6 +284,7 @@ bool AnimationGraphDocument::SetStateDirectionClip(const std::string& stateName,
 bool AnimationGraphDocument::AddStateEvent(const std::string& stateName, const std::string& eventName) { StateDefinition* s = GetState(stateName); if (!s || eventName.empty() || std::find(s->events.begin(), s->events.end(), eventName) != s->events.end()) return false; s->events.push_back(eventName); m_isDirty = true; m_data = BuildJson(); return true; }
 bool AnimationGraphDocument::RemoveStateEvent(const std::string& stateName, const std::string& eventName) { StateDefinition* s = GetState(stateName); if (!s) return false; std::vector<std::string>::iterator it = std::remove(s->events.begin(), s->events.end(), eventName); if (it == s->events.end()) return false; s->events.erase(it, s->events.end()); m_isDirty = true; m_data = BuildJson(); return true; }
 bool AnimationGraphDocument::AddTransition(const std::string& fromState, const std::string& toState, const std::string& condition, double duration) { if (fromState.empty() || toState.empty() || FindStateIndex(fromState) < 0 || FindStateIndex(toState) < 0) return false; TransitionDefinition t; t.fromState = fromState; t.toState = toState; t.condition = condition; t.duration = duration; m_transitions.push_back(t); m_isDirty = true; m_data = BuildJson(); return true; }
+bool AnimationGraphDocument::UpdateTransition(size_t index, const std::string& condition, double duration, int priority, bool interruptible) { if (index >= m_transitions.size() || duration < 0.0) return false; TransitionDefinition& transition = m_transitions[index]; transition.condition = condition; transition.duration = duration; transition.priority = priority; transition.interruptible = interruptible; m_isDirty = true; m_data = BuildJson(); return true; }
 bool AnimationGraphDocument::RemoveTransition(size_t index) { if (index >= m_transitions.size()) return false; m_transitions.erase(m_transitions.begin() + index); m_isDirty = true; m_data = BuildJson(); return true; }
 
 bool AnimationGraphDocument::HasSource(const std::string& filePath) const
@@ -230,10 +338,25 @@ std::vector<std::string> AnimationGraphDocument::ValidateBinding() const
 
 std::vector<std::string> AnimationGraphDocument::GetAllKnownClips() const { return m_availableClips; }
 
+nlohmann::json AnimationGraphDocument::CreateSnapshot() const
+{
+    return BuildJson();
+}
+
+bool AnimationGraphDocument::RestoreSnapshot(const nlohmann::json& snapshot)
+{
+    if (!LoadFromJson(snapshot))
+        return false;
+    m_isDirty = true;
+    return true;
+}
+
 nlohmann::json AnimationGraphDocument::BuildRuntimeJson() const
 {
     json root = json::object();
-    root["schema_version"] = 1;
+    // The compiled runtime export retains the source clip definitions so
+    // validation and runtime asset compilation agree on the same schema.
+    root["schema_version"] = 3;
     root["blueprintType"] = "AnimationGraph";
     root["name"] = m_name;
     root["description"] = m_description;
@@ -245,7 +368,24 @@ nlohmann::json AnimationGraphDocument::BuildRuntimeJson() const
         source["filePath"] = m_sources[i].filePath;
         source["sourceName"] = m_sources[i].sourceName;
         source["clips"] = json::array();
-        for (size_t j = 0; j < m_sources[i].clips.size(); ++j) source["clips"].push_back(m_sources[i].clips[j]);
+        for (const SourceDefinition::ClipDefinition& clipDefinition : m_sources[i].clips)
+        {
+            json clip = json::object();
+            clip["id"] = clipDefinition.id;
+            clip["group"] = clipDefinition.group;
+            clip["direction"] = clipDefinition.direction;
+            clip["loop"] = clipDefinition.loop;
+            clip["sourceTileId"] = clipDefinition.sourceTileId;
+            clip["frames"] = json::array();
+            for (const SourceDefinition::FrameDefinition& frameDefinition : clipDefinition.frames)
+            {
+                json frame = json::object();
+                frame["tileId"] = frameDefinition.tileId;
+                frame["durationMs"] = frameDefinition.durationMs;
+                clip["frames"].push_back(frame);
+            }
+            source["clips"].push_back(clip);
+        }
         root["sources"].push_back(source);
     }
     root["states"] = json::array();
@@ -290,7 +430,7 @@ std::string AnimationGraphDocument::GetName() const { return m_name.empty() ? "U
 nlohmann::json AnimationGraphDocument::BuildJson() const
 {
     json root = BuildRuntimeJson();
-    root["schema_version"] = 2;
+    root["schema_version"] = 3;
     return root;
 }
 
@@ -302,7 +442,37 @@ bool AnimationGraphDocument::LoadFromJson(const json& root)
     m_defaultState = JsonHelper::GetString(root, "defaultState", "Idle");
     m_sources.clear(); m_states.clear(); m_transitions.clear();
     if (root.contains("sources") && root["sources"].is_array())
-        for (const auto& sourceJson : root["sources"]) { SourceDefinition s; s.filePath = JsonHelper::GetString(sourceJson, "filePath", ""); s.sourceName = JsonHelper::GetString(sourceJson, "sourceName", ""); if (sourceJson.contains("clips") && sourceJson["clips"].is_array()) for (const auto& clip : sourceJson["clips"]) if (clip.is_string()) s.clips.push_back(clip.get<std::string>()); m_sources.push_back(s); }
+        for (const auto& sourceJson : root["sources"]) {
+            SourceDefinition source;
+            source.filePath = JsonHelper::GetString(sourceJson, "filePath", "");
+            source.sourceName = JsonHelper::GetString(sourceJson, "sourceName", "");
+            if (sourceJson.contains("clips") && sourceJson["clips"].is_array()) {
+                for (const auto& clipJson : sourceJson["clips"]) {
+                    SourceDefinition::ClipDefinition clip;
+                    // Schema v1/v2 stored only a string clip name.  Preserve
+                    // it as a valid provisional clip while loading old files.
+                    if (clipJson.is_string()) {
+                        clip.id = clipJson.get<std::string>();
+                    } else if (clipJson.is_object()) {
+                        clip.id = JsonHelper::GetString(clipJson, "id", "");
+                        clip.group = JsonHelper::GetString(clipJson, "group", "");
+                        clip.direction = JsonHelper::GetString(clipJson, "direction", "");
+                        clip.loop = JsonHelper::GetBool(clipJson, "loop", true);
+                        clip.sourceTileId = JsonHelper::GetInt(clipJson, "sourceTileId", -1);
+                        if (clipJson.contains("frames") && clipJson["frames"].is_array()) {
+                            for (const auto& frameJson : clipJson["frames"]) {
+                                SourceDefinition::FrameDefinition frame;
+                                frame.tileId = JsonHelper::GetInt(frameJson, "tileId", 0);
+                                frame.durationMs = JsonHelper::GetInt(frameJson, "durationMs", 0);
+                                clip.frames.push_back(frame);
+                            }
+                        }
+                    }
+                    if (!clip.id.empty()) source.clips.push_back(clip);
+                }
+            }
+            m_sources.push_back(source);
+        }
     if (root.contains("states") && root["states"].is_array())
         for (const auto& stateJson : root["states"]) { StateDefinition s; s.name = JsonHelper::GetString(stateJson, "name", ""); s.defaultClip = JsonHelper::GetString(stateJson, "defaultClip", ""); s.blendTime = JsonHelper::GetFloat(stateJson, "blendTime", 0.1f); s.loop = JsonHelper::GetBool(stateJson, "loop", true); s.priority = JsonHelper::GetInt(stateJson, "priority", 0); s.x = JsonHelper::GetFloat(stateJson, "x", 0.0f); s.y = JsonHelper::GetFloat(stateJson, "y", 0.0f); if (stateJson.contains("directionClips") && stateJson["directionClips"].is_array()) for (const auto& clipJson : stateJson["directionClips"]) { DirectionClipMapping m; m.direction = JsonHelper::GetString(clipJson, "direction", "N"); m.clip = JsonHelper::GetString(clipJson, "clip", ""); s.directionClips.push_back(m); } if (s.directionClips.size() < kDirectionCount) s.directionClips.resize(kDirectionCount); if (stateJson.contains("events") && stateJson["events"].is_array()) for (const auto& eventJson : stateJson["events"]) if (eventJson.is_string()) s.events.push_back(eventJson.get<std::string>()); m_states.push_back(s); }
     if (root.contains("transitions") && root["transitions"].is_array())
@@ -318,7 +488,9 @@ void AnimationGraphDocument::UpdateStateNamesInReferences(const std::string& old
 void AnimationGraphDocument::RebuildAvailableClips()
 {
     m_availableClips.clear();
-    for (size_t i = 0; i < m_sources.size(); ++i) for (size_t j = 0; j < m_sources[i].clips.size(); ++j) m_availableClips.push_back(m_sources[i].clips[j]);
+    for (const SourceDefinition& source : m_sources)
+        for (const SourceDefinition::ClipDefinition& clip : source.clips)
+            m_availableClips.push_back(clip.id);
 }
 
 std::string AnimationGraphDocument::NormalizePath(const std::string& path) { std::string result = path; std::replace(result.begin(), result.end(), '\\', '/'); return result; }
@@ -407,7 +579,47 @@ bool AnimationGraphDocument::ImportTSXFile(const std::string& filePath, std::vec
     source.filePath = resolvedPath;
     source.sourceName = tileset.name.empty() ? ExtractClipNameFromTsx(json::object(), filePath) : tileset.name;
 
-    source.clips.push_back(source.sourceName);
+    // A TSX is a source collection, not a single animation state.  Each
+    // animated tile is a separately addressable clip with its own frame
+    // timing.  The detailed frame data stays on TiledTile for the forthcoming
+    // Animation Bank compiler; the graph palette needs the stable clip IDs.
+    for (const Olympe::Tiled::TiledTile& tile : tileset.tiles)
+    {
+        if (!tile.animationFrames.empty())
+        {
+            SourceDefinition::ClipDefinition clip;
+            clip.id = MakeUniqueClipName(source.clips, MakeImportedClipName(tile, source.sourceName));
+            clip.group = GetTileAnimationProperty(tile, "anim.group", "anim_group");
+            clip.direction = GetTileAnimationProperty(tile, "anim.direction", "direction");
+            clip.loop = GetTileBoolProperty(tile, "anim.loop",
+                GetTileBoolProperty(tile, "loop", true));
+            clip.sourceTileId = tile.id;
+            for (const Olympe::Tiled::TiledAnimationFrame& tiledFrame : tile.animationFrames)
+            {
+                SourceDefinition::FrameDefinition frame;
+                frame.tileId = tiledFrame.tileId;
+                frame.durationMs = tiledFrame.durationMs;
+                clip.frames.push_back(frame);
+            }
+            source.clips.push_back(clip);
+        }
+    }
+
+    // Image-only tilesets remain valid sources.  They expose one provisional
+    // clip so authors can create a state, then refine its frame range in the
+    // Animation Bank editor.
+    if (source.clips.empty())
+    {
+        SourceDefinition::ClipDefinition provisionalClip;
+        provisionalClip.id = MakeUniqueClipName(source.clips, source.sourceName);
+        source.clips.push_back(provisionalClip);
+        if (errors)
+        {
+            errors->push_back("TSX '" + source.sourceName +
+                              "' has no animated tiles; imported as one provisional clip.");
+        }
+    }
+
     m_sources.push_back(source);
     RebuildAvailableClips();
     m_isDirty = true;

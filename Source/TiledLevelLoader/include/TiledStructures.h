@@ -214,6 +214,25 @@ namespace Tiled {
               repeatx(false), repeaty(false) {}
     };
 
+    /**
+     * @brief A frame declared by Tiled on an animated tile.
+     *
+     * The duration belongs to the frame, rather than to the whole tileset.
+     * Keeping it here is essential for consumers such as the animation-bank
+     * importer: a Tiled animation frequently has non-uniform timings.
+     */
+    struct TiledAnimationFrame
+    {
+        int tileId;
+        int durationMs;
+
+        TiledAnimationFrame()
+            : tileId(0), durationMs(0) {}
+
+        TiledAnimationFrame(int tileIdValue, int durationMsValue)
+            : tileId(tileIdValue), durationMs(durationMsValue) {}
+    };
+
     // Individual tile in tileset (for tile-specific properties)
     struct TiledTile
     {
@@ -223,6 +242,12 @@ namespace Tiled {
         int imageheight;
         std::string type;   // Tile type/class
         std::map<std::string, TiledProperty> properties;
+
+        // Optional metadata for animated tiles.  objectNames preserves the
+        // names authored in a tile object-group, which legacy TSX animation
+        // banks often use as their clip label.
+        std::vector<TiledAnimationFrame> animationFrames;
+        std::vector<std::string> objectNames;
 
         TiledTile()
             : id(0), imagewidth(0), imageheight(0) {}

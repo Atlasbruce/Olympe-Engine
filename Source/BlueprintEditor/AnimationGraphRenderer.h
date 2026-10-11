@@ -9,6 +9,7 @@
 #include "Utilities/CanvasMinimapRenderer.h"
 #include "../third_party/imgui/imgui.h"
 #include <memory>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -45,6 +46,11 @@ public:
     void SetMinimapSize(float size) override;
     int GetMinimapPosition() const override;
     void SetMinimapPosition(int pos) override;
+    bool SupportsGrid() const override { return true; }
+    bool IsGridVisible() const override { return m_gridVisible; }
+    void SetGridVisible(bool visible) override;
+    bool SupportsResetView() const override { return true; }
+    void ResetView() override;
     void RenderFrameworkModals() override;
 
     IGraphDocument* GetDocument() const { return static_cast<IGraphDocument*>(m_document.get()); }
@@ -65,6 +71,8 @@ private:
     void RenderSingleTransition(size_t transitionIndex, const ImVec2& canvasOrigin);
     void EnsureStatePositions();
     void RenderGraphNodePorts(const nlohmann::json& state, int stateIndex, bool isSelected);
+    bool ExecuteDocumentCommand(const std::string& description, const std::function<bool()>& edit);
+    void HandleKeyboardShortcuts();
     int FindStateIndexByName(const std::string& name) const;
     int FindEventIndexByState(const std::string& stateName) const;
     std::string MakeUniqueStateName(const std::string& baseName) const;
@@ -72,6 +80,7 @@ private:
     std::unique_ptr<AnimationGraphDocument> m_document;
     std::string m_currentPath;
     std::string m_canvasStateJson;
+    bool m_canvasStateLoaded;
     char m_bankPathBuffer[512];
     char m_stateNameBuffer[128];
     char m_animationNameBuffer[128];
@@ -84,6 +93,7 @@ private:
     bool m_minimapVisible;
     float m_minimapSize;
     int m_minimapPosition;
+    bool m_gridVisible;
     bool m_showVerification;
     bool m_showRunPreview;
     float m_previewTime;
@@ -92,6 +102,7 @@ private:
     float m_timelinePanelHeight;
     int m_draggedStateIndex;
     ImVec2 m_dragStartPos;
+    std::string m_draggedStateName;
     int m_selectedStateIndex;
     int m_selectedTransitionIndex;
     int m_selectedEventIndex;

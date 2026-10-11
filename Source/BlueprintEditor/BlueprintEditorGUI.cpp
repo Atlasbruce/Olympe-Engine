@@ -1390,12 +1390,14 @@ void BlueprintEditorGUI::RenderPreferencesDialog()
         ImGuiIO& io = ImGui::GetIO();
         auto& backend = BlueprintEditor::Get();
 
-        // Visual Script owns a dedicated command stack.  Its panel handles
-        // Ctrl+Z/Ctrl+Y itself; sending the same keystroke to the legacy
-        // BlueprintEditor stack can restore an unrelated legacy command.
+        // Visual Script and Animation Graph own dedicated command histories.
+        // Their renderers handle Ctrl+Z/Ctrl+Y themselves; sending the same
+        // keystroke to the legacy BlueprintEditor stack can restore an
+        // unrelated legacy command.
         EditorTab* activeTab = TabManager::Get().GetActiveTab();
         const bool activeTabOwnsHistory = activeTab != nullptr &&
-                                          activeTab->graphType == "VisualScript";
+                                          (activeTab->graphType == "VisualScript" ||
+                                           activeTab->graphType == "AnimationGraph");
         
         // Don't process shortcuts if typing in a text field
         if (io.WantTextInput)
