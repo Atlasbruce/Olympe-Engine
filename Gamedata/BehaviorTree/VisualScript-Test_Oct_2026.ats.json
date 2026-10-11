@@ -1,0 +1,745 @@
+{
+  "blackboard": [
+    {
+      "isGlobal": false,
+      "key": "mHealth",
+      "type": "Int",
+      "value": 10
+    },
+    {
+      "isGlobal": false,
+      "key": "mFatigue",
+      "type": "Int",
+      "value": 1
+    },
+    {
+      "isGlobal": false,
+      "key": "mFoodPortion",
+      "type": "Int",
+      "value": 4
+    },
+    {
+      "isGlobal": false,
+      "key": "cst_zero",
+      "type": "Int",
+      "value": 0
+    },
+    {
+      "isGlobal": false,
+      "key": "cst_Hundred",
+      "type": "Int",
+      "value": 100
+    },
+    {
+      "isGlobal": true,
+      "key": "NewVariable TOTOTOTOTO",
+      "type": "Float",
+      "value": 123.78
+    },
+    {
+      "isGlobal": false,
+      "key": "mVector",
+      "type": "Vector",
+      "value": {
+        "x": -1,
+        "y": 1,
+        "z": -1
+      }
+    }
+  ],
+  "blueprintType": "VisualScript",
+  "dataConnections": [
+    {
+      "fromNode": 14,
+      "fromPin": "Value",
+      "toNode": 16,
+      "toPin": "A"
+    },
+    {
+      "fromNode": 15,
+      "fromPin": "Value",
+      "toNode": 16,
+      "toPin": "B"
+    },
+    {
+      "fromNode": 16,
+      "fromPin": "Result",
+      "toNode": 13,
+      "toPin": "Value"
+    }
+  ],
+  "execConnections": [
+    {
+      "fromNode": 1,
+      "fromPin": "Completed",
+      "toNode": 2,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Case_1",
+      "toNode": 5,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Case_2",
+      "toNode": 6,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Case_3",
+      "toNode": 7,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 2,
+      "fromPin": "Completed",
+      "toNode": 8,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Case_9",
+      "toNode": 8,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Case_10",
+      "toNode": 7,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Case_7",
+      "toNode": 6,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 4,
+      "fromPin": "Case_6",
+      "toNode": 5,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 9,
+      "fromPin": "Else",
+      "toNode": 12,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 9,
+      "fromPin": "Then",
+      "toNode": 17,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 17,
+      "fromPin": "Out",
+      "toNode": 13,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 17,
+      "fromPin": "Out_2",
+      "toNode": 11,
+      "toPin": "In"
+    },
+    {
+      "fromNode": 10,
+      "fromPin": "Completed",
+      "toNode": 20,
+      "toPin": "In"
+    }
+  ],
+  "graphType": "VisualScript",
+  "name": "",
+  "nodes": [
+    {
+      "id": 1,
+      "label": "Log Message (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": 351,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 551.79,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "mfatigue reset",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 351,
+        "y": 551.79
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 2,
+      "label": "Take Cover (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": 577.87,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 552.689,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "mfatigue reset",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 577.87,
+        "y": 552.689
+      },
+      "taskType": "take_cover",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 3,
+      "label": "Log Message (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": 351.02,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 430.707,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Subgraph completed!",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 351.02,
+        "y": 430.707
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "dynamicExecPins": [
+        "Case_1",
+        "Case_2",
+        "Case_8",
+        "Case_3",
+        "Case_4",
+        "Case_5",
+        "Case_6",
+        "Case_7",
+        "Case_9",
+        "Case_10"
+      ],
+      "id": 4,
+      "label": "Switch Complex for tests new title for test  (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": 450.55,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 120.744,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 450.55,
+        "y": 120.744
+      },
+      "switchCases": [
+        {
+          "label": "Idle",
+          "pin": "Case_0",
+          "value": "0"
+        },
+        {
+          "label": "Probe",
+          "pin": "Case_1",
+          "value": "1"
+        },
+        {
+          "label": "Walk",
+          "pin": "Case_2",
+          "value": "2"
+        },
+        {
+          "label": "Run",
+          "pin": "Case_8",
+          "value": "3"
+        },
+        {
+          "label": "Flee",
+          "pin": "Case_3",
+          "value": "4"
+        },
+        {
+          "label": "Attak",
+          "pin": "Case_4",
+          "value": "7"
+        },
+        {
+          "label": "Search",
+          "pin": "Case_5",
+          "value": "10"
+        },
+        {
+          "label": "Exchange",
+          "pin": "Case_6",
+          "value": "12"
+        },
+        {
+          "label": "Strategize",
+          "pin": "Case_7",
+          "value": "256"
+        },
+        {
+          "label": "Optimize",
+          "pin": "Case_9",
+          "value": "257"
+        },
+        {
+          "label": "Simplify",
+          "pin": "Case_10",
+          "value": "258"
+        }
+      ],
+      "switchVariable": "mHealth",
+      "type": "Switch"
+    },
+    {
+      "id": 5,
+      "label": "Log Message (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1084.92,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 95,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Switch Case 2 Completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1084.92,
+        "y": 95
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 6,
+      "label": "Log Message (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1087.37,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 197.344,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Switch Case 3 Completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1087.37,
+        "y": 197.344
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 7,
+      "label": "Log Message (Copy) (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1092.97,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 307.281,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Switch Case 4 Completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1092.97,
+        "y": 307.281
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 8,
+      "label": "Set Volume (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": 1017.67,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 441.419,
+          "Type": "Literal"
+        },
+        "channelName": {
+          "LiteralValue": "Gamedata/Souns/sound.wav",
+          "Type": "Literal"
+        },
+        "volume": {
+          "LiteralValue": 1.5,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": 1017.67,
+        "y": 441.419
+      },
+      "taskType": "set_volume",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 9,
+      "label": "Need to eat? (Copy)",
+      "nodeConditionRefs": [
+        {
+          "leftPinID": "",
+          "logicalOp": "Start",
+          "presetID": "preset_53cfd155-5b07-4d9d-a77c-152f60c26fdc",
+          "rightPinID": ""
+        }
+      ],
+      "params": {
+        "__posX": {
+          "LiteralValue": -648.739,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 451.579,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -648.739,
+        "y": 451.579
+      },
+      "type": "Branch"
+    },
+    {
+      "id": 10,
+      "label": "Log Message (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": -633.739,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 291.579,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "Exec Sequence 1 completed",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -633.739,
+        "y": 291.579
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 11,
+      "label": "Log Message (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": -133.209,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 624.388,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "I've Eaten Food",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -133.209,
+        "y": 624.388
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "id": 12,
+      "label": "Log Message (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": -446.739,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 574.579,
+          "Type": "Literal"
+        },
+        "message": {
+          "LiteralValue": "I am good to go patrol",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -446.739,
+        "y": 574.579
+      },
+      "taskType": "log_message",
+      "type": "AtomicTask"
+    },
+    {
+      "bbKey": "mHealth",
+      "id": 13,
+      "label": "Set mHealth value (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": -180.369,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 124.82,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -180.369,
+        "y": 124.82
+      },
+      "type": "SetBBValue"
+    },
+    {
+      "bbKey": "mHealth",
+      "id": 14,
+      "label": "mHealth (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": -583.369,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 42.8197,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -583.369,
+        "y": 42.8197
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "bbKey": "mFoodPortion",
+      "id": 15,
+      "label": "mFoodPortion (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": -572.579,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 159.944,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -572.579,
+        "y": 159.944
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "id": 16,
+      "label": "MathOp (Copy)",
+      "mathOp": "+",
+      "mathOpRef": {
+        "leftOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        },
+        "mathOperator": "+",
+        "rightOperand": {
+          "constValue": "0",
+          "dynamicPinID": "",
+          "mode": 1,
+          "variableName": ""
+        }
+      },
+      "params": {
+        "__posX": {
+          "LiteralValue": -375.369,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 141.82,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -375.369,
+        "y": 141.82
+      },
+      "type": "MathOp"
+    },
+    {
+      "dynamicExecPins": [
+        "Out_1",
+        "Out_2"
+      ],
+      "id": 17,
+      "label": "Sequence mHeath & mFatigue (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": -447.802,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 404.412,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -447.802,
+        "y": 404.412
+      },
+      "type": "Sequence"
+    },
+    {
+      "bbKey": "cst_zero",
+      "id": 18,
+      "label": "GetBBValue ZERO (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": -164.999,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 490.803,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -164.999,
+        "y": 490.803
+      },
+      "type": "GetBBValue"
+    },
+    {
+      "delaySeconds": 2,
+      "id": 19,
+      "label": "Delay NOM AAAA (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": -609.75,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 656.029,
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -609.75,
+        "y": 656.029
+      },
+      "type": "Delay"
+    },
+    {
+      "id": 20,
+      "label": "Subgraph Boss Combat New Name update (Copy)",
+      "params": {
+        "__posX": {
+          "LiteralValue": -146.739,
+          "Type": "Literal"
+        },
+        "__posY": {
+          "LiteralValue": 296.579,
+          "Type": "Literal"
+        },
+        "subgraph_path": {
+          "LiteralValue": "AI\\Boss123.ats",
+          "Type": "Literal"
+        }
+      },
+      "position": {
+        "x": -146.739,
+        "y": 296.579
+      },
+      "subGraphPath": "AI\\Boss123.ats",
+      "type": "SubGraph"
+    }
+  ],
+  "presets": [
+    {
+      "id": "preset_ed2171ef-9ad8-4f83-9115-70da9a127130",
+      "left": {
+        "mode": "Variable",
+        "value": "mHealth"
+      },
+      "name": "Condition",
+      "op": "<=",
+      "right": {
+        "mode": "Const",
+        "value": 4
+      }
+    },
+    {
+      "id": "preset_6635e4f2-2468-4333-8deb-bb00c79ec3c5",
+      "left": {
+        "mode": "Pin",
+        "value": "[Pin-in]"
+      },
+      "name": "Condition",
+      "op": ">=",
+      "right": {
+        "mode": "Const",
+        "value": 10
+      }
+    },
+    {
+      "id": "preset_53cfd155-5b07-4d9d-a77c-152f60c26fdc",
+      "left": {
+        "mode": "Variable",
+        "value": "mFatigue"
+      },
+      "name": "Condition",
+      "op": ">=",
+      "right": {
+        "mode": "Const",
+        "value": 10
+      }
+    }
+  ],
+  "schema_version": 4
+}

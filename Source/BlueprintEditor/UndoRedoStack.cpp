@@ -686,9 +686,11 @@ std::string EditNodePropertiesCommand::GetDescription() const
 
 EditNodeDefinitionCommand::EditNodeDefinitionCommand(
     const TaskNodeDefinition& oldNode,
-    const TaskNodeDefinition& newNode)
+    const TaskNodeDefinition& newNode,
+    const std::string& description)
     : m_oldNode(oldNode)
     , m_newNode(newNode)
+    , m_description(description)
 {
 }
 
@@ -718,7 +720,7 @@ void EditNodeDefinitionCommand::Undo(TaskGraphTemplate& graph)
 
 std::string EditNodeDefinitionCommand::GetDescription() const
 {
-    return "Edit conditions on node #" + std::to_string(m_newNode.NodeID);
+    return m_description + " on node #" + std::to_string(m_newNode.NodeID);
 }
 
 // ============================================================================

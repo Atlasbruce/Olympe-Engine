@@ -7,8 +7,7 @@
  * @details
  * This file contains 5 methods extracted from VisualScriptEditorPanel.cpp
  * for better code organization and maintainability:
- *   - RenderProperties() — Main properties panel dispatcher
- *   - RenderNodePropertiesPanel() — Node properties panel (alternative renderer)
+ *   - RenderNodePropertiesPanel() — Active node properties panel
  *   - RenderBranchNodeProperties() — Branch/While node properties
  *   - RenderMathOpNodeProperties() — MathOp node properties
  *   - RenderNodeDataParameters() — Generic parameter editor for data nodes
@@ -113,7 +112,7 @@ void VisualScriptEditorPanel::RenderBranchNodeProperties(VSEditorNode& eNode,
             m_conditionsPanel->ClearDirty();
             m_undoStack.PushCommand(
                 std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
-                    beforeConditionEdit, def)),
+                    beforeConditionEdit, def, "Edit conditions")),
                 m_template);
             m_dirty = true;
         }
@@ -205,7 +204,7 @@ void VisualScriptEditorPanel::RenderMathOpNodeProperties(VSEditorNode& eNode,
             m_mathOpPanel->ClearDirty();
             m_undoStack.PushCommand(
                 std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
-                    beforeOperandEdit, def)),
+                    beforeOperandEdit, def, "Edit math operation")),
                 m_template);
             m_dirty = true;
         }
@@ -342,7 +341,7 @@ void VisualScriptEditorPanel::RenderSwitchNodeProperties(VSEditorNode& eNode,
             m_dirty = true;
             m_undoStack.PushCommand(
                 std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
-                    beforeSwitchCasesEdit, def)),
+                    beforeSwitchCasesEdit, def, "Edit switch cases")),
                 m_template);
             m_switchCaseModal->Close();
         }
@@ -431,7 +430,9 @@ void VisualScriptEditorPanel::RenderNodeDataParameters(TaskNodeDefinition& def)
             std::string currentValue;
             if (!binding.LiteralValue.IsNone())
             {
-                currentValue = binding.LiteralValue.AsString();
+                // Parameters can hold any TaskValue type.  Use the generic
+                // representation instead of the strict string accessor.
+                currentValue = binding.LiteralValue.to_string();
             }
 
             char buf[256];
@@ -520,7 +521,7 @@ void VisualScriptEditorPanel::RenderNodeDataParameters(TaskNodeDefinition& def)
         {
             m_undoStack.PushCommand(
                 std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
-                    beforeParameterEdit, def)),
+                    beforeParameterEdit, def, "Edit node parameter")),
                 m_template);
         }
 
@@ -561,7 +562,7 @@ void VisualScriptEditorPanel::RenderNodeDataParameters(TaskNodeDefinition& def)
             m_dirty = true;
             m_undoStack.PushCommand(
                 std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
-                    beforeAddParameter, def)),
+                    beforeAddParameter, def, "Add node parameter")),
                 m_template);
             paramNameBuf[0] = '\0';  // Clear the input field
         }
@@ -627,7 +628,7 @@ void VisualScriptEditorPanel::RenderForEachNodeProperties()
         m_dirty = true;
         m_undoStack.PushCommand(
             std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
-                beforeForEachEdit, *nodePtr)),
+                beforeForEachEdit, *nodePtr, "Edit ForEach node")),
             m_template);
     }
 
@@ -679,6 +680,7 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
     // A SubGraph path affects both the explicit path field and its serialized
     // parameter binding.  Preserve the whole definition for Undo/Redo.
     const TaskNodeDefinition beforeSubGraphEdit = *nodePtr;
+    bool subGraphChangedThisFrame = false;
 
     // ========================================================================
     // SubGraph File Path - stored as editable parameter (Phase 24)
@@ -786,10 +788,7 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
         if (subGraphChanged)
         {
             m_dirty = true;
-            m_undoStack.PushCommand(
-                std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
-                    beforeSubGraphEdit, *nodePtr)),
-                m_template);
+            subGraphChangedThisFrame = true;
         }
     }
     else
@@ -873,10 +872,7 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
         if (subGraphChanged)
         {
             m_dirty = true;
-            m_undoStack.PushCommand(
-                std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
-                    beforeSubGraphEdit, *nodePtr)),
-                m_template);
+            subGraphChangedThisFrame = true;
         }
         m_subGraphModal->Close();
     }
@@ -933,6 +929,7 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
             {
                 binding.Type = static_cast<ParameterBindingType>(typeIdx);
                 m_dirty = true;
+                subGraphChangedThisFrame = true;
             }
             ImGui::SameLine();
 
@@ -951,6 +948,7 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
                     // Update the literal value from text
                     binding.LiteralValue = TaskValue(std::string(valueBuffer));
                     m_dirty = true;
+                    subGraphChangedThisFrame = true;
                 }
             }
             else if (binding.Type == ParameterBindingType::LocalVariable)
@@ -966,6 +964,7 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
                 {
                     binding.VariableName = varBuffer;
                     m_dirty = true;
+                    subGraphChangedThisFrame = true;
                 }
 
                 // Show hint with available blackboard keys
@@ -979,6 +978,7 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
                         {
                             binding.VariableName = bbEntry.Key;
                             m_dirty = true;
+                            subGraphChangedThisFrame = true;
                         }
                     }
                     ImGui::EndCombo();
@@ -1003,6 +1003,7 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
         {
             nodePtr->InputParams.erase(paramName);
             m_dirty = true;
+            subGraphChangedThisFrame = true;
         }
     }
     else
@@ -1030,6 +1031,7 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
         newBinding.LiteralValue = TaskValue(std::string(""));
         nodePtr->InputParams[newParamName] = newBinding;
         m_dirty = true;
+        subGraphChangedThisFrame = true;
     }
     ImGui::SameLine();
     ImGui::TextDisabled("Add Parameter");
@@ -1076,6 +1078,7 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
             {
                 bbKey = bbKeyBuffer;
                 m_dirty = true;
+                subGraphChangedThisFrame = true;
             }
             ImGui::SameLine();
 
@@ -1090,6 +1093,7 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
                     {
                         bbKey = bbEntry.Key;
                         m_dirty = true;
+                        subGraphChangedThisFrame = true;
                     }
                 }
                 ImGui::EndCombo();
@@ -1113,6 +1117,7 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
         {
             nodePtr->OutputParams.erase(outputName);
             m_dirty = true;
+            subGraphChangedThisFrame = true;
         }
     }
     else
@@ -1122,6 +1127,25 @@ void VisualScriptEditorPanel::RenderSubGraphNodeProperties()
 
     ImGui::Separator();
     ImGui::Spacing();
+
+    if (subGraphChangedThisFrame)
+    {
+        // Keep the editor mirror aligned before the command may later rebuild
+        // it during Undo/Redo; InputParams/OutputParams are part of the node
+        // definition and must travel together.
+        for (VSEditorNode& editorNode : m_editorNodes)
+        {
+            if (editorNode.nodeID == m_selectedNodeID)
+            {
+                editorNode.def = *nodePtr;
+                break;
+            }
+        }
+        m_undoStack.PushCommand(
+            std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
+                beforeSubGraphEdit, *nodePtr, "Edit subgraph node")),
+            m_template);
+    }
 
 }
 
@@ -1652,9 +1676,8 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
     // For Branch nodes, the specialized renderer is handled separately
     if (def.Type != TaskNodeType::Branch)
     {
-        // Call RenderProperties() which already handles all type-specific fields
-        // BUT we need to inline it here to avoid infinite recursion / double-rendering
-        // So instead, render just the critical type-specific parts:
+        // The active Properties tab owns these type-specific controls.  Keep
+        // them here so one renderer is responsible for each edit transaction.
 
         switch (def.Type)
         {
@@ -1687,7 +1710,7 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
                             }
                             m_undoStack.PushCommand(
                                 std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
-                                    beforeTaskEdit, def)),
+                                    beforeTaskEdit, def, "Edit atomic task")),
                                 m_template);
                             m_dirty = true;
                         }
@@ -1723,7 +1746,9 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
                             auto paramIt = def.Parameters.find(param.name);
                             if (paramIt != def.Parameters.end() && paramIt->second.Type == ParameterBindingType::Literal)
                             {
-                                currentValue = paramIt->second.LiteralValue.AsString();
+                                // The literal may be Bool/Int/Float; a strict
+                                // AsString() would throw for those values.
+                                currentValue = paramIt->second.LiteralValue.to_string();
                             }
 
                             // Display parameter name with description as label
@@ -1852,7 +1877,7 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
                             {
                                 m_undoStack.PushCommand(
                                     std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
-                                        beforeParameterEdit, def)),
+                                    beforeParameterEdit, def, "Edit node parameter")),
                                     m_template);
                             }
 
@@ -2011,7 +2036,7 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
                     }
                     m_undoStack.PushCommand(
                         std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
-                            beforeMathOpEdit, def)),
+                            beforeMathOpEdit, def, "Edit math operation")),
                         m_template);
                     m_dirty = true;
                 }
@@ -2131,7 +2156,7 @@ void VisualScriptEditorPanel::RenderNodePropertiesPanelContent()
             }
             m_undoStack.PushCommand(
                 std::unique_ptr<ICommand>(new EditNodeDefinitionCommand(
-                    beforeConditionEdit, def)),
+                    beforeConditionEdit, def, "Edit conditions")),
                 m_template);
         }
 

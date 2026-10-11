@@ -149,7 +149,7 @@ public:
 
     /**
      * @brief Renders the full panel window.
-     * Calls RenderToolbar(), RenderCanvas(), RenderProperties(), RenderBlackboard().
+     * Calls the toolbar, canvas, active node Properties panel and Blackboard UI.
      */
     void Render();
 
@@ -821,7 +821,7 @@ private:
     // receives focus (IsItemActivated), push undo only on IsItemDeactivatedAfterEdit.
     // -----------------------------------------------------------------------
 
-    /// Node ID that was selected when RenderProperties() last entered focus
+    /// Node ID that was selected when the active Properties panel last entered focus
     int m_propEditNodeIDOnFocus = -1;
 
     /// Snapshot values captured at focus time for each editable field

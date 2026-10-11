@@ -389,7 +389,8 @@ private:
 class EditNodeDefinitionCommand : public ICommand {
 public:
     EditNodeDefinitionCommand(const TaskNodeDefinition& oldNode,
-                              const TaskNodeDefinition& newNode);
+                              const TaskNodeDefinition& newNode,
+                              const std::string& description = "Edit node definition");
 
     void Execute(TaskGraphTemplate& graph) override;
     void Undo(TaskGraphTemplate& graph) override;
@@ -398,6 +399,7 @@ public:
 private:
     TaskNodeDefinition m_oldNode;
     TaskNodeDefinition m_newNode;
+    std::string        m_description;
 
     static void ApplyNode(TaskGraphTemplate& graph,
                           const TaskNodeDefinition& node);
