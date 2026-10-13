@@ -61,17 +61,24 @@ private:
     void RenderInspectorPanel();
     void RenderVerificationPanel();
     void RenderStateEditorPanel();
+    void RenderAnimationBankPanel();
     void RenderTransitionEditorPanel();
     void RenderTimelinePanel();
+    void RenderAnimationPreviewPanel();
     void RenderGraphCanvas();
     void RenderRightPanel();
     void RenderRightPanelTabs();
-    void RenderTransitionPreview();
     void RenderSingleTransition(size_t transitionIndex, const ImVec2& canvasOrigin);
     void EnsureStatePositions();
     void RenderGraphNodePorts(const nlohmann::json& state, int stateIndex, bool isSelected);
     bool ExecuteDocumentCommand(const std::string& description, const std::function<bool()>& edit);
     bool DeleteSelectedStates();
+    void CopySelectedStatesToClipboard();
+    void PasteClipboardStates();
+    void SelectStatesByName(const std::vector<std::string>& stateNames);
+    std::vector<std::string> GetSelectedStateNames() const;
+    void RestoreSelectionAfterHistory(const std::vector<std::string>& stateNames);
+    void RefreshSelectedEventEditor();
     void HandleKeyboardShortcuts();
     void RefreshSelectedTransitionEditor();
     int FindStateIndexByName(const std::string& name) const;
@@ -89,6 +96,7 @@ private:
     char m_transitionToBuffer[128];
     char m_eventNameBuffer[128];
     char m_eventStateBuffer[128];
+    char m_eventPayloadBuffer[256];
     float m_transitionTimeBuffer;
     float m_eventTimeBuffer;
     bool m_minimapVisible;
@@ -133,6 +141,7 @@ private:
     // This defensive guard exposes/prevents a host-level double render from
     // opening two independent context popup stacks.
     int m_lastGraphCanvasFrame = -1;
+    int m_pasteSequence = 0;
     std::vector<std::string> m_logs;
 
     std::unique_ptr<CanvasFramework> m_framework;

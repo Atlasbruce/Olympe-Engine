@@ -31,12 +31,21 @@ public:
         std::string clip;
     };
 
+    struct EventDefinition
+    {
+        std::string type = "Custom";
+        // Stable across direction variants with different frame counts.
+        // The editor displays this phase as frames and seconds.
+        float phase = 0.0f;
+        std::string payload;
+    };
+
     struct StateDefinition
     {
         std::string name;
         std::string defaultClip;
         std::vector<DirectionClipMapping> directionClips;
-        std::vector<std::string> events;
+        std::vector<EventDefinition> events;
         double blendTime = 0.1;
         bool loop = true;
         int priority = 0;
@@ -111,6 +120,9 @@ public:
     std::string MakeUniqueStateName(const std::string& baseName) const;
     bool AddState(const std::string& stateName);
     bool AddStateFromClip(const std::string& stateName, const std::string& clipName);
+    // Instantiates one semantic state from a TSX animation bank.  Directional
+    // clips remain variants of this state and are selected by the runtime.
+    bool AddStateFromSource(const std::string& stateName, size_t sourceIndex);
     bool RenameState(const std::string& oldName, const std::string& newName);
     bool RemoveState(const std::string& stateName);
     // Removes a selection as one model mutation.  This is intentionally not
@@ -123,6 +135,9 @@ public:
     bool SetStateDirectionClip(const std::string& stateName, Direction direction, const std::string& clipName);
     bool AddStateEvent(const std::string& stateName, const std::string& eventName);
     bool RemoveStateEvent(const std::string& stateName, const std::string& eventName);
+    bool AddStateEventMarker(const std::string& stateName, const EventDefinition& event);
+    bool UpdateStateEventMarker(const std::string& stateName, size_t eventIndex, const EventDefinition& event);
+    bool RemoveStateEventMarker(const std::string& stateName, size_t eventIndex);
 
     bool AddTransition(const std::string& fromState, const std::string& toState, const std::string& condition, double duration);
     bool UpdateTransition(size_t index, const std::string& condition, double duration, int priority, bool interruptible);

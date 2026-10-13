@@ -10,11 +10,48 @@
 #include "../system/system_utils.h"
 #include <algorithm>
 #include <cmath>
+#include <cctype>
 #include <cstring>
+#include <map>
+#include <set>
 #include <sstream>
 #include <tuple>
 
 namespace Olympe {
+
+namespace {
+class AnimationGraphClipboardPayload final : public IGraphClipboardPayload
+{
+public:
+    AnimationGraphClipboardPayload(nlohmann::json copiedStates,
+                                   nlohmann::json copiedTransitions,
+                                   float sourceMinX, float sourceMinY)
+        : states(std::move(copiedStates))
+        , transitions(std::move(copiedTransitions))
+        , minX(sourceMinX)
+        , minY(sourceMinY)
+    {
+    }
+
+    const char* GetGraphTypeId() const override { return "AnimationGraph"; }
+
+    nlohmann::json states;
+    nlohmann::json transitions;
+    float minX;
+    float minY;
+};
+
+std::string MakeStateNameFromBank(const std::string& sourceName)
+{
+    std::string name = sourceName;
+    const size_t separator = name.find_last_of('_');
+    if (separator != std::string::npos && separator + 1 < name.size())
+        name = name.substr(separator + 1);
+    if (!name.empty())
+        name[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(name[0])));
+    return name.empty() ? "State" : name;
+}
+}
 
 AnimationGraphRenderer::AnimationGraphRenderer()
     : m_canvasStateLoaded(false)
@@ -47,6 +84,7 @@ AnimationGraphRenderer::AnimationGraphRenderer()
     m_transitionToBuffer[0] = 0;
     m_eventNameBuffer[0] = 0;
     m_eventStateBuffer[0] = 0;
+    m_eventPayloadBuffer[0] = 0;
     EnsureDocument();
 }
 
@@ -156,7 +194,12 @@ std::string AnimationGraphRenderer::GetCurrentPath() const { return m_currentPat
 void AnimationGraphRenderer::VerifyGraph()
 {
     if (!m_document) return;
-    std::vector<std::string> issues = m_document->ValidateBinding();
+    const std::vector<std::string> issues = m_document->ValidateBinding();
+    m_logs.clear();
+    if (issues.empty())
+        m_logs.push_back("Validation passed: the Animation Graph is internally consistent.");
+    else
+        m_logs = issues;
     SYSTEM_LOG << "[AnimationGraphRenderer] VerifyGraph: " << issues.size() << " issue(s)\n";
 }
 
@@ -176,14 +219,18 @@ void AnimationGraphRenderer::RenderToolbar()
         ImGui::SameLine(0.0f, 12.0f);
         if (ImGui::Button("Undo##animation_history") && m_framework->CanUndo())
         {
-            if (m_framework->Undo()) RefreshSelectedTransitionEditor();
+            const std::vector<std::string> selectedStates = GetSelectedStateNames();
+            if (m_framework->Undo())
+                RestoreSelectionAfterHistory(selectedStates);
         }
         if (ImGui::IsItemHovered() && m_framework->CanUndo())
             ImGui::SetTooltip("Undo: %s", m_framework->GetUndoDescription().c_str());
         ImGui::SameLine();
         if (ImGui::Button("Redo##animation_history") && m_framework->CanRedo())
         {
-            if (m_framework->Redo()) RefreshSelectedTransitionEditor();
+            const std::vector<std::string> selectedStates = GetSelectedStateNames();
+            if (m_framework->Redo())
+                RestoreSelectionAfterHistory(selectedStates);
         }
         if (ImGui::IsItemHovered() && m_framework->CanRedo())
             ImGui::SetTooltip("Redo: %s", m_framework->GetRedoDescription().c_str());
@@ -239,6 +286,202 @@ bool AnimationGraphRenderer::DeleteSelectedStates()
     return deleted;
 }
 
+void AnimationGraphRenderer::SelectStatesByName(const std::vector<std::string>& stateNames)
+{
+    m_selectedStateIndices.clear();
+    m_selectedStateIndex = -1;
+    if (!m_document)
+        return;
+
+    const nlohmann::json& data = m_document->GetData();
+    if (!data.contains("states") || !data["states"].is_array())
+        return;
+    for (size_t index = 0; index < data["states"].size(); ++index)
+    {
+        const std::string name = data["states"][index].value("name", "");
+        if (std::find(stateNames.begin(), stateNames.end(), name) == stateNames.end())
+            continue;
+        m_selectedStateIndices.push_back(static_cast<int>(index));
+    }
+    if (!m_selectedStateIndices.empty())
+    {
+        m_selectedStateIndex = m_selectedStateIndices.front();
+        strncpy_s(m_stateNameBuffer, sizeof(m_stateNameBuffer),
+            data["states"][m_selectedStateIndex].value("name", "").c_str(), _TRUNCATE);
+    }
+}
+
+std::vector<std::string> AnimationGraphRenderer::GetSelectedStateNames() const
+{
+    std::vector<std::string> names;
+    if (!m_document)
+        return names;
+    const nlohmann::json& data = m_document->GetData();
+    if (!data.contains("states") || !data["states"].is_array())
+        return names;
+    for (int index : m_selectedStateIndices)
+    {
+        if (index < 0 || static_cast<size_t>(index) >= data["states"].size())
+            continue;
+        const std::string name = data["states"][static_cast<size_t>(index)].value("name", "");
+        if (!name.empty() && std::find(names.begin(), names.end(), name) == names.end())
+            names.push_back(name);
+    }
+    return names;
+}
+
+void AnimationGraphRenderer::RestoreSelectionAfterHistory(const std::vector<std::string>& stateNames)
+{
+    SelectStatesByName(stateNames);
+    m_selectedTransitionIndex = -1;
+    m_contextTransitionIndex = -1;
+    if (m_selectedStateIndex < 0)
+    {
+        m_selectedEventIndex = -1;
+        m_eventStateBuffer[0] = 0;
+    }
+    else
+    {
+        RefreshSelectedEventEditor();
+    }
+    RefreshSelectedTransitionEditor();
+}
+
+void AnimationGraphRenderer::RefreshSelectedEventEditor()
+{
+    if (!m_document || m_selectedEventIndex < 0 || m_selectedStateIndex < 0)
+        return;
+    const nlohmann::json& data = m_document->GetData();
+    if (!data.contains("states") || !data["states"].is_array() ||
+        static_cast<size_t>(m_selectedStateIndex) >= data["states"].size())
+    {
+        m_selectedEventIndex = -1;
+        return;
+    }
+    const nlohmann::json& state = data["states"][static_cast<size_t>(m_selectedStateIndex)];
+    const std::string stateName = state.value("name", "");
+    if (stateName != m_eventStateBuffer || !state.contains("events") || !state["events"].is_array() ||
+        static_cast<size_t>(m_selectedEventIndex) >= state["events"].size())
+    {
+        m_selectedEventIndex = -1;
+        return;
+    }
+    strncpy_s(m_eventPayloadBuffer, sizeof(m_eventPayloadBuffer),
+        state["events"][static_cast<size_t>(m_selectedEventIndex)].value("payload", "").c_str(), _TRUNCATE);
+}
+
+void AnimationGraphRenderer::CopySelectedStatesToClipboard()
+{
+    if (!m_framework || !m_document || m_selectedStateIndices.empty())
+        return;
+
+    const nlohmann::json& data = m_document->GetData();
+    if (!data.contains("states") || !data["states"].is_array())
+        return;
+
+    std::set<std::string> selectedNames;
+    nlohmann::json copiedStates = nlohmann::json::array();
+    float minX = 0.0f;
+    float minY = 0.0f;
+    bool hasPosition = false;
+    for (int index : m_selectedStateIndices)
+    {
+        if (index < 0 || static_cast<size_t>(index) >= data["states"].size())
+            continue;
+        const nlohmann::json& state = data["states"][index];
+        const std::string name = state.value("name", "");
+        if (name.empty() || !selectedNames.insert(name).second)
+            continue;
+        copiedStates.push_back(state);
+        const float x = static_cast<float>(state.value("x", 0.0));
+        const float y = static_cast<float>(state.value("y", 0.0));
+        if (!hasPosition) { minX = x; minY = y; hasPosition = true; }
+        else { minX = std::min(minX, x); minY = std::min(minY, y); }
+    }
+    if (copiedStates.empty())
+        return;
+
+    nlohmann::json copiedTransitions = nlohmann::json::array();
+    if (data.contains("transitions") && data["transitions"].is_array())
+    {
+        for (const nlohmann::json& transition : data["transitions"])
+        {
+            const std::string from = transition.value("from", "");
+            const std::string to = transition.value("to", "");
+            if (selectedNames.count(from) && selectedNames.count(to))
+                copiedTransitions.push_back(transition);
+        }
+    }
+    m_framework->SetClipboardPayload(std::make_shared<AnimationGraphClipboardPayload>(
+        std::move(copiedStates), std::move(copiedTransitions), minX, minY));
+    SYSTEM_LOG << "[AnimationGraphRenderer] Copied animation state selection\n";
+}
+
+void AnimationGraphRenderer::PasteClipboardStates()
+{
+    if (!m_framework || !m_document || !m_framework->HasClipboardPayload("AnimationGraph"))
+        return;
+    const std::shared_ptr<const AnimationGraphClipboardPayload> payload =
+        std::dynamic_pointer_cast<const AnimationGraphClipboardPayload>(m_framework->GetClipboardPayload());
+    if (!payload || !payload->states.is_array() || payload->states.empty())
+        return;
+
+    const nlohmann::json before = m_document->CreateSnapshot();
+    nlohmann::json after = before;
+    if (!after.contains("states") || !after["states"].is_array()) after["states"] = nlohmann::json::array();
+    if (!after.contains("transitions") || !after["transitions"].is_array()) after["transitions"] = nlohmann::json::array();
+
+    std::set<std::string> usedNames;
+    for (const nlohmann::json& state : after["states"])
+        usedNames.insert(state.value("name", ""));
+    std::map<std::string, std::string> pastedNames;
+    std::vector<std::string> selectedNames;
+    ++m_pasteSequence;
+    const float fallbackOffset = 30.0f * static_cast<float>(m_pasteSequence);
+    ImVec2 pasteOrigin(payload->minX + fallbackOffset, payload->minY + fallbackOffset);
+    if (m_canvasEditor && m_canvasEditor->IsCanvasHovered())
+        pasteOrigin = m_canvasEditor->ScreenToCanvas(ImGui::GetIO().MousePos);
+
+    for (const nlohmann::json& sourceState : payload->states)
+    {
+        nlohmann::json pastedState = sourceState;
+        const std::string sourceName = sourceState.value("name", "State");
+        std::string pastedName = sourceName + " Copy";
+        int suffix = 2;
+        while (usedNames.count(pastedName))
+            pastedName = sourceName + " Copy " + std::to_string(suffix++);
+        usedNames.insert(pastedName);
+        pastedNames[sourceName] = pastedName;
+        selectedNames.push_back(pastedName);
+        pastedState["name"] = pastedName;
+        pastedState["x"] = pasteOrigin.x + static_cast<float>(sourceState.value("x", 0.0)) - payload->minX;
+        pastedState["y"] = pasteOrigin.y + static_cast<float>(sourceState.value("y", 0.0)) - payload->minY;
+        after["states"].push_back(std::move(pastedState));
+    }
+    for (const nlohmann::json& sourceTransition : payload->transitions)
+    {
+        const std::string from = sourceTransition.value("from", "");
+        const std::string to = sourceTransition.value("to", "");
+        const std::map<std::string, std::string>::const_iterator fromIt = pastedNames.find(from);
+        const std::map<std::string, std::string>::const_iterator toIt = pastedNames.find(to);
+        if (fromIt == pastedNames.end() || toIt == pastedNames.end())
+            continue;
+        nlohmann::json pastedTransition = sourceTransition;
+        pastedTransition["from"] = fromIt->second;
+        pastedTransition["to"] = toIt->second;
+        after["transitions"].push_back(std::move(pastedTransition));
+    }
+
+    if (m_framework->ExecuteCommand(std::unique_ptr<GraphCommand>(new CallbackGraphCommand(
+        selectedNames.size() == 1 ? "Paste Animation State" : "Paste Animation States",
+        [document = m_document.get(), after]() -> bool { return document && document->RestoreSnapshot(after); },
+        [document = m_document.get(), before]() -> bool { return document && document->RestoreSnapshot(before); }))))
+    {
+        SelectStatesByName(selectedNames);
+        m_selectedTransitionIndex = -1;
+    }
+}
+
 void AnimationGraphRenderer::HandleKeyboardShortcuts()
 {
     if (!m_framework || ImGui::GetIO().WantTextInput)
@@ -258,16 +501,22 @@ void AnimationGraphRenderer::HandleKeyboardShortcuts()
     {
         if (ImGui::GetIO().KeyShift)
         {
-            if (m_framework->Redo()) RefreshSelectedTransitionEditor();
+            const std::vector<std::string> selectedStates = GetSelectedStateNames();
+            if (m_framework->Redo())
+                RestoreSelectionAfterHistory(selectedStates);
         }
         else
         {
-            if (m_framework->Undo()) RefreshSelectedTransitionEditor();
+            const std::vector<std::string> selectedStates = GetSelectedStateNames();
+            if (m_framework->Undo())
+                RestoreSelectionAfterHistory(selectedStates);
         }
     }
     else if (ImGui::IsKeyPressed(ImGuiKey_Y))
     {
-        if (m_framework->Redo()) RefreshSelectedTransitionEditor();
+        const std::vector<std::string> selectedStates = GetSelectedStateNames();
+        if (m_framework->Redo())
+            RestoreSelectionAfterHistory(selectedStates);
     }
     else if (ImGui::IsKeyPressed(ImGuiKey_A) && m_document)
     {
@@ -281,6 +530,14 @@ void AnimationGraphRenderer::HandleKeyboardShortcuts()
             if (m_selectedStateIndex >= 0)
                 strncpy_s(m_stateNameBuffer, sizeof(m_stateNameBuffer), data["states"][m_selectedStateIndex].value("name", "").c_str(), _TRUNCATE);
         }
+    }
+    else if (ImGui::IsKeyPressed(ImGuiKey_C))
+    {
+        CopySelectedStatesToClipboard();
+    }
+    else if (ImGui::IsKeyPressed(ImGuiKey_V))
+    {
+        PasteClipboardStates();
     }
 }
 
@@ -306,40 +563,36 @@ void AnimationGraphRenderer::RenderMainPanel()
     if (totalHeight <= 0.0f) totalHeight = 600.0f;
 
     static float s_splitX = 0.72f;
-    static float s_splitY = 0.70f;
+    static float s_splitY = 0.68f;
     static float s_splitMin = 0.20f;
     static float s_splitMax = 0.80f;
     float leftWidth = totalWidth * s_splitX;
-    float rightWidth = totalWidth - leftWidth;
-    float topHeight = totalHeight * s_splitY;
-    float bottomHeight = totalHeight - topHeight;
+    const float topHeight = totalHeight * s_splitY;
     const float splitterThickness = 6.0f;
 
     ImGui::BeginChild("AnimationGraph_GridRoot", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     {
         ImGui::BeginChild("AnimationGraph_TopRow", ImVec2(0, topHeight), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-        {
-            ImGui::BeginChild("AnimationGraph_CanvasZone", ImVec2(leftWidth, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-            RenderGraphCanvas();
-            ImGui::EndChild();
-
-            ImGui::SameLine(0.0f, splitterThickness);
-            ImGui::InvisibleButton("##AnimationGraphHorizontalSplitter", ImVec2(splitterThickness, topHeight));
-            if (ImGui::IsItemActive())
-            {
-                s_splitX += ImGui::GetIO().MouseDelta.x / totalWidth;
-                if (s_splitX < s_splitMin) s_splitX = s_splitMin;
-                if (s_splitX > s_splitMax) s_splitX = s_splitMax;
-            }
-
-            ImGui::SameLine(0.0f, splitterThickness);
-            ImGui::BeginChild("AnimationGraph_RightTopZone", ImVec2(0, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-            RenderRightPanelTabs();
-            ImGui::EndChild();
-        }
+        ImGui::BeginChild("AnimationGraph_CanvasZone", ImVec2(leftWidth, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        RenderGraphCanvas();
         ImGui::EndChild();
 
-        ImGui::InvisibleButton("##AnimationGraphVerticalSplitter", ImVec2(totalWidth, splitterThickness));
+        ImGui::SameLine(0.0f, splitterThickness);
+        ImGui::InvisibleButton("##AnimationGraphWorkspaceSplitter", ImVec2(splitterThickness, topHeight));
+        if (ImGui::IsItemActive())
+        {
+            s_splitX += ImGui::GetIO().MouseDelta.x / totalWidth;
+            if (s_splitX < s_splitMin) s_splitX = s_splitMin;
+            if (s_splitX > s_splitMax) s_splitX = s_splitMax;
+        }
+
+        ImGui::SameLine(0.0f, splitterThickness);
+        ImGui::BeginChild("AnimationGraph_WorkspaceZone", ImVec2(0, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        RenderRightPanelTabs();
+        ImGui::EndChild();
+        ImGui::EndChild();
+
+        ImGui::InvisibleButton("##AnimationGraphTimelineSplitter", ImVec2(totalWidth, splitterThickness));
         if (ImGui::IsItemActive())
         {
             s_splitY += ImGui::GetIO().MouseDelta.y / totalHeight;
@@ -348,27 +601,23 @@ void AnimationGraphRenderer::RenderMainPanel()
         }
 
         ImGui::BeginChild("AnimationGraph_BottomRow", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        ImGui::BeginChild("AnimationGraph_TimelineZone", ImVec2(leftWidth, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        RenderTimelinePanel();
+        ImGui::EndChild();
+
+        ImGui::SameLine(0.0f, splitterThickness);
+        ImGui::InvisibleButton("##AnimationGraphPreviewSplitter", ImVec2(splitterThickness, ImGui::GetContentRegionAvail().y));
+        if (ImGui::IsItemActive())
         {
-            ImGui::BeginChild("AnimationGraph_SequenceurZone", ImVec2(leftWidth, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-            RenderTimelinePanel();
-            ImGui::EndChild();
-
-            ImGui::SameLine(0.0f, splitterThickness);
-            ImGui::InvisibleButton("##AnimationGraphBottomHorizontalSplitter", ImVec2(splitterThickness, bottomHeight));
-            if (ImGui::IsItemActive())
-            {
-                s_splitX += ImGui::GetIO().MouseDelta.x / totalWidth;
-                if (s_splitX < s_splitMin) s_splitX = s_splitMin;
-                if (s_splitX > s_splitMax) s_splitX = s_splitMax;
-            }
-
-            ImGui::SameLine(0.0f, splitterThickness);
-            ImGui::BeginChild("AnimationGraph_RendererZone", ImVec2(0, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-            ImGui::Text("Animation Renderer");
-            ImGui::Separator();
-            ImGui::TextDisabled("Runtime preview and resolved clip playback will live here.");
-            ImGui::EndChild();
+            s_splitX += ImGui::GetIO().MouseDelta.x / totalWidth;
+            if (s_splitX < s_splitMin) s_splitX = s_splitMin;
+            if (s_splitX > s_splitMax) s_splitX = s_splitMax;
         }
+
+        ImGui::SameLine(0.0f, splitterThickness);
+        ImGui::BeginChild("AnimationGraph_PreviewZone", ImVec2(0, 0), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        RenderAnimationPreviewPanel();
+        ImGui::EndChild();
         ImGui::EndChild();
     }
     ImGui::EndChild();
@@ -391,11 +640,10 @@ void AnimationGraphRenderer::RenderStateEditorPanel()
         {
             sourcePaths.push_back(sources[i].filePath);
         }
-        m_document->Clear();
+        for (size_t i = sourcePaths.size(); i > 0; --i)
+            m_document->RemoveSource(i - 1);
         for (size_t i = 0; i < sourcePaths.size(); ++i)
-        {
-            m_document->ImportTSXSource(sourcePaths[i], 0);
-        }
+            m_document->ImportTSXSource(sourcePaths[i], nullptr);
     }
 
     CanvasModalRenderer::Get().RenderAnimationGraphTsxPickerModal();
@@ -421,6 +669,13 @@ void AnimationGraphRenderer::RenderStateEditorPanel()
     {
         ImGui::PushID(static_cast<int>(i));
         ImGui::Selectable(sources[i].sourceName.c_str());
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+        {
+            const int sourceIndex = static_cast<int>(i);
+            ImGui::SetDragDropPayload("ANIMATION_GRAPH_BANK_STATE", &sourceIndex, sizeof(sourceIndex));
+            ImGui::Text("Create directional state %s", MakeStateNameFromBank(sources[i].sourceName).c_str());
+            ImGui::EndDragDropSource();
+        }
         ImGui::TextDisabled("%s", sources[i].filePath.c_str());
         ImGui::TextDisabled("Clips: %d", (int)sources[i].clips.size());
         for (size_t clipIndex = 0; clipIndex < sources[i].clips.size(); ++clipIndex)
@@ -445,6 +700,108 @@ void AnimationGraphRenderer::RenderStateEditorPanel()
     {
         for (size_t i = 0; i < data["states"].size(); ++i)
             ImGui::BulletText("%s", data["states"][i].value("name", "").c_str());
+    }
+}
+
+void AnimationGraphRenderer::RenderAnimationBankPanel()
+{
+    ImGui::Text("Animation Banks");
+    ImGui::Separator();
+    ImGui::TextWrapped("1. Import a TSX bank.  2. Drag its header onto the canvas to create one directional state.");
+    if (ImGui::Button("Import TSX...##animation_bank"))
+        CanvasModalRenderer::Get().OpenAnimationGraphTsxPickerModal("./Gamedata/Animation/AnimationBanks");
+    ImGui::SameLine();
+    if (ImGui::Button("Reload All##animation_bank"))
+    {
+        std::vector<std::string> sourcePaths;
+        const std::vector<AnimationGraphDocument::SourceDefinition>& existingSources = m_document->GetSources();
+        for (const AnimationGraphDocument::SourceDefinition& source : existingSources)
+            sourcePaths.push_back(source.filePath);
+        for (size_t i = sourcePaths.size(); i > 0; --i)
+            m_document->RemoveSource(i - 1);
+        for (const std::string& sourcePath : sourcePaths)
+            m_document->ImportTSXSource(sourcePath, nullptr);
+    }
+
+    CanvasModalRenderer::Get().RenderAnimationGraphTsxPickerModal();
+    if (CanvasModalRenderer::Get().IsAnimationGraphTsxModalConfirmed())
+    {
+        std::vector<std::string> selectedFiles = CanvasModalRenderer::Get().GetSelectedAnimationGraphTsxFiles();
+        if (selectedFiles.empty())
+        {
+            const std::string selected = CanvasModalRenderer::Get().GetSelectedAnimationGraphTsxFile();
+            if (!selected.empty()) selectedFiles.push_back(selected);
+        }
+        std::vector<std::string> errors;
+        for (const std::string& selectedFile : selectedFiles)
+            m_document->ImportTSXSource(selectedFile, &errors);
+        CanvasModalRenderer::Get().CloseAnimationGraphTsxModal();
+    }
+
+    ImGui::Separator();
+    const std::vector<AnimationGraphDocument::SourceDefinition>& sources = m_document->GetSources();
+    if (sources.empty())
+    {
+        ImGui::TextDisabled("Import a TSX source to inspect its animation clips.");
+        return;
+    }
+
+    for (size_t sourceIndex = 0; sourceIndex < sources.size(); ++sourceIndex)
+    {
+        const AnimationGraphDocument::SourceDefinition& source = sources[sourceIndex];
+        ImGui::PushID(static_cast<int>(sourceIndex));
+        const bool sourceOpen = ImGui::CollapsingHeader(source.sourceName.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
+        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+        {
+            const int payloadSourceIndex = static_cast<int>(sourceIndex);
+            ImGui::SetDragDropPayload("ANIMATION_GRAPH_BANK_STATE", &payloadSourceIndex, sizeof(payloadSourceIndex));
+            ImGui::Text("Create directional state %s", MakeStateNameFromBank(source.sourceName).c_str());
+            ImGui::EndDragDropSource();
+        }
+        if (sourceOpen)
+        {
+            ImGui::TextDisabled("%s", source.filePath.c_str());
+            ImGui::Text("%d clip(s)", static_cast<int>(source.clips.size()));
+            ImGui::TextDisabled("Drag this bank onto the canvas to create state '%s' with directional clips.",
+                MakeStateNameFromBank(source.sourceName).c_str());
+            for (size_t clipIndex = 0; clipIndex < source.clips.size(); ++clipIndex)
+            {
+                const AnimationGraphDocument::SourceDefinition::ClipDefinition& clip = source.clips[clipIndex];
+                ImGui::PushID(static_cast<int>(clipIndex));
+                const bool isOpen = ImGui::TreeNodeEx(clip.id.c_str(), ImGuiTreeNodeFlags_SpanAvailWidth);
+                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+                {
+                    ImGui::SetDragDropPayload("ANIMATION_GRAPH_STATE", clip.id.c_str(), static_cast<int>(clip.id.size() + 1));
+                    ImGui::Text("Create state from %s", clip.id.c_str());
+                    ImGui::EndDragDropSource();
+                }
+                if (isOpen)
+                {
+                    int totalDurationMs = 0;
+                    for (const AnimationGraphDocument::SourceDefinition::FrameDefinition& frame : clip.frames)
+                        totalDurationMs += frame.durationMs;
+                    const float fps = totalDurationMs > 0
+                        ? static_cast<float>(clip.frames.size()) * 1000.0f / static_cast<float>(totalDurationMs)
+                        : 0.0f;
+                    ImGui::Text("Group: %s", clip.group.empty() ? "(none)" : clip.group.c_str());
+                    ImGui::Text("Direction: %s", clip.direction.empty() ? "(unspecified)" : clip.direction.c_str());
+                    ImGui::Text("Playback: %s", clip.loop ? "Loop" : "Once");
+                    ImGui::Text("Source tile: %d", clip.sourceTileId);
+                    if (clip.frames.empty())
+                        ImGui::TextDisabled("Provisional clip: no Tiled frame sequence.");
+                    else
+                    {
+                        ImGui::Text("%d frame(s), %d ms, %.1f FPS", static_cast<int>(clip.frames.size()), totalDurationMs, fps);
+                        for (size_t frameIndex = 0; frameIndex < clip.frames.size(); ++frameIndex)
+                            ImGui::BulletText("Frame %d: tile %d — %d ms", static_cast<int>(frameIndex),
+                                clip.frames[frameIndex].tileId, clip.frames[frameIndex].durationMs);
+                    }
+                    ImGui::TreePop();
+                }
+                ImGui::PopID();
+            }
+        }
+        ImGui::PopID();
     }
 }
 
@@ -525,9 +882,162 @@ void AnimationGraphRenderer::RenderTransitionEditorPanel()
 
 void AnimationGraphRenderer::RenderTimelinePanel()
 {
-    ImGui::Text("Animation Event");
+    ImGui::Text("Event Timeline");
     ImGui::Separator();
-    ImGui::TextDisabled("Events and timeline editor will live here.");
+    const nlohmann::json& data = m_document->GetData();
+    if (m_selectedStateIndex < 0 || !data.contains("states") || !data["states"].is_array() ||
+        static_cast<size_t>(m_selectedStateIndex) >= data["states"].size())
+    {
+        ImGui::TextDisabled("Select a state in the canvas to edit its events.");
+        return;
+    }
+
+    const nlohmann::json& state = data["states"][m_selectedStateIndex];
+    const std::string stateName = state.value("name", "State");
+    const std::string clip = state.value("defaultClip", "");
+    const nlohmann::json events = state.contains("events") && state["events"].is_array()
+        ? state["events"] : nlohmann::json::array();
+    int frameCount = 1;
+    int durationMs = 0;
+    for (const AnimationGraphDocument::SourceDefinition& source : m_document->GetSources())
+        for (const AnimationGraphDocument::SourceDefinition::ClipDefinition& sourceClip : source.clips)
+            if (sourceClip.id == clip && !sourceClip.frames.empty())
+            {
+                frameCount = static_cast<int>(sourceClip.frames.size());
+                for (const AnimationGraphDocument::SourceDefinition::FrameDefinition& frame : sourceClip.frames)
+                    durationMs += frame.durationMs;
+            }
+    ImGui::Text("State: %s", stateName.c_str());
+    ImGui::TextDisabled("Clip: %s", clip.empty() ? "(none)" : clip.c_str());
+    ImGui::TextDisabled("%d frame(s), %.2f s, %d event(s)", frameCount,
+        static_cast<float>(durationMs) / 1000.0f, static_cast<int>(events.size()));
+    ImGui::Separator();
+    const char* trackNames[] = { "Sound", "Gameplay", "VFX", "Spawn" };
+    ImGui::TextDisabled("Click a frame on the desired track to add an event.");
+    ImGui::Separator();
+
+    for (int track = 0; track < IM_ARRAYSIZE(trackNames); ++track)
+    {
+        ImGui::Text("%s", trackNames[track]);
+        ImGui::SameLine(92.0f);
+        for (int frame = 0; frame < frameCount; ++frame)
+        {
+            if (frame > 0) ImGui::SameLine();
+            const float phase = frameCount <= 1 ? 0.0f : static_cast<float>(frame) / static_cast<float>(frameCount - 1);
+            int eventIndex = -1;
+            for (size_t index = 0; index < events.size(); ++index)
+            {
+                const nlohmann::json& event = events[index];
+                if (event.value("type", "") == trackNames[track] &&
+                    std::fabs(event.value("phase", 0.0f) - phase) < 0.001f)
+                {
+                    eventIndex = static_cast<int>(index);
+                    break;
+                }
+            }
+            ImGui::PushID(track * 1000 + frame);
+            if (ImGui::SmallButton(eventIndex >= 0 ? "●" : "·"))
+            {
+                if (eventIndex >= 0)
+                {
+                    m_selectedEventIndex = eventIndex;
+                    strncpy_s(m_eventStateBuffer, sizeof(m_eventStateBuffer), stateName.c_str(), _TRUNCATE);
+                    strncpy_s(m_eventPayloadBuffer, sizeof(m_eventPayloadBuffer),
+                        events[static_cast<size_t>(eventIndex)].value("payload", "").c_str(), _TRUNCATE);
+                }
+                else
+                {
+                    AnimationGraphDocument::EventDefinition event;
+                    event.type = trackNames[track];
+                    event.phase = phase;
+                    event.payload = trackNames[track];
+                    if (ExecuteDocumentCommand("Add Animation Event", [document = m_document.get(), stateName, event]() -> bool {
+                        return document->AddStateEventMarker(stateName, event);
+                    }))
+                    {
+                        m_selectedEventIndex = static_cast<int>(events.size());
+                        strncpy_s(m_eventStateBuffer, sizeof(m_eventStateBuffer), stateName.c_str(), _TRUNCATE);
+                        strncpy_s(m_eventPayloadBuffer, sizeof(m_eventPayloadBuffer), event.payload.c_str(), _TRUNCATE);
+                    }
+                }
+            }
+            if (ImGui::IsItemHovered())
+            {
+                const float seconds = frameCount <= 1 ? 0.0f :
+                    (static_cast<float>(durationMs) / 1000.0f) * phase;
+                ImGui::SetTooltip("Frame %d — %.2f s", frame, seconds);
+            }
+            ImGui::PopID();
+        }
+    }
+
+    if (m_selectedEventIndex >= 0 && stateName == m_eventStateBuffer &&
+        static_cast<size_t>(m_selectedEventIndex) < events.size())
+    {
+        const nlohmann::json& selectedEvent = events[static_cast<size_t>(m_selectedEventIndex)];
+        const std::string selectedType = selectedEvent.value("type", "Custom");
+        ImGui::Separator();
+        ImGui::Text("Selected %s event — frame %d", selectedType.c_str(),
+            static_cast<int>(std::round(selectedEvent.value("phase", 0.0f) * std::max(0, frameCount - 1))));
+        ImGui::InputText("Action / asset", m_eventPayloadBuffer, sizeof(m_eventPayloadBuffer));
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            AnimationGraphDocument::EventDefinition updated;
+            updated.type = selectedType;
+            updated.phase = selectedEvent.value("phase", 0.0f);
+            updated.payload = m_eventPayloadBuffer;
+            ExecuteDocumentCommand("Edit Animation Event", [document = m_document.get(), stateName, updated, selectedIndex = m_selectedEventIndex]() -> bool {
+                return document->UpdateStateEventMarker(stateName, static_cast<size_t>(selectedIndex), updated);
+            });
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Delete Event"))
+        {
+            const int selectedIndex = m_selectedEventIndex;
+            if (ExecuteDocumentCommand("Delete Animation Event", [document = m_document.get(), stateName, selectedIndex]() -> bool {
+                return document->RemoveStateEventMarker(stateName, static_cast<size_t>(selectedIndex));
+            }))
+                m_selectedEventIndex = -1;
+        }
+    }
+}
+
+void AnimationGraphRenderer::RenderAnimationPreviewPanel()
+{
+    ImGui::Text("Animation Preview");
+    ImGui::Separator();
+    const nlohmann::json& data = m_document->GetData();
+    if (m_selectedStateIndex < 0 || !data.contains("states") || !data["states"].is_array() ||
+        static_cast<size_t>(m_selectedStateIndex) >= data["states"].size())
+    {
+        ImGui::TextDisabled("Select a state to preview its resolved directional clip.");
+        return;
+    }
+
+    const nlohmann::json& state = data["states"][m_selectedStateIndex];
+    const std::string stateName = state.value("name", "State");
+    static int previewDirection = static_cast<int>(AnimationGraphDocument::Direction::South);
+    const char* directions[] = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" };
+    ImGui::Text("State: %s", stateName.c_str());
+    ImGui::Combo("Facing", &previewDirection, directions, IM_ARRAYSIZE(directions));
+    const std::string resolvedClip = m_document->ResolveClipForState(stateName,
+        static_cast<AnimationGraphDocument::Direction>(previewDirection));
+    ImGui::Text("Resolved clip: %s", resolvedClip.empty() ? "(none)" : resolvedClip.c_str());
+    if (ImGui::Button(m_showRunPreview ? "Pause" : "Play"))
+        m_showRunPreview = !m_showRunPreview;
+    ImGui::SameLine();
+    if (ImGui::Button("Reset"))
+    {
+        m_showRunPreview = false;
+        m_previewTime = 0.0f;
+    }
+    if (m_showRunPreview)
+    {
+        m_previewTime += ImGui::GetIO().DeltaTime;
+        if (m_previewTime > m_previewDuration)
+            m_previewTime = std::fmod(m_previewTime, m_previewDuration);
+    }
+    ImGui::TextDisabled("Playback %.2f s — visual sprite rendering is the next implementation step.", m_previewTime);
 }
 
 void AnimationGraphRenderer::RenderRightPanel()
@@ -547,7 +1057,7 @@ void AnimationGraphRenderer::RenderRightPanelTabs()
 {
     if (ImGui::BeginTabBar("AnimationGraphRightTabs"))
     {
-        if (ImGui::BeginTabItem("Properties"))
+        if (ImGui::BeginTabItem("Inspector"))
         {
             ImGui::Text("Animation Graph");
             ImGui::Separator();
@@ -598,6 +1108,21 @@ void AnimationGraphRenderer::RenderRightPanelTabs()
                     }
                     ImGui::EndCombo();
                 }
+                if (selectedState.contains("directionClips") && selectedState["directionClips"].is_array())
+                {
+                    if (ImGui::TreeNodeEx("Directional variants##animation_state", ImGuiTreeNodeFlags_DefaultOpen))
+                    {
+                        ImGui::TextDisabled("Resolved by runtime from entity/player orientation.");
+                        for (const nlohmann::json& mapping : selectedState["directionClips"])
+                        {
+                            const std::string direction = mapping.value("direction", "?");
+                            const std::string clip = mapping.value("clip", "");
+                            ImGui::BulletText("%s: %s", direction.c_str(),
+                                clip.empty() ? "(fallback clip)" : clip.c_str());
+                        }
+                        ImGui::TreePop();
+                    }
+                }
                 if (ImGui::Button("Make Default State##animation_state") && currentName != m_document->GetDefaultState())
                 {
                     const std::string previousDefault = m_document->GetDefaultState();
@@ -609,55 +1134,28 @@ void AnimationGraphRenderer::RenderRightPanelTabs()
                     (void)previousDefault;
                 }
             }
+            if (!m_logs.empty())
+            {
+                ImGui::Separator();
+                ImGui::Text("Validation");
+                for (const std::string& log : m_logs)
+                {
+                    const bool passed = log.find("Validation passed:") == 0;
+                    ImGui::TextColored(passed ? ImVec4(0.35f, 0.95f, 0.45f, 1.0f)
+                                               : ImVec4(1.0f, 0.75f, 0.25f, 1.0f),
+                        "%s", log.c_str());
+                }
+            }
             ImGui::EndTabItem();
         }
-        if (ImGui::BeginTabItem("States"))
+        if (ImGui::BeginTabItem("Banks"))
         {
-            RenderStateEditorPanel();
+            RenderAnimationBankPanel();
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Transitions"))
         {
             RenderTransitionEditorPanel();
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Events"))
-        {
-            RenderTimelinePanel();
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Nodes"))
-        {
-            ImGui::Text("Animation state node palette");
-            ImGui::Separator();
-            ImGui::TextWrapped("Imported TSX entries appear here as draggable nodes.");
-            ImGui::TextWrapped("Drag a TSX entry onto the canvas to instantiate a state node.");
-            ImGui::Separator();
-
-            const std::vector<AnimationGraphDocument::SourceDefinition>& sources = m_document->GetSources();
-            for (size_t i = 0; i < sources.size(); ++i)
-            {
-                const AnimationGraphDocument::SourceDefinition& source = sources[i];
-                ImGui::PushID(static_cast<int>(i));
-                if (ImGui::CollapsingHeader(source.sourceName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
-                {
-                    ImGui::TextDisabled("%s", source.filePath.c_str());
-                    for (size_t clipIndex = 0; clipIndex < source.clips.size(); ++clipIndex)
-                    {
-                        const AnimationGraphDocument::SourceDefinition::ClipDefinition& clip = source.clips[clipIndex];
-                        ImGui::PushID(static_cast<int>(clipIndex));
-                        ImGui::Selectable(clip.id.c_str(), false);
-                        if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-                        {
-                            ImGui::SetDragDropPayload("ANIMATION_GRAPH_STATE", clip.id.c_str(), static_cast<int>(clip.id.size() + 1));
-                            ImGui::Text("%s", clip.id.c_str());
-                            ImGui::EndDragDropSource();
-                        }
-                        ImGui::PopID();
-                    }
-                }
-                ImGui::PopID();
-            }
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
@@ -721,6 +1219,28 @@ void AnimationGraphRenderer::RenderGraphCanvas()
 
     if (ImGui::BeginDragDropTarget())
     {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ANIMATION_GRAPH_BANK_STATE"))
+        {
+            if (payload->Data && payload->DataSize == sizeof(int))
+            {
+                const int sourceIndex = *static_cast<const int*>(payload->Data);
+                const std::vector<AnimationGraphDocument::SourceDefinition>& sources = m_document->GetSources();
+                if (sourceIndex >= 0 && static_cast<size_t>(sourceIndex) < sources.size())
+                {
+                    const std::string stateName = m_document->MakeUniqueStateName(
+                        MakeStateNameFromBank(sources[static_cast<size_t>(sourceIndex)].sourceName));
+                    const ImVec2 graphPos = m_canvasEditor->ScreenToCanvas(ImGui::GetIO().MousePos);
+                    if (ExecuteDocumentCommand("Create Directional Animation State",
+                        [document = m_document.get(), stateName, sourceIndex, graphPos]() -> bool {
+                            return document->AddStateFromSource(stateName, static_cast<size_t>(sourceIndex)) &&
+                                   document->SetStatePosition(stateName, graphPos.x, graphPos.y);
+                        }))
+                    {
+                        SelectStatesByName({ stateName });
+                    }
+                }
+            }
+        }
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ANIMATION_GRAPH_STATE"))
         {
             const char* sourceName = static_cast<const char*>(payload->Data);
@@ -728,11 +1248,14 @@ void AnimationGraphRenderer::RenderGraphCanvas()
             {
                 std::string stateName = m_document->MakeUniqueStateName(sourceName);
                 const ImVec2 graphPos = m_canvasEditor->ScreenToCanvas(ImGui::GetIO().MousePos);
-                ExecuteDocumentCommand("Create Animation State",
+                if (ExecuteDocumentCommand("Create Animation State",
                     [document = m_document.get(), stateName, sourceName, graphPos]() -> bool {
                         return document->AddStateFromClip(stateName, sourceName) &&
                                document->SetStatePosition(stateName, graphPos.x, graphPos.y);
-                    });
+                    }))
+                {
+                    SelectStatesByName({ stateName });
+                }
             }
         }
         ImGui::EndDragDropTarget();
@@ -1111,7 +1634,7 @@ void AnimationGraphRenderer::RenderGraphCanvas()
     // The mutation is deliberately applied after EndPopup(): changing the
     // graph or the selection while ImGui is iterating the popup was the last
     // remaining legacy interaction path and produced a second canvas popup.
-    enum class ContextAction { None, DeleteState, DeleteTransition, SelectAll, ClearSelection, DeleteSelected, ResetView };
+    enum class ContextAction { None, DeleteState, DeleteTransition, Copy, Paste, SelectAll, ClearSelection, DeleteSelected, ResetView };
     ContextAction contextAction = ContextAction::None;
     int contextActionIndex = -1;
     std::string contextActionStateName;
@@ -1139,6 +1662,12 @@ void AnimationGraphRenderer::RenderGraphCanvas()
         }
         else if (targetType == CanvasContextTargetType::Canvas)
         {
+            if (ImGui::MenuItem("Copy Selection", "Ctrl+C", false, !m_selectedStateIndices.empty()))
+                contextAction = ContextAction::Copy;
+            if (ImGui::MenuItem("Paste", "Ctrl+V", false,
+                m_framework && m_framework->HasClipboardPayload("AnimationGraph")))
+                contextAction = ContextAction::Paste;
+            ImGui::Separator();
             if (ImGui::MenuItem("Select All", "Ctrl+A"))
                 contextAction = ContextAction::SelectAll;
             if (ImGui::MenuItem("Clear Selection"))
@@ -1187,6 +1716,14 @@ void AnimationGraphRenderer::RenderGraphCanvas()
                 m_selectedTransitionIndex = -1;
             }
         }
+        else if (contextAction == ContextAction::Copy)
+        {
+            CopySelectedStatesToClipboard();
+        }
+        else if (contextAction == ContextAction::Paste)
+        {
+            PasteClipboardStates();
+        }
         else if (contextAction == ContextAction::SelectAll)
         {
             m_selectedStateIndices.clear();
@@ -1221,7 +1758,6 @@ void AnimationGraphRenderer::RenderGraphCanvas()
 
 void AnimationGraphRenderer::RenderInspectorPanel() {}
 void AnimationGraphRenderer::RenderVerificationPanel() {}
-void AnimationGraphRenderer::RenderTransitionPreview() {}
 void AnimationGraphRenderer::RenderSingleTransition(size_t, const ImVec2&) {}
 void AnimationGraphRenderer::EnsureStatePositions() {}
 void AnimationGraphRenderer::RenderGraphNodePorts(const nlohmann::json&, int, bool) {}

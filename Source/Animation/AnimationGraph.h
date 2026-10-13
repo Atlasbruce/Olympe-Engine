@@ -16,12 +16,19 @@ namespace OlympeAnimation
             std::string clip;
         };
 
+        struct EventMarker
+        {
+            std::string type = "Custom";
+            float phase = 0.0f;
+            std::string payload;
+        };
+
         struct State
         {
             std::string name;
             std::string defaultClip;
             std::vector<DirectionClip> directionClips;
-            std::vector<std::string> events;
+            std::vector<EventMarker> events;
             float blendTime = 0.1f;
             bool loop = true;
             int priority = 0;

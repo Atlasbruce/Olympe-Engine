@@ -63,9 +63,26 @@ spécifiques.
 
 - [ ] Animation Bank : inspection des clips, directions, loop, FPS et frames.
 - [ ] État : choix du clip, paramètres de lecture et aperçu local.
-- [ ] Timeline : évènements images/franchissements, pistes et édition.
+- [x] Événements structurés par état (`type`, phase normalisée, action/asset),
+  persistés et rétrocompatibles avec les anciens événements texte.
+- [ ] Timeline : pistes audio/gameplay/VFX, déplacement direct des marqueurs et
+  édition détaillée.
 - [ ] Preview : lecture de l'état et simulation de transitions.
 - [ ] Export runtime : artefact compact consommable par ECS/AI/animation.
+
+## 7. Espace de travail d'édition
+
+- [x] Un canvas principal et, sous lui, un unique plan de travail contextuel :
+  séquenceur d'événements à gauche, lecteur d'animation à droite. Aucun
+  panneau n'est dupliqué dans les onglets de l'inspecteur.
+- [x] Une seule zone d'inspection organisée par étape métier : `Inspector`
+  (graphe/état sélectionné), `Banks` (import et clips), `Transitions` et
+  `Events`.
+- [x] La banque TSX constitue l'unité de création normale : son dépôt crée un
+  state sémantique directionnel (`Run`, `Walk`, etc.) ; le dépôt d'un clip
+  individuel reste une opération avancée.
+- [ ] Un vrai éditeur de timeline et un aperçu runtime remplacent les
+  emplacements actuels, sans réintroduire de doublon de panneau.
 
 ## Ordre de réalisation
 

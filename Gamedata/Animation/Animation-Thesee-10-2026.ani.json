@@ -1,0 +1,3408 @@
+{
+  "blueprintType": "AnimationGraph",
+  "defaultState": "Idle",
+  "description": "",
+  "name": "Untitled Animation Graph",
+  "schema_version": 3,
+  "sources": [
+    {
+      "clips": [
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 70,
+              "tileId": 0
+            },
+            {
+              "durationMs": 70,
+              "tileId": 1
+            },
+            {
+              "durationMs": 70,
+              "tileId": 2
+            },
+            {
+              "durationMs": 70,
+              "tileId": 3
+            },
+            {
+              "durationMs": 70,
+              "tileId": 4
+            },
+            {
+              "durationMs": 70,
+              "tileId": 5
+            },
+            {
+              "durationMs": 70,
+              "tileId": 6
+            },
+            {
+              "durationMs": 70,
+              "tileId": 7
+            },
+            {
+              "durationMs": 70,
+              "tileId": 8
+            },
+            {
+              "durationMs": 70,
+              "tileId": 9
+            },
+            {
+              "durationMs": 70,
+              "tileId": 10
+            },
+            {
+              "durationMs": 70,
+              "tileId": 11
+            },
+            {
+              "durationMs": 70,
+              "tileId": 12
+            },
+            {
+              "durationMs": 70,
+              "tileId": 13
+            },
+            {
+              "durationMs": 70,
+              "tileId": 14
+            }
+          ],
+          "group": "",
+          "id": "ani_zombie_idle_s",
+          "loop": true,
+          "sourceTileId": 0
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 70,
+              "tileId": 15
+            },
+            {
+              "durationMs": 70,
+              "tileId": 16
+            },
+            {
+              "durationMs": 70,
+              "tileId": 17
+            },
+            {
+              "durationMs": 70,
+              "tileId": 18
+            },
+            {
+              "durationMs": 70,
+              "tileId": 19
+            },
+            {
+              "durationMs": 70,
+              "tileId": 20
+            },
+            {
+              "durationMs": 70,
+              "tileId": 21
+            },
+            {
+              "durationMs": 70,
+              "tileId": 22
+            },
+            {
+              "durationMs": 70,
+              "tileId": 23
+            },
+            {
+              "durationMs": 70,
+              "tileId": 24
+            },
+            {
+              "durationMs": 70,
+              "tileId": 25
+            },
+            {
+              "durationMs": 70,
+              "tileId": 26
+            },
+            {
+              "durationMs": 70,
+              "tileId": 27
+            },
+            {
+              "durationMs": 70,
+              "tileId": 28
+            },
+            {
+              "durationMs": 70,
+              "tileId": 29
+            }
+          ],
+          "group": "",
+          "id": "ani_zombie_idle_sw",
+          "loop": true,
+          "sourceTileId": 15
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 70,
+              "tileId": 30
+            },
+            {
+              "durationMs": 70,
+              "tileId": 31
+            },
+            {
+              "durationMs": 70,
+              "tileId": 32
+            },
+            {
+              "durationMs": 70,
+              "tileId": 33
+            },
+            {
+              "durationMs": 70,
+              "tileId": 34
+            },
+            {
+              "durationMs": 70,
+              "tileId": 35
+            },
+            {
+              "durationMs": 70,
+              "tileId": 36
+            },
+            {
+              "durationMs": 70,
+              "tileId": 37
+            },
+            {
+              "durationMs": 70,
+              "tileId": 38
+            },
+            {
+              "durationMs": 70,
+              "tileId": 39
+            },
+            {
+              "durationMs": 70,
+              "tileId": 40
+            },
+            {
+              "durationMs": 70,
+              "tileId": 41
+            },
+            {
+              "durationMs": 70,
+              "tileId": 42
+            },
+            {
+              "durationMs": 70,
+              "tileId": 43
+            },
+            {
+              "durationMs": 70,
+              "tileId": 44
+            }
+          ],
+          "group": "",
+          "id": "ani_zombie_idle_w",
+          "loop": true,
+          "sourceTileId": 30
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 70,
+              "tileId": 45
+            },
+            {
+              "durationMs": 70,
+              "tileId": 46
+            },
+            {
+              "durationMs": 70,
+              "tileId": 47
+            },
+            {
+              "durationMs": 70,
+              "tileId": 48
+            },
+            {
+              "durationMs": 70,
+              "tileId": 49
+            },
+            {
+              "durationMs": 70,
+              "tileId": 50
+            },
+            {
+              "durationMs": 70,
+              "tileId": 51
+            },
+            {
+              "durationMs": 70,
+              "tileId": 52
+            },
+            {
+              "durationMs": 70,
+              "tileId": 53
+            },
+            {
+              "durationMs": 70,
+              "tileId": 54
+            },
+            {
+              "durationMs": 70,
+              "tileId": 55
+            },
+            {
+              "durationMs": 70,
+              "tileId": 56
+            },
+            {
+              "durationMs": 70,
+              "tileId": 57
+            },
+            {
+              "durationMs": 70,
+              "tileId": 58
+            },
+            {
+              "durationMs": 70,
+              "tileId": 59
+            }
+          ],
+          "group": "",
+          "id": "ani_zombie_idle_nw",
+          "loop": true,
+          "sourceTileId": 45
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 70,
+              "tileId": 60
+            },
+            {
+              "durationMs": 70,
+              "tileId": 61
+            },
+            {
+              "durationMs": 70,
+              "tileId": 62
+            },
+            {
+              "durationMs": 70,
+              "tileId": 63
+            },
+            {
+              "durationMs": 70,
+              "tileId": 64
+            },
+            {
+              "durationMs": 70,
+              "tileId": 65
+            },
+            {
+              "durationMs": 70,
+              "tileId": 66
+            },
+            {
+              "durationMs": 70,
+              "tileId": 67
+            },
+            {
+              "durationMs": 70,
+              "tileId": 68
+            },
+            {
+              "durationMs": 70,
+              "tileId": 69
+            },
+            {
+              "durationMs": 70,
+              "tileId": 70
+            },
+            {
+              "durationMs": 70,
+              "tileId": 71
+            },
+            {
+              "durationMs": 70,
+              "tileId": 72
+            },
+            {
+              "durationMs": 70,
+              "tileId": 73
+            },
+            {
+              "durationMs": 70,
+              "tileId": 74
+            }
+          ],
+          "group": "",
+          "id": "ani_zombie_idle_n",
+          "loop": true,
+          "sourceTileId": 60
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 70,
+              "tileId": 75
+            },
+            {
+              "durationMs": 70,
+              "tileId": 76
+            },
+            {
+              "durationMs": 70,
+              "tileId": 77
+            },
+            {
+              "durationMs": 70,
+              "tileId": 78
+            },
+            {
+              "durationMs": 70,
+              "tileId": 79
+            },
+            {
+              "durationMs": 70,
+              "tileId": 80
+            },
+            {
+              "durationMs": 70,
+              "tileId": 81
+            },
+            {
+              "durationMs": 70,
+              "tileId": 82
+            },
+            {
+              "durationMs": 70,
+              "tileId": 83
+            },
+            {
+              "durationMs": 70,
+              "tileId": 84
+            },
+            {
+              "durationMs": 70,
+              "tileId": 85
+            },
+            {
+              "durationMs": 70,
+              "tileId": 86
+            },
+            {
+              "durationMs": 70,
+              "tileId": 87
+            },
+            {
+              "durationMs": 70,
+              "tileId": 88
+            },
+            {
+              "durationMs": 70,
+              "tileId": 89
+            }
+          ],
+          "group": "",
+          "id": "ani_zombie_idle_ne",
+          "loop": true,
+          "sourceTileId": 75
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 70,
+              "tileId": 90
+            },
+            {
+              "durationMs": 70,
+              "tileId": 91
+            },
+            {
+              "durationMs": 70,
+              "tileId": 92
+            },
+            {
+              "durationMs": 70,
+              "tileId": 93
+            },
+            {
+              "durationMs": 70,
+              "tileId": 94
+            },
+            {
+              "durationMs": 70,
+              "tileId": 95
+            },
+            {
+              "durationMs": 70,
+              "tileId": 96
+            },
+            {
+              "durationMs": 70,
+              "tileId": 97
+            },
+            {
+              "durationMs": 70,
+              "tileId": 98
+            },
+            {
+              "durationMs": 70,
+              "tileId": 99
+            },
+            {
+              "durationMs": 70,
+              "tileId": 100
+            },
+            {
+              "durationMs": 70,
+              "tileId": 101
+            },
+            {
+              "durationMs": 70,
+              "tileId": 102
+            },
+            {
+              "durationMs": 70,
+              "tileId": 103
+            },
+            {
+              "durationMs": 70,
+              "tileId": 104
+            }
+          ],
+          "group": "",
+          "id": "ani_zombie_idle_e",
+          "loop": true,
+          "sourceTileId": 90
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 70,
+              "tileId": 105
+            },
+            {
+              "durationMs": 70,
+              "tileId": 106
+            },
+            {
+              "durationMs": 70,
+              "tileId": 107
+            },
+            {
+              "durationMs": 70,
+              "tileId": 108
+            },
+            {
+              "durationMs": 70,
+              "tileId": 109
+            },
+            {
+              "durationMs": 70,
+              "tileId": 110
+            },
+            {
+              "durationMs": 70,
+              "tileId": 111
+            },
+            {
+              "durationMs": 70,
+              "tileId": 112
+            },
+            {
+              "durationMs": 70,
+              "tileId": 113
+            },
+            {
+              "durationMs": 70,
+              "tileId": 114
+            },
+            {
+              "durationMs": 70,
+              "tileId": 115
+            },
+            {
+              "durationMs": 70,
+              "tileId": 116
+            },
+            {
+              "durationMs": 70,
+              "tileId": 117
+            },
+            {
+              "durationMs": 70,
+              "tileId": 118
+            },
+            {
+              "durationMs": 70,
+              "tileId": 119
+            }
+          ],
+          "group": "",
+          "id": "ani_zombie_idle_se",
+          "loop": true,
+          "sourceTileId": 105
+        }
+      ],
+      "filePath": "./Gamedata/Animation/AnimationBanks/ani_bank_zombie.tsx",
+      "sourceName": "Animation Bank Zombie"
+    },
+    {
+      "clips": [
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 0
+            },
+            {
+              "durationMs": 100,
+              "tileId": 1
+            },
+            {
+              "durationMs": 100,
+              "tileId": 2
+            },
+            {
+              "durationMs": 100,
+              "tileId": 3
+            },
+            {
+              "durationMs": 100,
+              "tileId": 4
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_s",
+          "loop": true,
+          "sourceTileId": 0
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 4
+            },
+            {
+              "durationMs": 100,
+              "tileId": 9
+            },
+            {
+              "durationMs": 100,
+              "tileId": 14
+            },
+            {
+              "durationMs": 100,
+              "tileId": 19
+            },
+            {
+              "durationMs": 100,
+              "tileId": 24
+            },
+            {
+              "durationMs": 100,
+              "tileId": 29
+            },
+            {
+              "durationMs": 100,
+              "tileId": 34
+            },
+            {
+              "durationMs": 100,
+              "tileId": 39
+            },
+            {
+              "durationMs": 100,
+              "tileId": 44
+            },
+            {
+              "durationMs": 100,
+              "tileId": 49
+            },
+            {
+              "durationMs": 100,
+              "tileId": 54
+            },
+            {
+              "durationMs": 100,
+              "tileId": 59
+            },
+            {
+              "durationMs": 100,
+              "tileId": 64
+            },
+            {
+              "durationMs": 100,
+              "tileId": 69
+            },
+            {
+              "durationMs": 100,
+              "tileId": 74
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_rotate_full",
+          "loop": true,
+          "sourceTileId": 4
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 5
+            },
+            {
+              "durationMs": 100,
+              "tileId": 6
+            },
+            {
+              "durationMs": 100,
+              "tileId": 7
+            },
+            {
+              "durationMs": 100,
+              "tileId": 8
+            },
+            {
+              "durationMs": 100,
+              "tileId": 9
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_sw1",
+          "loop": true,
+          "sourceTileId": 5
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 10
+            },
+            {
+              "durationMs": 100,
+              "tileId": 11
+            },
+            {
+              "durationMs": 100,
+              "tileId": 12
+            },
+            {
+              "durationMs": 100,
+              "tileId": 13
+            },
+            {
+              "durationMs": 100,
+              "tileId": 14
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_w",
+          "loop": true,
+          "sourceTileId": 10
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 15
+            },
+            {
+              "durationMs": 100,
+              "tileId": 16
+            },
+            {
+              "durationMs": 100,
+              "tileId": 17
+            },
+            {
+              "durationMs": 100,
+              "tileId": 18
+            },
+            {
+              "durationMs": 100,
+              "tileId": 19
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_nw1",
+          "loop": true,
+          "sourceTileId": 15
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 20
+            },
+            {
+              "durationMs": 100,
+              "tileId": 21
+            },
+            {
+              "durationMs": 100,
+              "tileId": 22
+            },
+            {
+              "durationMs": 100,
+              "tileId": 23
+            },
+            {
+              "durationMs": 100,
+              "tileId": 24
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_nw2",
+          "loop": true,
+          "sourceTileId": 20
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 25
+            },
+            {
+              "durationMs": 100,
+              "tileId": 26
+            },
+            {
+              "durationMs": 100,
+              "tileId": 27
+            },
+            {
+              "durationMs": 100,
+              "tileId": 28
+            },
+            {
+              "durationMs": 100,
+              "tileId": 29
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_nw3",
+          "loop": true,
+          "sourceTileId": 25
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 30
+            },
+            {
+              "durationMs": 100,
+              "tileId": 31
+            },
+            {
+              "durationMs": 100,
+              "tileId": 32
+            },
+            {
+              "durationMs": 100,
+              "tileId": 33
+            },
+            {
+              "durationMs": 100,
+              "tileId": 34
+            }
+          ],
+          "group": "",
+          "id": "nw4",
+          "loop": true,
+          "sourceTileId": 30
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 35
+            },
+            {
+              "durationMs": 100,
+              "tileId": 36
+            },
+            {
+              "durationMs": 100,
+              "tileId": 37
+            },
+            {
+              "durationMs": 100,
+              "tileId": 38
+            },
+            {
+              "durationMs": 100,
+              "tileId": 39
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_n",
+          "loop": true,
+          "sourceTileId": 35
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 40
+            },
+            {
+              "durationMs": 100,
+              "tileId": 41
+            },
+            {
+              "durationMs": 100,
+              "tileId": 42
+            },
+            {
+              "durationMs": 100,
+              "tileId": 43
+            },
+            {
+              "durationMs": 100,
+              "tileId": 44
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_ne1",
+          "loop": true,
+          "sourceTileId": 40
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 45
+            },
+            {
+              "durationMs": 100,
+              "tileId": 46
+            },
+            {
+              "durationMs": 100,
+              "tileId": 47
+            },
+            {
+              "durationMs": 100,
+              "tileId": 48
+            },
+            {
+              "durationMs": 100,
+              "tileId": 49
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_ne2",
+          "loop": true,
+          "sourceTileId": 45
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 50
+            },
+            {
+              "durationMs": 100,
+              "tileId": 51
+            },
+            {
+              "durationMs": 100,
+              "tileId": 52
+            },
+            {
+              "durationMs": 100,
+              "tileId": 53
+            },
+            {
+              "durationMs": 100,
+              "tileId": 54
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_e",
+          "loop": true,
+          "sourceTileId": 50
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 55
+            },
+            {
+              "durationMs": 100,
+              "tileId": 56
+            },
+            {
+              "durationMs": 100,
+              "tileId": 57
+            },
+            {
+              "durationMs": 100,
+              "tileId": 58
+            },
+            {
+              "durationMs": 100,
+              "tileId": 59
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_se1",
+          "loop": true,
+          "sourceTileId": 55
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 60
+            },
+            {
+              "durationMs": 100,
+              "tileId": 61
+            },
+            {
+              "durationMs": 100,
+              "tileId": 62
+            },
+            {
+              "durationMs": 100,
+              "tileId": 63
+            },
+            {
+              "durationMs": 100,
+              "tileId": 64
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_se2",
+          "loop": true,
+          "sourceTileId": 60
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 65
+            },
+            {
+              "durationMs": 100,
+              "tileId": 66
+            },
+            {
+              "durationMs": 100,
+              "tileId": 67
+            },
+            {
+              "durationMs": 100,
+              "tileId": 68
+            },
+            {
+              "durationMs": 100,
+              "tileId": 69
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_se3",
+          "loop": true,
+          "sourceTileId": 65
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 70
+            },
+            {
+              "durationMs": 100,
+              "tileId": 71
+            },
+            {
+              "durationMs": 100,
+              "tileId": 72
+            },
+            {
+              "durationMs": 100,
+              "tileId": 73
+            },
+            {
+              "durationMs": 100,
+              "tileId": 74
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Idle_se4",
+          "loop": true,
+          "sourceTileId": 70
+        }
+      ],
+      "filePath": "./Gamedata/Animation/AnimationBanks/these_idle.tsx",
+      "sourceName": "these_idle"
+    },
+    {
+      "clips": [
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 0
+            },
+            {
+              "durationMs": 100,
+              "tileId": 1
+            },
+            {
+              "durationMs": 100,
+              "tileId": 2
+            },
+            {
+              "durationMs": 100,
+              "tileId": 3
+            },
+            {
+              "durationMs": 100,
+              "tileId": 4
+            },
+            {
+              "durationMs": 100,
+              "tileId": 5
+            },
+            {
+              "durationMs": 100,
+              "tileId": 6
+            },
+            {
+              "durationMs": 100,
+              "tileId": 7
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_s",
+          "loop": true,
+          "sourceTileId": 0
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 8
+            },
+            {
+              "durationMs": 100,
+              "tileId": 9
+            },
+            {
+              "durationMs": 100,
+              "tileId": 10
+            },
+            {
+              "durationMs": 100,
+              "tileId": 11
+            },
+            {
+              "durationMs": 100,
+              "tileId": 12
+            },
+            {
+              "durationMs": 100,
+              "tileId": 13
+            },
+            {
+              "durationMs": 100,
+              "tileId": 14
+            },
+            {
+              "durationMs": 100,
+              "tileId": 15
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_sw1",
+          "loop": true,
+          "sourceTileId": 8
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 16
+            },
+            {
+              "durationMs": 100,
+              "tileId": 17
+            },
+            {
+              "durationMs": 100,
+              "tileId": 18
+            },
+            {
+              "durationMs": 100,
+              "tileId": 19
+            },
+            {
+              "durationMs": 100,
+              "tileId": 20
+            },
+            {
+              "durationMs": 100,
+              "tileId": 21
+            },
+            {
+              "durationMs": 100,
+              "tileId": 22
+            },
+            {
+              "durationMs": 100,
+              "tileId": 23
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_sw2",
+          "loop": true,
+          "sourceTileId": 16
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 24
+            },
+            {
+              "durationMs": 100,
+              "tileId": 25
+            },
+            {
+              "durationMs": 100,
+              "tileId": 26
+            },
+            {
+              "durationMs": 100,
+              "tileId": 27
+            },
+            {
+              "durationMs": 100,
+              "tileId": 28
+            },
+            {
+              "durationMs": 100,
+              "tileId": 29
+            },
+            {
+              "durationMs": 100,
+              "tileId": 30
+            },
+            {
+              "durationMs": 100,
+              "tileId": 31
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_w",
+          "loop": true,
+          "sourceTileId": 24
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 32
+            },
+            {
+              "durationMs": 100,
+              "tileId": 33
+            },
+            {
+              "durationMs": 100,
+              "tileId": 34
+            },
+            {
+              "durationMs": 100,
+              "tileId": 35
+            },
+            {
+              "durationMs": 100,
+              "tileId": 36
+            },
+            {
+              "durationMs": 100,
+              "tileId": 37
+            },
+            {
+              "durationMs": 100,
+              "tileId": 38
+            },
+            {
+              "durationMs": 100,
+              "tileId": 39
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_nw1",
+          "loop": true,
+          "sourceTileId": 32
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 40
+            },
+            {
+              "durationMs": 100,
+              "tileId": 41
+            },
+            {
+              "durationMs": 100,
+              "tileId": 42
+            },
+            {
+              "durationMs": 100,
+              "tileId": 43
+            },
+            {
+              "durationMs": 100,
+              "tileId": 44
+            },
+            {
+              "durationMs": 100,
+              "tileId": 45
+            },
+            {
+              "durationMs": 100,
+              "tileId": 46
+            },
+            {
+              "durationMs": 100,
+              "tileId": 47
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_nw2",
+          "loop": true,
+          "sourceTileId": 40
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 48
+            },
+            {
+              "durationMs": 100,
+              "tileId": 49
+            },
+            {
+              "durationMs": 100,
+              "tileId": 50
+            },
+            {
+              "durationMs": 100,
+              "tileId": 51
+            },
+            {
+              "durationMs": 100,
+              "tileId": 52
+            },
+            {
+              "durationMs": 100,
+              "tileId": 53
+            },
+            {
+              "durationMs": 100,
+              "tileId": 54
+            },
+            {
+              "durationMs": 100,
+              "tileId": 55
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_nw3",
+          "loop": true,
+          "sourceTileId": 48
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 56
+            },
+            {
+              "durationMs": 100,
+              "tileId": 57
+            },
+            {
+              "durationMs": 100,
+              "tileId": 58
+            },
+            {
+              "durationMs": 100,
+              "tileId": 59
+            },
+            {
+              "durationMs": 100,
+              "tileId": 60
+            },
+            {
+              "durationMs": 100,
+              "tileId": 61
+            },
+            {
+              "durationMs": 100,
+              "tileId": 62
+            },
+            {
+              "durationMs": 100,
+              "tileId": 63
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_nw4",
+          "loop": true,
+          "sourceTileId": 56
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 64
+            },
+            {
+              "durationMs": 100,
+              "tileId": 65
+            },
+            {
+              "durationMs": 100,
+              "tileId": 66
+            },
+            {
+              "durationMs": 100,
+              "tileId": 67
+            },
+            {
+              "durationMs": 100,
+              "tileId": 68
+            },
+            {
+              "durationMs": 100,
+              "tileId": 69
+            },
+            {
+              "durationMs": 100,
+              "tileId": 70
+            },
+            {
+              "durationMs": 100,
+              "tileId": 71
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_n",
+          "loop": true,
+          "sourceTileId": 64
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 72
+            },
+            {
+              "durationMs": 100,
+              "tileId": 73
+            },
+            {
+              "durationMs": 100,
+              "tileId": 74
+            },
+            {
+              "durationMs": 100,
+              "tileId": 75
+            },
+            {
+              "durationMs": 100,
+              "tileId": 76
+            },
+            {
+              "durationMs": 100,
+              "tileId": 77
+            },
+            {
+              "durationMs": 100,
+              "tileId": 78
+            },
+            {
+              "durationMs": 100,
+              "tileId": 79
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_ne1",
+          "loop": true,
+          "sourceTileId": 72
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 80
+            },
+            {
+              "durationMs": 100,
+              "tileId": 81
+            },
+            {
+              "durationMs": 100,
+              "tileId": 82
+            },
+            {
+              "durationMs": 100,
+              "tileId": 83
+            },
+            {
+              "durationMs": 100,
+              "tileId": 84
+            },
+            {
+              "durationMs": 100,
+              "tileId": 85
+            },
+            {
+              "durationMs": 100,
+              "tileId": 86
+            },
+            {
+              "durationMs": 100,
+              "tileId": 87
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_ne2",
+          "loop": true,
+          "sourceTileId": 80
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 88
+            },
+            {
+              "durationMs": 100,
+              "tileId": 89
+            },
+            {
+              "durationMs": 100,
+              "tileId": 90
+            },
+            {
+              "durationMs": 100,
+              "tileId": 91
+            },
+            {
+              "durationMs": 100,
+              "tileId": 92
+            },
+            {
+              "durationMs": 100,
+              "tileId": 93
+            },
+            {
+              "durationMs": 100,
+              "tileId": 94
+            },
+            {
+              "durationMs": 100,
+              "tileId": 95
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_ne3",
+          "loop": true,
+          "sourceTileId": 88
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 96
+            },
+            {
+              "durationMs": 100,
+              "tileId": 97
+            },
+            {
+              "durationMs": 100,
+              "tileId": 98
+            },
+            {
+              "durationMs": 100,
+              "tileId": 99
+            },
+            {
+              "durationMs": 100,
+              "tileId": 100
+            },
+            {
+              "durationMs": 100,
+              "tileId": 101
+            },
+            {
+              "durationMs": 100,
+              "tileId": 102
+            },
+            {
+              "durationMs": 100,
+              "tileId": 103
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_e",
+          "loop": true,
+          "sourceTileId": 96
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 104
+            },
+            {
+              "durationMs": 100,
+              "tileId": 105
+            },
+            {
+              "durationMs": 100,
+              "tileId": 106
+            },
+            {
+              "durationMs": 100,
+              "tileId": 107
+            },
+            {
+              "durationMs": 100,
+              "tileId": 108
+            },
+            {
+              "durationMs": 100,
+              "tileId": 109
+            },
+            {
+              "durationMs": 100,
+              "tileId": 110
+            },
+            {
+              "durationMs": 100,
+              "tileId": 111
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_se1",
+          "loop": true,
+          "sourceTileId": 104
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 112
+            },
+            {
+              "durationMs": 100,
+              "tileId": 113
+            },
+            {
+              "durationMs": 100,
+              "tileId": 114
+            },
+            {
+              "durationMs": 100,
+              "tileId": 115
+            },
+            {
+              "durationMs": 100,
+              "tileId": 116
+            },
+            {
+              "durationMs": 100,
+              "tileId": 117
+            },
+            {
+              "durationMs": 100,
+              "tileId": 118
+            },
+            {
+              "durationMs": 100,
+              "tileId": 119
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Run_se2",
+          "loop": true,
+          "sourceTileId": 112
+        }
+      ],
+      "filePath": "./Gamedata/Animation/AnimationBanks/these_run.tsx",
+      "sourceName": "these_run"
+    },
+    {
+      "clips": [
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 0
+            },
+            {
+              "durationMs": 100,
+              "tileId": 1
+            },
+            {
+              "durationMs": 100,
+              "tileId": 2
+            },
+            {
+              "durationMs": 100,
+              "tileId": 3
+            },
+            {
+              "durationMs": 100,
+              "tileId": 4
+            },
+            {
+              "durationMs": 100,
+              "tileId": 5
+            },
+            {
+              "durationMs": 100,
+              "tileId": 6
+            },
+            {
+              "durationMs": 100,
+              "tileId": 7
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_s",
+          "loop": true,
+          "sourceTileId": 0
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 8
+            },
+            {
+              "durationMs": 100,
+              "tileId": 9
+            },
+            {
+              "durationMs": 100,
+              "tileId": 10
+            },
+            {
+              "durationMs": 100,
+              "tileId": 11
+            },
+            {
+              "durationMs": 100,
+              "tileId": 12
+            },
+            {
+              "durationMs": 100,
+              "tileId": 13
+            },
+            {
+              "durationMs": 100,
+              "tileId": 14
+            },
+            {
+              "durationMs": 100,
+              "tileId": 15
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_sw1",
+          "loop": true,
+          "sourceTileId": 8
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 16
+            },
+            {
+              "durationMs": 100,
+              "tileId": 17
+            },
+            {
+              "durationMs": 100,
+              "tileId": 18
+            },
+            {
+              "durationMs": 100,
+              "tileId": 19
+            },
+            {
+              "durationMs": 100,
+              "tileId": 20
+            },
+            {
+              "durationMs": 100,
+              "tileId": 21
+            },
+            {
+              "durationMs": 100,
+              "tileId": 22
+            },
+            {
+              "durationMs": 100,
+              "tileId": 23
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_sw2",
+          "loop": true,
+          "sourceTileId": 16
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 24
+            },
+            {
+              "durationMs": 100,
+              "tileId": 25
+            },
+            {
+              "durationMs": 100,
+              "tileId": 26
+            },
+            {
+              "durationMs": 100,
+              "tileId": 27
+            },
+            {
+              "durationMs": 100,
+              "tileId": 28
+            },
+            {
+              "durationMs": 100,
+              "tileId": 29
+            },
+            {
+              "durationMs": 100,
+              "tileId": 30
+            },
+            {
+              "durationMs": 100,
+              "tileId": 31
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_sw3",
+          "loop": true,
+          "sourceTileId": 24
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 32
+            },
+            {
+              "durationMs": 100,
+              "tileId": 33
+            },
+            {
+              "durationMs": 100,
+              "tileId": 34
+            },
+            {
+              "durationMs": 100,
+              "tileId": 35
+            },
+            {
+              "durationMs": 100,
+              "tileId": 36
+            },
+            {
+              "durationMs": 100,
+              "tileId": 37
+            },
+            {
+              "durationMs": 100,
+              "tileId": 38
+            },
+            {
+              "durationMs": 100,
+              "tileId": 39
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_w",
+          "loop": true,
+          "sourceTileId": 32
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 40
+            },
+            {
+              "durationMs": 100,
+              "tileId": 41
+            },
+            {
+              "durationMs": 100,
+              "tileId": 42
+            },
+            {
+              "durationMs": 100,
+              "tileId": 43
+            },
+            {
+              "durationMs": 100,
+              "tileId": 44
+            },
+            {
+              "durationMs": 100,
+              "tileId": 45
+            },
+            {
+              "durationMs": 100,
+              "tileId": 46
+            },
+            {
+              "durationMs": 100,
+              "tileId": 47
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_nw1",
+          "loop": true,
+          "sourceTileId": 40
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 48
+            },
+            {
+              "durationMs": 100,
+              "tileId": 49
+            },
+            {
+              "durationMs": 100,
+              "tileId": 50
+            },
+            {
+              "durationMs": 100,
+              "tileId": 51
+            },
+            {
+              "durationMs": 100,
+              "tileId": 52
+            },
+            {
+              "durationMs": 100,
+              "tileId": 53
+            },
+            {
+              "durationMs": 100,
+              "tileId": 54
+            },
+            {
+              "durationMs": 100,
+              "tileId": 55
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_nw2",
+          "loop": true,
+          "sourceTileId": 48
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 56
+            },
+            {
+              "durationMs": 100,
+              "tileId": 57
+            },
+            {
+              "durationMs": 100,
+              "tileId": 58
+            },
+            {
+              "durationMs": 100,
+              "tileId": 59
+            },
+            {
+              "durationMs": 100,
+              "tileId": 60
+            },
+            {
+              "durationMs": 100,
+              "tileId": 61
+            },
+            {
+              "durationMs": 100,
+              "tileId": 62
+            },
+            {
+              "durationMs": 100,
+              "tileId": 63
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_nw3",
+          "loop": true,
+          "sourceTileId": 56
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 64
+            },
+            {
+              "durationMs": 100,
+              "tileId": 65
+            },
+            {
+              "durationMs": 100,
+              "tileId": 66
+            },
+            {
+              "durationMs": 100,
+              "tileId": 67
+            },
+            {
+              "durationMs": 100,
+              "tileId": 68
+            },
+            {
+              "durationMs": 100,
+              "tileId": 69
+            },
+            {
+              "durationMs": 100,
+              "tileId": 70
+            },
+            {
+              "durationMs": 100,
+              "tileId": 71
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_n",
+          "loop": true,
+          "sourceTileId": 64
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 72
+            },
+            {
+              "durationMs": 100,
+              "tileId": 73
+            },
+            {
+              "durationMs": 100,
+              "tileId": 74
+            },
+            {
+              "durationMs": 100,
+              "tileId": 75
+            },
+            {
+              "durationMs": 100,
+              "tileId": 76
+            },
+            {
+              "durationMs": 100,
+              "tileId": 77
+            },
+            {
+              "durationMs": 100,
+              "tileId": 78
+            },
+            {
+              "durationMs": 100,
+              "tileId": 79
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_ne1",
+          "loop": true,
+          "sourceTileId": 72
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 80
+            },
+            {
+              "durationMs": 100,
+              "tileId": 81
+            },
+            {
+              "durationMs": 100,
+              "tileId": 82
+            },
+            {
+              "durationMs": 100,
+              "tileId": 83
+            },
+            {
+              "durationMs": 100,
+              "tileId": 84
+            },
+            {
+              "durationMs": 100,
+              "tileId": 85
+            },
+            {
+              "durationMs": 100,
+              "tileId": 86
+            },
+            {
+              "durationMs": 100,
+              "tileId": 87
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_ne2",
+          "loop": true,
+          "sourceTileId": 80
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 88
+            },
+            {
+              "durationMs": 100,
+              "tileId": 89
+            },
+            {
+              "durationMs": 100,
+              "tileId": 90
+            },
+            {
+              "durationMs": 100,
+              "tileId": 91
+            },
+            {
+              "durationMs": 100,
+              "tileId": 92
+            },
+            {
+              "durationMs": 100,
+              "tileId": 93
+            },
+            {
+              "durationMs": 100,
+              "tileId": 94
+            },
+            {
+              "durationMs": 100,
+              "tileId": 95
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_ne3",
+          "loop": true,
+          "sourceTileId": 88
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 96
+            },
+            {
+              "durationMs": 100,
+              "tileId": 97
+            },
+            {
+              "durationMs": 100,
+              "tileId": 98
+            },
+            {
+              "durationMs": 100,
+              "tileId": 99
+            },
+            {
+              "durationMs": 100,
+              "tileId": 100
+            },
+            {
+              "durationMs": 100,
+              "tileId": 101
+            },
+            {
+              "durationMs": 100,
+              "tileId": 102
+            },
+            {
+              "durationMs": 100,
+              "tileId": 103
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_e",
+          "loop": true,
+          "sourceTileId": 96
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 104
+            },
+            {
+              "durationMs": 100,
+              "tileId": 105
+            },
+            {
+              "durationMs": 100,
+              "tileId": 106
+            },
+            {
+              "durationMs": 100,
+              "tileId": 107
+            },
+            {
+              "durationMs": 100,
+              "tileId": 108
+            },
+            {
+              "durationMs": 100,
+              "tileId": 109
+            },
+            {
+              "durationMs": 100,
+              "tileId": 110
+            },
+            {
+              "durationMs": 100,
+              "tileId": 111
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_se1",
+          "loop": true,
+          "sourceTileId": 104
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 112
+            },
+            {
+              "durationMs": 100,
+              "tileId": 113
+            },
+            {
+              "durationMs": 100,
+              "tileId": 114
+            },
+            {
+              "durationMs": 100,
+              "tileId": 115
+            },
+            {
+              "durationMs": 100,
+              "tileId": 116
+            },
+            {
+              "durationMs": 100,
+              "tileId": 117
+            },
+            {
+              "durationMs": 100,
+              "tileId": 118
+            },
+            {
+              "durationMs": 100,
+              "tileId": 119
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_se2",
+          "loop": true,
+          "sourceTileId": 112
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 120
+            },
+            {
+              "durationMs": 100,
+              "tileId": 121
+            },
+            {
+              "durationMs": 100,
+              "tileId": 122
+            },
+            {
+              "durationMs": 100,
+              "tileId": 123
+            },
+            {
+              "durationMs": 100,
+              "tileId": 124
+            },
+            {
+              "durationMs": 100,
+              "tileId": 125
+            },
+            {
+              "durationMs": 100,
+              "tileId": 126
+            },
+            {
+              "durationMs": 100,
+              "tileId": 127
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Walk_se3",
+          "loop": true,
+          "sourceTileId": 120
+        }
+      ],
+      "filePath": "./Gamedata/Animation/AnimationBanks/these_walk.tsx",
+      "sourceName": "these_walk"
+    },
+    {
+      "clips": [
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 0
+            },
+            {
+              "durationMs": 100,
+              "tileId": 1
+            },
+            {
+              "durationMs": 100,
+              "tileId": 2
+            },
+            {
+              "durationMs": 100,
+              "tileId": 3
+            },
+            {
+              "durationMs": 100,
+              "tileId": 4
+            },
+            {
+              "durationMs": 100,
+              "tileId": 5
+            },
+            {
+              "durationMs": 100,
+              "tileId": 6
+            },
+            {
+              "durationMs": 100,
+              "tileId": 7
+            },
+            {
+              "durationMs": 100,
+              "tileId": 8
+            },
+            {
+              "durationMs": 100,
+              "tileId": 9
+            },
+            {
+              "durationMs": 100,
+              "tileId": 10
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_s",
+          "loop": true,
+          "sourceTileId": 0
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 11
+            },
+            {
+              "durationMs": 100,
+              "tileId": 12
+            },
+            {
+              "durationMs": 100,
+              "tileId": 13
+            },
+            {
+              "durationMs": 100,
+              "tileId": 14
+            },
+            {
+              "durationMs": 100,
+              "tileId": 15
+            },
+            {
+              "durationMs": 100,
+              "tileId": 16
+            },
+            {
+              "durationMs": 100,
+              "tileId": 17
+            },
+            {
+              "durationMs": 100,
+              "tileId": 18
+            },
+            {
+              "durationMs": 100,
+              "tileId": 19
+            },
+            {
+              "durationMs": 100,
+              "tileId": 20
+            },
+            {
+              "durationMs": 100,
+              "tileId": 21
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_sw1",
+          "loop": true,
+          "sourceTileId": 11
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 22
+            },
+            {
+              "durationMs": 100,
+              "tileId": 23
+            },
+            {
+              "durationMs": 100,
+              "tileId": 24
+            },
+            {
+              "durationMs": 100,
+              "tileId": 25
+            },
+            {
+              "durationMs": 100,
+              "tileId": 26
+            },
+            {
+              "durationMs": 100,
+              "tileId": 27
+            },
+            {
+              "durationMs": 100,
+              "tileId": 28
+            },
+            {
+              "durationMs": 100,
+              "tileId": 29
+            },
+            {
+              "durationMs": 100,
+              "tileId": 30
+            },
+            {
+              "durationMs": 100,
+              "tileId": 31
+            },
+            {
+              "durationMs": 100,
+              "tileId": 32
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_sw2",
+          "loop": true,
+          "sourceTileId": 22
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 33
+            },
+            {
+              "durationMs": 100,
+              "tileId": 34
+            },
+            {
+              "durationMs": 100,
+              "tileId": 35
+            },
+            {
+              "durationMs": 100,
+              "tileId": 36
+            },
+            {
+              "durationMs": 100,
+              "tileId": 37
+            },
+            {
+              "durationMs": 100,
+              "tileId": 38
+            },
+            {
+              "durationMs": 100,
+              "tileId": 39
+            },
+            {
+              "durationMs": 100,
+              "tileId": 40
+            },
+            {
+              "durationMs": 100,
+              "tileId": 41
+            },
+            {
+              "durationMs": 100,
+              "tileId": 42
+            },
+            {
+              "durationMs": 100,
+              "tileId": 43
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_w",
+          "loop": true,
+          "sourceTileId": 33
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 44
+            },
+            {
+              "durationMs": 100,
+              "tileId": 45
+            },
+            {
+              "durationMs": 100,
+              "tileId": 46
+            },
+            {
+              "durationMs": 100,
+              "tileId": 47
+            },
+            {
+              "durationMs": 100,
+              "tileId": 48
+            },
+            {
+              "durationMs": 100,
+              "tileId": 49
+            },
+            {
+              "durationMs": 100,
+              "tileId": 50
+            },
+            {
+              "durationMs": 100,
+              "tileId": 51
+            },
+            {
+              "durationMs": 100,
+              "tileId": 52
+            },
+            {
+              "durationMs": 100,
+              "tileId": 53
+            },
+            {
+              "durationMs": 100,
+              "tileId": 54
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_nw1",
+          "loop": true,
+          "sourceTileId": 44
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 55
+            },
+            {
+              "durationMs": 100,
+              "tileId": 56
+            },
+            {
+              "durationMs": 100,
+              "tileId": 57
+            },
+            {
+              "durationMs": 100,
+              "tileId": 58
+            },
+            {
+              "durationMs": 100,
+              "tileId": 59
+            },
+            {
+              "durationMs": 100,
+              "tileId": 60
+            },
+            {
+              "durationMs": 100,
+              "tileId": 61
+            },
+            {
+              "durationMs": 100,
+              "tileId": 62
+            },
+            {
+              "durationMs": 100,
+              "tileId": 63
+            },
+            {
+              "durationMs": 100,
+              "tileId": 64
+            },
+            {
+              "durationMs": 100,
+              "tileId": 65
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_nw2",
+          "loop": true,
+          "sourceTileId": 55
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 66
+            },
+            {
+              "durationMs": 100,
+              "tileId": 67
+            },
+            {
+              "durationMs": 100,
+              "tileId": 68
+            },
+            {
+              "durationMs": 100,
+              "tileId": 69
+            },
+            {
+              "durationMs": 100,
+              "tileId": 70
+            },
+            {
+              "durationMs": 100,
+              "tileId": 71
+            },
+            {
+              "durationMs": 100,
+              "tileId": 72
+            },
+            {
+              "durationMs": 100,
+              "tileId": 73
+            },
+            {
+              "durationMs": 100,
+              "tileId": 74
+            },
+            {
+              "durationMs": 100,
+              "tileId": 75
+            },
+            {
+              "durationMs": 100,
+              "tileId": 76
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_nw3",
+          "loop": true,
+          "sourceTileId": 66
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 66
+            },
+            {
+              "durationMs": 100,
+              "tileId": 67
+            },
+            {
+              "durationMs": 100,
+              "tileId": 68
+            },
+            {
+              "durationMs": 100,
+              "tileId": 69
+            },
+            {
+              "durationMs": 100,
+              "tileId": 70
+            },
+            {
+              "durationMs": 100,
+              "tileId": 71
+            },
+            {
+              "durationMs": 100,
+              "tileId": 72
+            },
+            {
+              "durationMs": 100,
+              "tileId": 73
+            },
+            {
+              "durationMs": 100,
+              "tileId": 74
+            },
+            {
+              "durationMs": 100,
+              "tileId": 75
+            },
+            {
+              "durationMs": 100,
+              "tileId": 76
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_nw4",
+          "loop": true,
+          "sourceTileId": 77
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 77
+            },
+            {
+              "durationMs": 100,
+              "tileId": 78
+            },
+            {
+              "durationMs": 100,
+              "tileId": 79
+            },
+            {
+              "durationMs": 100,
+              "tileId": 80
+            },
+            {
+              "durationMs": 100,
+              "tileId": 81
+            },
+            {
+              "durationMs": 100,
+              "tileId": 82
+            },
+            {
+              "durationMs": 100,
+              "tileId": 83
+            },
+            {
+              "durationMs": 100,
+              "tileId": 84
+            },
+            {
+              "durationMs": 100,
+              "tileId": 85
+            },
+            {
+              "durationMs": 100,
+              "tileId": 86
+            },
+            {
+              "durationMs": 100,
+              "tileId": 87
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_n",
+          "loop": true,
+          "sourceTileId": 88
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 99
+            },
+            {
+              "durationMs": 100,
+              "tileId": 100
+            },
+            {
+              "durationMs": 100,
+              "tileId": 101
+            },
+            {
+              "durationMs": 100,
+              "tileId": 102
+            },
+            {
+              "durationMs": 100,
+              "tileId": 103
+            },
+            {
+              "durationMs": 100,
+              "tileId": 104
+            },
+            {
+              "durationMs": 100,
+              "tileId": 105
+            },
+            {
+              "durationMs": 100,
+              "tileId": 106
+            },
+            {
+              "durationMs": 100,
+              "tileId": 107
+            },
+            {
+              "durationMs": 100,
+              "tileId": 108
+            },
+            {
+              "durationMs": 100,
+              "tileId": 109
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_ne1",
+          "loop": true,
+          "sourceTileId": 99
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 110
+            },
+            {
+              "durationMs": 100,
+              "tileId": 111
+            },
+            {
+              "durationMs": 100,
+              "tileId": 112
+            },
+            {
+              "durationMs": 100,
+              "tileId": 113
+            },
+            {
+              "durationMs": 100,
+              "tileId": 114
+            },
+            {
+              "durationMs": 100,
+              "tileId": 115
+            },
+            {
+              "durationMs": 100,
+              "tileId": 116
+            },
+            {
+              "durationMs": 100,
+              "tileId": 117
+            },
+            {
+              "durationMs": 100,
+              "tileId": 118
+            },
+            {
+              "durationMs": 100,
+              "tileId": 119
+            },
+            {
+              "durationMs": 100,
+              "tileId": 120
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_ne2",
+          "loop": true,
+          "sourceTileId": 110
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 121
+            },
+            {
+              "durationMs": 100,
+              "tileId": 122
+            },
+            {
+              "durationMs": 100,
+              "tileId": 123
+            },
+            {
+              "durationMs": 100,
+              "tileId": 124
+            },
+            {
+              "durationMs": 100,
+              "tileId": 125
+            },
+            {
+              "durationMs": 100,
+              "tileId": 126
+            },
+            {
+              "durationMs": 100,
+              "tileId": 127
+            },
+            {
+              "durationMs": 100,
+              "tileId": 128
+            },
+            {
+              "durationMs": 100,
+              "tileId": 129
+            },
+            {
+              "durationMs": 100,
+              "tileId": 130
+            },
+            {
+              "durationMs": 100,
+              "tileId": 131
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_e",
+          "loop": true,
+          "sourceTileId": 121
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 132
+            },
+            {
+              "durationMs": 100,
+              "tileId": 133
+            },
+            {
+              "durationMs": 100,
+              "tileId": 134
+            },
+            {
+              "durationMs": 100,
+              "tileId": 135
+            },
+            {
+              "durationMs": 100,
+              "tileId": 136
+            },
+            {
+              "durationMs": 100,
+              "tileId": 137
+            },
+            {
+              "durationMs": 100,
+              "tileId": 138
+            },
+            {
+              "durationMs": 100,
+              "tileId": 139
+            },
+            {
+              "durationMs": 100,
+              "tileId": 140
+            },
+            {
+              "durationMs": 100,
+              "tileId": 141
+            },
+            {
+              "durationMs": 100,
+              "tileId": 142
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_se1",
+          "loop": true,
+          "sourceTileId": 132
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 143
+            },
+            {
+              "durationMs": 100,
+              "tileId": 144
+            },
+            {
+              "durationMs": 100,
+              "tileId": 145
+            },
+            {
+              "durationMs": 100,
+              "tileId": 146
+            },
+            {
+              "durationMs": 100,
+              "tileId": 147
+            },
+            {
+              "durationMs": 100,
+              "tileId": 148
+            },
+            {
+              "durationMs": 100,
+              "tileId": 149
+            },
+            {
+              "durationMs": 100,
+              "tileId": 150
+            },
+            {
+              "durationMs": 100,
+              "tileId": 151
+            },
+            {
+              "durationMs": 100,
+              "tileId": 152
+            },
+            {
+              "durationMs": 100,
+              "tileId": 153
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_se2",
+          "loop": true,
+          "sourceTileId": 143
+        },
+        {
+          "direction": "",
+          "frames": [
+            {
+              "durationMs": 100,
+              "tileId": 154
+            },
+            {
+              "durationMs": 100,
+              "tileId": 155
+            },
+            {
+              "durationMs": 100,
+              "tileId": 156
+            },
+            {
+              "durationMs": 100,
+              "tileId": 157
+            },
+            {
+              "durationMs": 100,
+              "tileId": 158
+            },
+            {
+              "durationMs": 100,
+              "tileId": 159
+            },
+            {
+              "durationMs": 100,
+              "tileId": 160
+            },
+            {
+              "durationMs": 100,
+              "tileId": 161
+            },
+            {
+              "durationMs": 100,
+              "tileId": 162
+            },
+            {
+              "durationMs": 100,
+              "tileId": 163
+            },
+            {
+              "durationMs": 100,
+              "tileId": 164
+            }
+          ],
+          "group": "",
+          "id": "Thesee_Kick_se3",
+          "loop": true,
+          "sourceTileId": 154
+        }
+      ],
+      "filePath": "./Gamedata/Animation/AnimationBanks/these_kick.tsx",
+      "sourceName": "these_kick"
+    }
+  ],
+  "states": [
+    {
+      "blendTime": 0.1,
+      "defaultClip": "Thesee_Idle_s",
+      "directionClips": [
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "N"
+        },
+        {
+          "clip": "Thesee_Idle_ne1",
+          "direction": "NE"
+        },
+        {
+          "clip": "Thesee_Idle_e",
+          "direction": "E"
+        },
+        {
+          "clip": "Thesee_Idle_se1",
+          "direction": "SE"
+        },
+        {
+          "clip": "Thesee_Idle_s",
+          "direction": "S"
+        },
+        {
+          "clip": "Thesee_Idle_sw1",
+          "direction": "SW"
+        },
+        {
+          "clip": "Thesee_Idle_w",
+          "direction": "W"
+        },
+        {
+          "clip": "Thesee_Idle_nw1",
+          "direction": "NW"
+        }
+      ],
+      "events": [
+        {
+          "payload": "Sound",
+          "phase": 0,
+          "type": "Sound"
+        },
+        {
+          "payload": "Gameplay",
+          "phase": 0.75,
+          "type": "Gameplay"
+        }
+      ],
+      "loop": true,
+      "name": "Idle",
+      "priority": 0,
+      "x": 11,
+      "y": 347
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "Thesee_Run_s",
+      "directionClips": [
+        {
+          "clip": "Thesee_Run_n",
+          "direction": "N"
+        },
+        {
+          "clip": "Thesee_Run_ne1",
+          "direction": "NE"
+        },
+        {
+          "clip": "Thesee_Run_e",
+          "direction": "E"
+        },
+        {
+          "clip": "Thesee_Run_se1",
+          "direction": "SE"
+        },
+        {
+          "clip": "Thesee_Run_s",
+          "direction": "S"
+        },
+        {
+          "clip": "Thesee_Run_sw1",
+          "direction": "SW"
+        },
+        {
+          "clip": "Thesee_Run_w",
+          "direction": "W"
+        },
+        {
+          "clip": "Thesee_Run_nw1",
+          "direction": "NW"
+        }
+      ],
+      "events": [
+        {
+          "payload": "Gameplay Event ABC DEF ",
+          "phase": 0.142857,
+          "type": "Gameplay"
+        },
+        {
+          "payload": "Spawn Footstep",
+          "phase": 1,
+          "type": "Spawn"
+        },
+        {
+          "payload": "Gameplay 123 456 ",
+          "phase": 0.714286,
+          "type": "Gameplay"
+        }
+      ],
+      "loop": true,
+      "name": "Run",
+      "priority": 0,
+      "x": 291,
+      "y": 179
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "Thesee_Walk_s",
+      "directionClips": [
+        {
+          "clip": "Thesee_Walk_n",
+          "direction": "N"
+        },
+        {
+          "clip": "Thesee_Walk_ne1",
+          "direction": "NE"
+        },
+        {
+          "clip": "Thesee_Walk_e",
+          "direction": "E"
+        },
+        {
+          "clip": "Thesee_Walk_se1",
+          "direction": "SE"
+        },
+        {
+          "clip": "Thesee_Walk_s",
+          "direction": "S"
+        },
+        {
+          "clip": "Thesee_Walk_sw1",
+          "direction": "SW"
+        },
+        {
+          "clip": "Thesee_Walk_w",
+          "direction": "W"
+        },
+        {
+          "clip": "Thesee_Walk_nw1",
+          "direction": "NW"
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "Walk",
+      "priority": 0,
+      "x": 567,
+      "y": 64
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "Thesee_Kick_s",
+      "directionClips": [
+        {
+          "clip": "Thesee_Kick_n",
+          "direction": "N"
+        },
+        {
+          "clip": "Thesee_Kick_ne1",
+          "direction": "NE"
+        },
+        {
+          "clip": "Thesee_Kick_e",
+          "direction": "E"
+        },
+        {
+          "clip": "Thesee_Kick_se1",
+          "direction": "SE"
+        },
+        {
+          "clip": "Thesee_Kick_s",
+          "direction": "S"
+        },
+        {
+          "clip": "Thesee_Kick_sw1",
+          "direction": "SW"
+        },
+        {
+          "clip": "Thesee_Kick_w",
+          "direction": "W"
+        },
+        {
+          "clip": "Thesee_Kick_nw1",
+          "direction": "NW"
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "Kick",
+      "priority": 0,
+      "x": 861,
+      "y": 353
+    }
+  ],
+  "transitions": [
+    {
+      "condition": "true",
+      "duration": 0.1,
+      "from": "Idle",
+      "interruptible": true,
+      "priority": 0,
+      "to": "Run"
+    },
+    {
+      "condition": "true",
+      "duration": 0.1,
+      "from": "Run",
+      "interruptible": true,
+      "priority": 0,
+      "to": "Walk"
+    },
+    {
+      "condition": "true",
+      "duration": 0.1,
+      "from": "Idle",
+      "interruptible": true,
+      "priority": 0,
+      "to": "Kick"
+    },
+    {
+      "condition": "true",
+      "duration": 0.1,
+      "from": "Walk",
+      "interruptible": true,
+      "priority": 0,
+      "to": "Kick"
+    },
+    {
+      "condition": "true",
+      "duration": 0.1,
+      "from": "Run",
+      "interruptible": true,
+      "priority": 0,
+      "to": "Kick"
+    }
+  ]
+}

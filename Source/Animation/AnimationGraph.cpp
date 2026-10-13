@@ -75,8 +75,23 @@ namespace OlympeAnimation
                     {
                         for (const auto& evt : stateJson["events"])
                         {
+                            EventMarker marker;
                             if (evt.is_string())
-                                state.events.push_back(evt.get<std::string>());
+                            {
+                                marker.type = "Gameplay";
+                                marker.payload = evt.get<std::string>();
+                            }
+                            else if (evt.is_object())
+                            {
+                                marker.type = JsonHelper::GetString(evt, "type", "Custom");
+                                if (marker.type == "Audio") marker.type = "Sound";
+                                if (marker.type == "Custom") marker.type = "Gameplay";
+                                marker.phase = JsonHelper::GetFloat(evt, "phase", 0.0f);
+                                marker.payload = JsonHelper::GetString(evt, "payload", "");
+                            }
+                            else
+                                continue;
+                            state.events.push_back(marker);
                         }
                     }
                     m_states[state.name] = state;

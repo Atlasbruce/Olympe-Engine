@@ -558,8 +558,8 @@
       "loop": true,
       "name": "State 1 Zombie",
       "priority": 0,
-      "x": -48.394,
-      "y": 237.034
+      "x": -19.394,
+      "y": 261.034
     },
     {
       "blendTime": 0.1,
@@ -651,7 +651,7 @@
     },
     {
       "blendTime": 0.1,
-      "defaultClip": "",
+      "defaultClip": "Thesee_Idle_rotate_full",
       "directionClips": [
         {
           "clip": "",
@@ -739,7 +739,7 @@
     },
     {
       "blendTime": 0.1,
-      "defaultClip": "",
+      "defaultClip": "Thesee_Idle_n",
       "directionClips": [
         {
           "clip": "",
@@ -824,6 +824,226 @@
       "priority": 0,
       "x": 917,
       "y": 500
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "",
+      "directionClips": [
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "ani_zombie_idle_e Copy",
+      "priority": 0,
+      "x": 637.615,
+      "y": 569.072
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "",
+      "directionClips": [
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "ani_zombie_idle_w_3 Copy",
+      "priority": 0,
+      "x": 341.096,
+      "y": 750.855
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "Thesee_Idle_n",
+      "directionClips": [
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "N"
+        },
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "NE"
+        },
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "E"
+        },
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "SE"
+        },
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "S"
+        },
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "SW"
+        },
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "W"
+        },
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "NW"
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "Thesee_Idle_n long title test to check if the node lenght auto adjust Copy",
+      "priority": 0,
+      "x": 645.743,
+      "y": 865.396
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "",
+      "directionClips": [
+        {
+          "clip": "",
+          "direction": "N"
+        },
+        {
+          "clip": "",
+          "direction": "NE"
+        },
+        {
+          "clip": "",
+          "direction": "E"
+        },
+        {
+          "clip": "",
+          "direction": "SE"
+        },
+        {
+          "clip": "",
+          "direction": "S"
+        },
+        {
+          "clip": "",
+          "direction": "SW"
+        },
+        {
+          "clip": "",
+          "direction": "W"
+        },
+        {
+          "clip": "",
+          "direction": "NW"
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "Thesee_Idle_n_1 Copy",
+      "priority": 0,
+      "x": 246.239,
+      "y": 524.515
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "Thesee_Idle_n",
+      "directionClips": [
+        {
+          "clip": "",
+          "direction": "N"
+        },
+        {
+          "clip": "",
+          "direction": "NE"
+        },
+        {
+          "clip": "",
+          "direction": "E"
+        },
+        {
+          "clip": "",
+          "direction": "SE"
+        },
+        {
+          "clip": "",
+          "direction": "S"
+        },
+        {
+          "clip": "",
+          "direction": "SW"
+        },
+        {
+          "clip": "",
+          "direction": "W"
+        },
+        {
+          "clip": "",
+          "direction": "NW"
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "Thesee_Idle_n_1 Copy 2",
+      "priority": 0,
+      "x": -297,
+      "y": 82
     }
   ],
   "transitions": [
@@ -890,6 +1110,46 @@
       "interruptible": true,
       "priority": 0,
       "to": "Thesee_Idle_s"
+    },
+    {
+      "condition": "false",
+      "duration": 0.1,
+      "from": "ani_zombie_idle_w_3 Copy",
+      "interruptible": true,
+      "priority": 0,
+      "to": "ani_zombie_idle_e Copy"
+    },
+    {
+      "condition": "truettte",
+      "duration": 123.321,
+      "from": "ani_zombie_idle_w_3 Copy",
+      "interruptible": true,
+      "priority": 0,
+      "to": "Thesee_Idle_n long title test to check if the node lenght auto adjust Copy"
+    },
+    {
+      "condition": "false123",
+      "duration": 0.29,
+      "from": "Thesee_Idle_n_1 Copy",
+      "interruptible": true,
+      "priority": 0,
+      "to": "ani_zombie_idle_e Copy"
+    },
+    {
+      "condition": "true",
+      "duration": 0.1,
+      "from": "Thesee_Idle_n_1 Copy 2",
+      "interruptible": true,
+      "priority": 0,
+      "to": "Thesee_Idle_n_1"
+    },
+    {
+      "condition": "true",
+      "duration": 0.1,
+      "from": "Thesee_Idle_n_1 Copy 2",
+      "interruptible": true,
+      "priority": 0,
+      "to": "State 1 Zombie"
     }
   ]
 }

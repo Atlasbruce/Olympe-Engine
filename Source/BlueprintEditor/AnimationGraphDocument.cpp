@@ -1,4 +1,5 @@
 #include "AnimationGraphDocument.h"
+#include <cstddef>
 #include "../../Source/json_helper.h"
 #include "../../Source/system/system_utils.h"
 #include <algorithm>
@@ -133,6 +134,18 @@ namespace {
         }
         return candidate;
     }
+
+    static std::string InferDirectionFromClipId(const std::string& clipId)
+    {
+        const size_t separator = clipId.find_last_of('_');
+        if (separator == std::string::npos || separator + 1 >= clipId.size())
+            return "";
+        std::string suffix = LowerCopy(clipId.substr(separator + 1));
+        while (!suffix.empty() && suffix[suffix.size() - 1] >= '0' && suffix[suffix.size() - 1] <= '9')
+            suffix.erase(suffix.size() - 1);
+        return (suffix == "n" || suffix == "ne" || suffix == "e" || suffix == "se" ||
+                suffix == "s" || suffix == "sw" || suffix == "w" || suffix == "nw") ? suffix : "";
+    }
 }
 
 AnimationGraphDocument::AnimationGraphDocument()
@@ -254,6 +267,46 @@ bool AnimationGraphDocument::AddStateFromClip(const std::string& stateName, cons
     return true;
 }
 
+bool AnimationGraphDocument::AddStateFromSource(const std::string& stateName, size_t sourceIndex)
+{
+    if (sourceIndex >= m_sources.size() || m_sources[sourceIndex].clips.empty() || !AddState(stateName))
+        return false;
+
+    StateDefinition* state = GetState(stateName);
+    if (!state)
+        return false;
+    const SourceDefinition& source = m_sources[sourceIndex];
+    state->defaultClip = source.clips.front().id;
+
+    // Prefer exact directional clips ("..._sw") over intermediate source
+    // variants ("..._sw1").  The latter remain available in the bank but do
+    // not silently replace the canonical 8-direction runtime mapping.
+    for (const SourceDefinition::ClipDefinition& clip : source.clips)
+    {
+        const std::string directionText = clip.direction.empty()
+            ? InferDirectionFromClipId(clip.id) : LowerCopy(clip.direction);
+        bool directionOk = false;
+        const Direction direction = StringToDirection(directionText, &directionOk);
+        if (!directionOk)
+            continue;
+        const size_t directionIndex = static_cast<size_t>(direction);
+        const bool isCanonicalName = LowerCopy(clip.id).size() > directionText.size() + 1 &&
+            LowerCopy(clip.id).compare(LowerCopy(clip.id).size() - directionText.size(), directionText.size(), directionText) == 0;
+        if (state->directionClips[directionIndex].clip.empty() || isCanonicalName)
+        {
+            state->directionClips[directionIndex].direction = DirectionToString(direction);
+            state->directionClips[directionIndex].clip = clip.id;
+        }
+    }
+
+    const size_t southIndex = static_cast<size_t>(Direction::South);
+    if (southIndex < state->directionClips.size() && !state->directionClips[southIndex].clip.empty())
+        state->defaultClip = state->directionClips[southIndex].clip;
+    m_isDirty = true;
+    m_data = BuildJson();
+    return true;
+}
+
 bool AnimationGraphDocument::RenameState(const std::string& oldName, const std::string& newName)
 {
     if (oldName.empty() || newName.empty() || oldName == newName || FindStateIndex(newName) >= 0) return false;
@@ -313,8 +366,52 @@ bool AnimationGraphDocument::RemoveStates(const std::vector<std::string>& stateN
 bool AnimationGraphDocument::SetStatePosition(const std::string& stateName, double x, double y) { StateDefinition* s = GetState(stateName); if (!s) return false; s->x = x; s->y = y; m_isDirty = true; m_data = BuildJson(); return true; }
 bool AnimationGraphDocument::SetStateDefaultClip(const std::string& stateName, const std::string& clipName) { StateDefinition* s = GetState(stateName); if (!s) return false; s->defaultClip = clipName; m_isDirty = true; m_data = BuildJson(); return true; }
 bool AnimationGraphDocument::SetStateDirectionClip(const std::string& stateName, Direction direction, const std::string& clipName) { StateDefinition* s = GetState(stateName); if (!s || !IsDirectionValid(direction)) return false; size_t index = static_cast<size_t>(direction); if (s->directionClips.size() < kDirectionCount) s->directionClips.resize(kDirectionCount); s->directionClips[index].direction = DirectionToString(direction); s->directionClips[index].clip = clipName; m_isDirty = true; m_data = BuildJson(); return true; }
-bool AnimationGraphDocument::AddStateEvent(const std::string& stateName, const std::string& eventName) { StateDefinition* s = GetState(stateName); if (!s || eventName.empty() || std::find(s->events.begin(), s->events.end(), eventName) != s->events.end()) return false; s->events.push_back(eventName); m_isDirty = true; m_data = BuildJson(); return true; }
-bool AnimationGraphDocument::RemoveStateEvent(const std::string& stateName, const std::string& eventName) { StateDefinition* s = GetState(stateName); if (!s) return false; std::vector<std::string>::iterator it = std::remove(s->events.begin(), s->events.end(), eventName); if (it == s->events.end()) return false; s->events.erase(it, s->events.end()); m_isDirty = true; m_data = BuildJson(); return true; }
+bool AnimationGraphDocument::AddStateEvent(const std::string& stateName, const std::string& eventName)
+{
+    EventDefinition event;
+    event.payload = eventName;
+    return AddStateEventMarker(stateName, event);
+}
+
+bool AnimationGraphDocument::RemoveStateEvent(const std::string& stateName, const std::string& eventName)
+{
+    StateDefinition* state = GetState(stateName);
+    if (!state) return false;
+    for (size_t index = 0; index < state->events.size(); ++index)
+        if (state->events[index].payload == eventName)
+            return RemoveStateEventMarker(stateName, index);
+    return false;
+}
+
+bool AnimationGraphDocument::AddStateEventMarker(const std::string& stateName, const EventDefinition& event)
+{
+    StateDefinition* state = GetState(stateName);
+    if (!state || event.type.empty() || event.phase < 0.0f || event.phase > 1.0f) return false;
+    state->events.push_back(event);
+    m_isDirty = true;
+    m_data = BuildJson();
+    return true;
+}
+
+bool AnimationGraphDocument::UpdateStateEventMarker(const std::string& stateName, size_t eventIndex, const EventDefinition& event)
+{
+    StateDefinition* state = GetState(stateName);
+    if (!state || eventIndex >= state->events.size() || event.type.empty() || event.phase < 0.0f || event.phase > 1.0f) return false;
+    state->events[eventIndex] = event;
+    m_isDirty = true;
+    m_data = BuildJson();
+    return true;
+}
+
+bool AnimationGraphDocument::RemoveStateEventMarker(const std::string& stateName, size_t eventIndex)
+{
+    StateDefinition* state = GetState(stateName);
+    if (!state || eventIndex >= state->events.size()) return false;
+    state->events.erase(state->events.begin() + static_cast<std::ptrdiff_t>(eventIndex));
+    m_isDirty = true;
+    m_data = BuildJson();
+    return true;
+}
 bool AnimationGraphDocument::AddTransition(const std::string& fromState, const std::string& toState, const std::string& condition, double duration) { if (fromState.empty() || toState.empty() || FindStateIndex(fromState) < 0 || FindStateIndex(toState) < 0) return false; TransitionDefinition t; t.fromState = fromState; t.toState = toState; t.condition = condition; t.duration = duration; m_transitions.push_back(t); m_isDirty = true; m_data = BuildJson(); return true; }
 bool AnimationGraphDocument::UpdateTransition(size_t index, const std::string& condition, double duration, int priority, bool interruptible) { if (index >= m_transitions.size() || duration < 0.0) return false; TransitionDefinition& transition = m_transitions[index]; transition.condition = condition; transition.duration = duration; transition.priority = priority; transition.interruptible = interruptible; m_isDirty = true; m_data = BuildJson(); return true; }
 bool AnimationGraphDocument::RemoveTransition(size_t index) { if (index >= m_transitions.size()) return false; m_transitions.erase(m_transitions.begin() + index); m_isDirty = true; m_data = BuildJson(); return true; }
@@ -357,14 +454,37 @@ std::vector<std::string> AnimationGraphDocument::ValidateBinding() const
     if (m_sources.empty()) warnings.push_back("No TSX sources imported.");
     if (m_states.empty()) warnings.push_back("No animation states defined.");
     if (m_defaultState.empty()) warnings.push_back("Default state is not set.");
+    else if (FindStateIndex(m_defaultState) < 0) warnings.push_back("Default state '" + m_defaultState + "' does not exist.");
+
+    std::set<std::string> stateNames;
+    std::set<std::string> transitionKeys;
     for (size_t i = 0; i < m_states.size(); ++i)
     {
         const StateDefinition& state = m_states[i];
         if (state.name.empty()) warnings.push_back("A state has no name.");
+        else if (!stateNames.insert(state.name).second) warnings.push_back("State name '" + state.name + "' is duplicated.");
         if (state.defaultClip.empty()) warnings.push_back("State '" + state.name + "' has no default clip.");
+        else if (!m_availableClips.empty() && std::find(m_availableClips.begin(), m_availableClips.end(), state.defaultClip) == m_availableClips.end())
+            warnings.push_back("State '" + state.name + "' references missing clip '" + state.defaultClip + "'.");
         if (state.directionClips.size() != kDirectionCount) warnings.push_back("State '" + state.name + "' does not define 8 directions.");
+        for (const DirectionClipMapping& mapping : state.directionClips)
+        {
+            if (mapping.clip.empty()) continue;
+            if (!m_availableClips.empty() && std::find(m_availableClips.begin(), m_availableClips.end(), mapping.clip) == m_availableClips.end())
+                warnings.push_back("State '" + state.name + "' references missing directional clip '" + mapping.clip + "'.");
+        }
     }
-    for (size_t i = 0; i < m_transitions.size(); ++i) if (FindStateIndex(m_transitions[i].fromState) < 0 || FindStateIndex(m_transitions[i].toState) < 0) warnings.push_back("Transition references an unknown state.");
+    for (size_t i = 0; i < m_transitions.size(); ++i)
+    {
+        const TransitionDefinition& transition = m_transitions[i];
+        if (FindStateIndex(transition.fromState) < 0 || FindStateIndex(transition.toState) < 0)
+            warnings.push_back("Transition references an unknown state.");
+        if (transition.condition.empty())
+            warnings.push_back("Transition '" + transition.fromState + " -> " + transition.toState + "' has no condition.");
+        const std::string key = transition.fromState + "\n" + transition.toState + "\n" + transition.condition;
+        if (!transitionKeys.insert(key).second)
+            warnings.push_back("Transition '" + transition.fromState + " -> " + transition.toState + "' is duplicated.");
+    }
     return warnings;
 }
 
@@ -388,7 +508,7 @@ nlohmann::json AnimationGraphDocument::BuildRuntimeJson() const
     json root = json::object();
     // The compiled runtime export retains the source clip definitions so
     // validation and runtime asset compilation agree on the same schema.
-    root["schema_version"] = 3;
+    root["schema_version"] = 4;
     root["blueprintType"] = "AnimationGraph";
     root["name"] = m_name;
     root["description"] = m_description;
@@ -428,7 +548,14 @@ nlohmann::json AnimationGraphDocument::BuildRuntimeJson() const
         item["name"] = state.name;
         item["defaultClip"] = state.defaultClip;
         item["events"] = json::array();
-        for (size_t e = 0; e < state.events.size(); ++e) item["events"].push_back(state.events[e]);
+        for (const EventDefinition& event : state.events)
+        {
+            json marker = json::object();
+            marker["type"] = event.type;
+            marker["phase"] = event.phase;
+            marker["payload"] = event.payload;
+            item["events"].push_back(marker);
+        }
         item["blendTime"] = state.blendTime;
         item["loop"] = state.loop;
         item["priority"] = state.priority;
@@ -506,7 +633,7 @@ bool AnimationGraphDocument::LoadFromJson(const json& root)
             m_sources.push_back(source);
         }
     if (root.contains("states") && root["states"].is_array())
-        for (const auto& stateJson : root["states"]) { StateDefinition s; s.name = JsonHelper::GetString(stateJson, "name", ""); s.defaultClip = JsonHelper::GetString(stateJson, "defaultClip", ""); s.blendTime = JsonHelper::GetFloat(stateJson, "blendTime", 0.1f); s.loop = JsonHelper::GetBool(stateJson, "loop", true); s.priority = JsonHelper::GetInt(stateJson, "priority", 0); s.x = JsonHelper::GetFloat(stateJson, "x", 0.0f); s.y = JsonHelper::GetFloat(stateJson, "y", 0.0f); if (stateJson.contains("directionClips") && stateJson["directionClips"].is_array()) for (const auto& clipJson : stateJson["directionClips"]) { DirectionClipMapping m; m.direction = JsonHelper::GetString(clipJson, "direction", "N"); m.clip = JsonHelper::GetString(clipJson, "clip", ""); s.directionClips.push_back(m); } if (s.directionClips.size() < kDirectionCount) s.directionClips.resize(kDirectionCount); if (stateJson.contains("events") && stateJson["events"].is_array()) for (const auto& eventJson : stateJson["events"]) if (eventJson.is_string()) s.events.push_back(eventJson.get<std::string>()); m_states.push_back(s); }
+        for (const auto& stateJson : root["states"]) { StateDefinition s; s.name = JsonHelper::GetString(stateJson, "name", ""); s.defaultClip = JsonHelper::GetString(stateJson, "defaultClip", ""); s.blendTime = JsonHelper::GetFloat(stateJson, "blendTime", 0.1f); s.loop = JsonHelper::GetBool(stateJson, "loop", true); s.priority = JsonHelper::GetInt(stateJson, "priority", 0); s.x = JsonHelper::GetFloat(stateJson, "x", 0.0f); s.y = JsonHelper::GetFloat(stateJson, "y", 0.0f); if (stateJson.contains("directionClips") && stateJson["directionClips"].is_array()) for (const auto& clipJson : stateJson["directionClips"]) { DirectionClipMapping m; m.direction = JsonHelper::GetString(clipJson, "direction", "N"); m.clip = JsonHelper::GetString(clipJson, "clip", ""); s.directionClips.push_back(m); } if (s.directionClips.size() < kDirectionCount) s.directionClips.resize(kDirectionCount); if (stateJson.contains("events") && stateJson["events"].is_array()) for (const auto& eventJson : stateJson["events"]) { EventDefinition event; if (eventJson.is_string()) { event.type = "Gameplay"; event.payload = eventJson.get<std::string>(); } else if (eventJson.is_object()) { event.type = JsonHelper::GetString(eventJson, "type", "Gameplay"); if (event.type == "Audio") event.type = "Sound"; if (event.type == "Custom") event.type = "Gameplay"; event.phase = eventJson.contains("phase") ? JsonHelper::GetFloat(eventJson, "phase", 0.0f) : 0.0f; event.payload = JsonHelper::GetString(eventJson, "payload", ""); } else continue; s.events.push_back(event); } m_states.push_back(s); }
     if (root.contains("transitions") && root["transitions"].is_array())
         for (const auto& transitionJson : root["transitions"]) { TransitionDefinition t; t.fromState = JsonHelper::GetString(transitionJson, "from", ""); t.toState = JsonHelper::GetString(transitionJson, "to", ""); t.condition = JsonHelper::GetString(transitionJson, "condition", ""); t.duration = JsonHelper::GetFloat(transitionJson, "duration", 0.1f); t.priority = JsonHelper::GetInt(transitionJson, "priority", 0); t.interruptible = JsonHelper::GetBool(transitionJson, "interruptible", true); m_transitions.push_back(t); }
     RebuildAvailableClips(); m_isDirty = false; m_data = BuildJson(); return true;

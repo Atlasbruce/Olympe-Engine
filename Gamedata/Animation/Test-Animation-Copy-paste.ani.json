@@ -1,0 +1,376 @@
+{
+  "blueprintType": "AnimationGraph",
+  "defaultState": "Idle",
+  "description": "",
+  "name": "Untitled Animation Graph",
+  "schema_version": 3,
+  "sources": [],
+  "states": [
+    {
+      "blendTime": 0.1,
+      "defaultClip": "",
+      "directionClips": [
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "State 1 Zombie Copy",
+      "priority": 0,
+      "x": 811.392,
+      "y": 650.502
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "",
+      "directionClips": [
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "ani_zombie_idle_e Copy",
+      "priority": 0,
+      "x": 1451.84,
+      "y": 523.78
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "",
+      "directionClips": [
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "ani_zombie_idle_w_3 Copy",
+      "priority": 0,
+      "x": 1147.32,
+      "y": 706.563
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "",
+      "directionClips": [
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        },
+        {
+          "clip": "",
+          "direction": ""
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "ani_zombie_idle_nw Copy",
+      "priority": 0,
+      "x": 1761.59,
+      "y": 610.468
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "Thesee_Idle_n",
+      "directionClips": [
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "N"
+        },
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "NE"
+        },
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "E"
+        },
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "SE"
+        },
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "S"
+        },
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "SW"
+        },
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "W"
+        },
+        {
+          "clip": "Thesee_Idle_n",
+          "direction": "NW"
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "Thesee_Idle_n long title test to check if the node lenght auto adjust Copy",
+      "priority": 0,
+      "x": 1451.97,
+      "y": 821.104
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "",
+      "directionClips": [
+        {
+          "clip": "",
+          "direction": "N"
+        },
+        {
+          "clip": "",
+          "direction": "NE"
+        },
+        {
+          "clip": "",
+          "direction": "E"
+        },
+        {
+          "clip": "",
+          "direction": "SE"
+        },
+        {
+          "clip": "",
+          "direction": "S"
+        },
+        {
+          "clip": "",
+          "direction": "SW"
+        },
+        {
+          "clip": "",
+          "direction": "W"
+        },
+        {
+          "clip": "",
+          "direction": "NW"
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "Thesee_Idle_n_1 Copy",
+      "priority": 0,
+      "x": 1052.46,
+      "y": 480.223
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "Thesee_Idle_s",
+      "directionClips": [
+        {
+          "clip": "Thesee_Idle_s",
+          "direction": "N"
+        },
+        {
+          "clip": "Thesee_Idle_s",
+          "direction": "NE"
+        },
+        {
+          "clip": "Thesee_Idle_s",
+          "direction": "E"
+        },
+        {
+          "clip": "Thesee_Idle_s",
+          "direction": "SE"
+        },
+        {
+          "clip": "Thesee_Idle_s",
+          "direction": "S"
+        },
+        {
+          "clip": "Thesee_Idle_s",
+          "direction": "SW"
+        },
+        {
+          "clip": "Thesee_Idle_s",
+          "direction": "W"
+        },
+        {
+          "clip": "Thesee_Idle_s",
+          "direction": "NW"
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "Thesee_Idle_s Copy",
+      "priority": 0,
+      "x": 1752.79,
+      "y": 916.468
+    }
+  ],
+  "transitions": [
+    {
+      "condition": "false",
+      "duration": 0.1,
+      "from": "ani_zombie_idle_w_3 Copy",
+      "interruptible": true,
+      "priority": 0,
+      "to": "ani_zombie_idle_e Copy"
+    },
+    {
+      "condition": "HAHAAHHAHAHA TEST",
+      "duration": 0.1,
+      "from": "ani_zombie_idle_e Copy",
+      "interruptible": true,
+      "priority": 0,
+      "to": "ani_zombie_idle_nw Copy"
+    },
+    {
+      "condition": "FALSE",
+      "duration": 12455.6,
+      "from": "State 1 Zombie Copy",
+      "interruptible": true,
+      "priority": 0,
+      "to": "ani_zombie_idle_w_3 Copy"
+    },
+    {
+      "condition": "truettte",
+      "duration": 123.321,
+      "from": "ani_zombie_idle_w_3 Copy",
+      "interruptible": true,
+      "priority": 0,
+      "to": "Thesee_Idle_n long title test to check if the node lenght auto adjust Copy"
+    },
+    {
+      "condition": "false123",
+      "duration": 0.29,
+      "from": "Thesee_Idle_n_1 Copy",
+      "interruptible": true,
+      "priority": 0,
+      "to": "ani_zombie_idle_e Copy"
+    },
+    {
+      "condition": "true",
+      "duration": 0.1,
+      "from": "ani_zombie_idle_w_3 Copy",
+      "interruptible": true,
+      "priority": 0,
+      "to": "ani_zombie_idle_nw Copy"
+    },
+    {
+      "condition": "true",
+      "duration": 0.1,
+      "from": "Thesee_Idle_n long title test to check if the node lenght auto adjust Copy",
+      "interruptible": true,
+      "priority": 0,
+      "to": "Thesee_Idle_s Copy"
+    }
+  ]
+}
