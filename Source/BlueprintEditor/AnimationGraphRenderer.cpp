@@ -6,6 +6,7 @@
 #include "Commands/CallbackGraphCommand.h"
 #include "Utilities/CanvasGridRenderer.h"
 #include "Utilities/CanvasMinimapRenderer.h"
+#include "../DataManager.h"
 #include "../third_party/imgui/imgui.h"
 #include "../system/system_utils.h"
 #include <algorithm>
@@ -65,6 +66,7 @@ AnimationGraphRenderer::AnimationGraphRenderer()
     , m_showRunPreview(false)
     , m_previewTime(0.0f)
     , m_previewDuration(1.0f)
+    , m_previousPreviewTime(0.0f)
     , m_rightPanelWidth(320.0f)
     , m_timelinePanelHeight(220.0f)
     , m_draggedStateIndex(-1)
@@ -761,6 +763,10 @@ void AnimationGraphRenderer::RenderAnimationBankPanel()
         if (sourceOpen)
         {
             ImGui::TextDisabled("%s", source.filePath.c_str());
+            if (!source.imagePath.empty())
+                ImGui::TextDisabled("Atlas: %s (%d x %d, tiles %d x %d, %d columns)",
+                    source.imagePath.c_str(), source.imageWidth, source.imageHeight,
+                    source.tileWidth, source.tileHeight, source.columns);
             ImGui::Text("%d clip(s)", static_cast<int>(source.clips.size()));
             ImGui::TextDisabled("Drag this bank onto the canvas to create state '%s' with directional clips.",
                 MakeStateNameFromBank(source.sourceName).c_str());
@@ -913,7 +919,10 @@ void AnimationGraphRenderer::RenderTimelinePanel()
         static_cast<float>(durationMs) / 1000.0f, static_cast<int>(events.size()));
     ImGui::Separator();
     const char* trackNames[] = { "Sound", "Gameplay", "VFX", "Spawn" };
-    ImGui::TextDisabled("Click a frame on the desired track to add an event.");
+    float previewPhase = m_previewDuration > 0.0f ? m_previewTime / m_previewDuration : 0.0f;
+    previewPhase = std::max(0.0f, std::min(1.0f, previewPhase));
+    const int previewFrame = frameCount <= 1 ? 0 : static_cast<int>(std::round(previewPhase * (frameCount - 1)));
+    ImGui::TextDisabled("Click a frame on the desired track to add an event.  Playhead: frame %d", previewFrame + 1);
     ImGui::Separator();
 
     for (int track = 0; track < IM_ARRAYSIZE(trackNames); ++track)
@@ -936,7 +945,10 @@ void AnimationGraphRenderer::RenderTimelinePanel()
                 }
             }
             ImGui::PushID(track * 1000 + frame);
-            if (ImGui::SmallButton(eventIndex >= 0 ? "●" : "·"))
+            const bool isPlayhead = frame == previewFrame;
+            if (isPlayhead)
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.18f, 0.42f, 0.70f, 1.0f));
+            if (ImGui::SmallButton(eventIndex >= 0 ? "*" : (isPlayhead ? ">" : ".")))
             {
                 if (eventIndex >= 0)
                 {
@@ -961,6 +973,8 @@ void AnimationGraphRenderer::RenderTimelinePanel()
                     }
                 }
             }
+            if (isPlayhead)
+                ImGui::PopStyleColor();
             if (ImGui::IsItemHovered())
             {
                 const float seconds = frameCount <= 1 ? 0.0f :
@@ -1016,6 +1030,16 @@ void AnimationGraphRenderer::RenderAnimationPreviewPanel()
 
     const nlohmann::json& state = data["states"][m_selectedStateIndex];
     const std::string stateName = state.value("name", "State");
+    if (m_previewStateName != stateName)
+    {
+        // A preview is scoped to one semantic state.  Do not carry an
+        // unrelated playhead or event history into the newly selected state.
+        m_previewStateName = stateName;
+        m_showRunPreview = false;
+        m_previewTime = 0.0f;
+        m_previousPreviewTime = 0.0f;
+        m_previewEventLog.clear();
+    }
     static int previewDirection = static_cast<int>(AnimationGraphDocument::Direction::South);
     const char* directions[] = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" };
     ImGui::Text("State: %s", stateName.c_str());
@@ -1023,21 +1047,139 @@ void AnimationGraphRenderer::RenderAnimationPreviewPanel()
     const std::string resolvedClip = m_document->ResolveClipForState(stateName,
         static_cast<AnimationGraphDocument::Direction>(previewDirection));
     ImGui::Text("Resolved clip: %s", resolvedClip.empty() ? "(none)" : resolvedClip.c_str());
+
+    const AnimationGraphDocument::SourceDefinition* previewSource = nullptr;
+    const AnimationGraphDocument::SourceDefinition::ClipDefinition* previewClip = nullptr;
+    for (const AnimationGraphDocument::SourceDefinition& source : m_document->GetSources())
+    {
+        for (const AnimationGraphDocument::SourceDefinition::ClipDefinition& candidate : source.clips)
+        {
+            if (candidate.id == resolvedClip)
+            {
+                previewSource = &source;
+                previewClip = &candidate;
+                break;
+            }
+        }
+        if (previewClip) break;
+    }
+
+    int durationMs = 0;
+    if (previewClip)
+        for (const AnimationGraphDocument::SourceDefinition::FrameDefinition& frame : previewClip->frames)
+            durationMs += frame.durationMs;
+    m_previewDuration = durationMs > 0 ? static_cast<float>(durationMs) / 1000.0f : 1.0f;
+    bool beganPlayback = false;
     if (ImGui::Button(m_showRunPreview ? "Pause" : "Play"))
+    {
         m_showRunPreview = !m_showRunPreview;
+        beganPlayback = m_showRunPreview && m_previewTime <= 0.0001f;
+    }
     ImGui::SameLine();
     if (ImGui::Button("Reset"))
     {
         m_showRunPreview = false;
         m_previewTime = 0.0f;
+        m_previousPreviewTime = 0.0f;
+        m_previewEventLog.clear();
     }
+    bool previewLooped = false;
+    m_previousPreviewTime = m_previewTime;
     if (m_showRunPreview)
     {
         m_previewTime += ImGui::GetIO().DeltaTime;
-        if (m_previewTime > m_previewDuration)
+        if (m_previewTime >= m_previewDuration)
+        {
             m_previewTime = std::fmod(m_previewTime, m_previewDuration);
+            previewLooped = true;
+        }
     }
-    ImGui::TextDisabled("Playback %.2f s — visual sprite rendering is the next implementation step.", m_previewTime);
+    if (!previewSource || !previewClip || previewClip->frames.empty())
+    {
+        ImGui::TextDisabled("No animated frame is available for this clip.");
+        return;
+    }
+
+    // The preview deliberately does not execute gameplay/audio/VFX systems.
+    // It simulates their schedule and exposes each crossed event to the author.
+    if (m_showRunPreview && state.contains("events") && state["events"].is_array())
+    {
+        for (const nlohmann::json& event : state["events"])
+        {
+            const float phase = event.value("phase", 0.0f);
+            const float eventTime = phase * m_previewDuration;
+            const bool crossed = previewLooped
+                ? eventTime >= m_previousPreviewTime || eventTime <= m_previewTime
+                : eventTime > m_previousPreviewTime && eventTime <= m_previewTime;
+            const bool startsAtZero = beganPlayback && phase <= 0.0001f;
+            if (!crossed && !startsAtZero)
+                continue;
+
+            std::ostringstream message;
+            message << "[" << event.value("type", "Gameplay") << "] "
+                << event.value("payload", "") << " at " << static_cast<int>(std::round(phase * 100.0f)) << "%";
+            m_previewEventLog.push_back(message.str());
+            if (m_previewEventLog.size() > 4)
+                m_previewEventLog.erase(m_previewEventLog.begin());
+        }
+    }
+    if (previewSource->imagePath.empty() || previewSource->imageWidth <= 0 || previewSource->imageHeight <= 0 ||
+        previewSource->tileWidth <= 0 || previewSource->tileHeight <= 0 || previewSource->columns <= 0)
+    {
+        ImGui::TextDisabled("This bank has no usable atlas metadata. Reload its TSX source.");
+        return;
+    }
+
+    int frameIndex = 0;
+    int elapsedMs = 0;
+    const int playheadMs = static_cast<int>(m_previewTime * 1000.0f);
+    for (size_t index = 0; index < previewClip->frames.size(); ++index)
+    {
+        elapsedMs += previewClip->frames[index].durationMs;
+        if (playheadMs < elapsedMs || index + 1 == previewClip->frames.size())
+        {
+            frameIndex = static_cast<int>(index);
+            break;
+        }
+    }
+    const int tileId = previewClip->frames[static_cast<size_t>(frameIndex)].tileId;
+    const int tileColumn = tileId % previewSource->columns;
+    const int tileRow = tileId / previewSource->columns;
+    const float srcX = static_cast<float>(previewSource->margin + tileColumn * (previewSource->tileWidth + previewSource->spacing));
+    const float srcY = static_cast<float>(previewSource->margin + tileRow * (previewSource->tileHeight + previewSource->spacing));
+    const ImVec2 uv0(srcX / static_cast<float>(previewSource->imageWidth), srcY / static_cast<float>(previewSource->imageHeight));
+    const ImVec2 uv1((srcX + previewSource->tileWidth) / static_cast<float>(previewSource->imageWidth),
+        (srcY + previewSource->tileHeight) / static_cast<float>(previewSource->imageHeight));
+    // imagePath is deliberately stored project-relative in the graph.  Resolve
+    // it from the executable before handing it to SDL so the editor works from
+    // its Debug/bin working directory as well as from the project root.
+    const std::string texturePath = ResolveResourcePath(previewSource->imagePath);
+    const std::string textureId = "AnimationGraphPreview:" + previewSource->imagePath;
+    SDL_Texture* texture = DataManager::Get().GetSprite(textureId, texturePath);
+    if (!texture)
+    {
+        ImGui::TextDisabled("Unable to load atlas: %s", texturePath.c_str());
+        return;
+    }
+    const float scale = 2.0f;
+    const ImVec2 imageSize(previewSource->tileWidth * scale, previewSource->tileHeight * scale);
+    const float availableWidth = ImGui::GetContentRegionAvail().x;
+    if (availableWidth > imageSize.x)
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (availableWidth - imageSize.x) * 0.5f);
+    ImGui::Image((ImTextureID)(intptr_t)texture, imageSize, uv0, uv1);
+    ImGui::TextDisabled("Frame %d / %d — %.2f s", frameIndex + 1,
+        static_cast<int>(previewClip->frames.size()), m_previewTime);
+    ImGui::Separator();
+    ImGui::TextDisabled("Event playback (simulation)");
+    if (m_previewEventLog.empty())
+    {
+        ImGui::TextDisabled("Play this state to inspect its scheduled events.");
+    }
+    else
+    {
+        for (const std::string& message : m_previewEventLog)
+            ImGui::Text("%s", message.c_str());
+    }
 }
 
 void AnimationGraphRenderer::RenderRightPanel()

@@ -3,7 +3,7 @@
   "defaultState": "Idle",
   "description": "",
   "name": "Untitled Animation Graph",
-  "schema_version": 3,
+  "schema_version": 4,
   "sources": [
     {
       "clips": [
@@ -560,8 +560,16 @@
           "sourceTileId": 105
         }
       ],
+      "columns": 15,
       "filePath": "./Gamedata/Animation/AnimationBanks/ani_bank_zombie.tsx",
-      "sourceName": "Animation Bank Zombie"
+      "imageHeight": 631,
+      "imagePath": "Gamedata/Resources/Animation/monk_walk.png",
+      "imageWidth": 623,
+      "margin": 0,
+      "sourceName": "Animation Bank Zombie",
+      "spacing": 0,
+      "tileHeight": 79,
+      "tileWidth": 39
     },
     {
       "clips": [
@@ -1070,8 +1078,16 @@
           "sourceTileId": 70
         }
       ],
+      "columns": 5,
       "filePath": "./Gamedata/Animation/AnimationBanks/these_idle.tsx",
-      "sourceName": "these_idle"
+      "imageHeight": 1247,
+      "imagePath": "Gamedata/Resources/Animation/these_idle.png",
+      "imageWidth": 257,
+      "margin": 0,
+      "sourceName": "these_idle",
+      "spacing": 0,
+      "tileHeight": 78,
+      "tileWidth": 43
     },
     {
       "clips": [
@@ -1691,8 +1707,16 @@
           "sourceTileId": 112
         }
       ],
+      "columns": 8,
       "filePath": "./Gamedata/Animation/AnimationBanks/these_run.tsx",
-      "sourceName": "these_run"
+      "imageHeight": 1343,
+      "imagePath": "Gamedata/Resources/Animation/these_run.png",
+      "imageWidth": 568,
+      "margin": 0,
+      "sourceName": "these_run",
+      "spacing": 0,
+      "tileHeight": 84,
+      "tileWidth": 71
     },
     {
       "clips": [
@@ -2353,8 +2377,16 @@
           "sourceTileId": 120
         }
       ],
+      "columns": 8,
       "filePath": "./Gamedata/Animation/AnimationBanks/these_walk.tsx",
-      "sourceName": "these_walk"
+      "imageHeight": 1295,
+      "imagePath": "Gamedata/Resources/Animation/these_walk.png",
+      "imageWidth": 368,
+      "margin": 0,
+      "sourceName": "these_walk",
+      "spacing": 0,
+      "tileHeight": 81,
+      "tileWidth": 46
     },
     {
       "clips": [
@@ -3154,8 +3186,16 @@
           "sourceTileId": 154
         }
       ],
+      "columns": 11,
       "filePath": "./Gamedata/Animation/AnimationBanks/these_kick.tsx",
-      "sourceName": "these_kick"
+      "imageHeight": 1359,
+      "imagePath": "Gamedata/Resources/Animation/these_kick.png",
+      "imageWidth": 1379,
+      "margin": 0,
+      "sourceName": "these_kick",
+      "spacing": 0,
+      "tileHeight": 85,
+      "tileWidth": 115
     }
   ],
   "states": [
@@ -3271,8 +3311,8 @@
       "loop": true,
       "name": "Run",
       "priority": 0,
-      "x": 291,
-      "y": 179
+      "x": 588,
+      "y": 77
     },
     {
       "blendTime": 0.1,
@@ -3315,8 +3355,8 @@
       "loop": true,
       "name": "Walk",
       "priority": 0,
-      "x": 567,
-      "y": 64
+      "x": 281,
+      "y": 145
     },
     {
       "blendTime": 0.1,
@@ -3361,25 +3401,53 @@
       "priority": 0,
       "x": 861,
       "y": 353
+    },
+    {
+      "blendTime": 0.1,
+      "defaultClip": "ani_zombie_idle_s",
+      "directionClips": [
+        {
+          "clip": "ani_zombie_idle_n",
+          "direction": "N"
+        },
+        {
+          "clip": "ani_zombie_idle_ne",
+          "direction": "NE"
+        },
+        {
+          "clip": "ani_zombie_idle_e",
+          "direction": "E"
+        },
+        {
+          "clip": "ani_zombie_idle_se",
+          "direction": "SE"
+        },
+        {
+          "clip": "ani_zombie_idle_s",
+          "direction": "S"
+        },
+        {
+          "clip": "ani_zombie_idle_sw",
+          "direction": "SW"
+        },
+        {
+          "clip": "ani_zombie_idle_w",
+          "direction": "W"
+        },
+        {
+          "clip": "ani_zombie_idle_nw",
+          "direction": "NW"
+        }
+      ],
+      "events": [],
+      "loop": true,
+      "name": "Animation Bank Zombie",
+      "priority": 0,
+      "x": 925,
+      "y": 134
     }
   ],
   "transitions": [
-    {
-      "condition": "true",
-      "duration": 0.1,
-      "from": "Idle",
-      "interruptible": true,
-      "priority": 0,
-      "to": "Run"
-    },
-    {
-      "condition": "true",
-      "duration": 0.1,
-      "from": "Run",
-      "interruptible": true,
-      "priority": 0,
-      "to": "Walk"
-    },
     {
       "condition": "true",
       "duration": 0.1,
@@ -3403,6 +3471,22 @@
       "interruptible": true,
       "priority": 0,
       "to": "Kick"
+    },
+    {
+      "condition": "true",
+      "duration": 0.1,
+      "from": "Idle",
+      "interruptible": true,
+      "priority": 0,
+      "to": "Walk"
+    },
+    {
+      "condition": "true",
+      "duration": 0.1,
+      "from": "Walk",
+      "interruptible": true,
+      "priority": 0,
+      "to": "Run"
     }
   ]
 }

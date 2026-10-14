@@ -519,6 +519,14 @@ nlohmann::json AnimationGraphDocument::BuildRuntimeJson() const
         json source = json::object();
         source["filePath"] = m_sources[i].filePath;
         source["sourceName"] = m_sources[i].sourceName;
+        source["imagePath"] = m_sources[i].imagePath;
+        source["imageWidth"] = m_sources[i].imageWidth;
+        source["imageHeight"] = m_sources[i].imageHeight;
+        source["tileWidth"] = m_sources[i].tileWidth;
+        source["tileHeight"] = m_sources[i].tileHeight;
+        source["columns"] = m_sources[i].columns;
+        source["spacing"] = m_sources[i].spacing;
+        source["margin"] = m_sources[i].margin;
         source["clips"] = json::array();
         for (const SourceDefinition::ClipDefinition& clipDefinition : m_sources[i].clips)
         {
@@ -589,7 +597,7 @@ std::string AnimationGraphDocument::GetName() const { return m_name.empty() ? "U
 nlohmann::json AnimationGraphDocument::BuildJson() const
 {
     json root = BuildRuntimeJson();
-    root["schema_version"] = 3;
+    root["schema_version"] = 4;
     return root;
 }
 
@@ -605,6 +613,14 @@ bool AnimationGraphDocument::LoadFromJson(const json& root)
             SourceDefinition source;
             source.filePath = JsonHelper::GetString(sourceJson, "filePath", "");
             source.sourceName = JsonHelper::GetString(sourceJson, "sourceName", "");
+            source.imagePath = NormalizePath(JsonHelper::GetString(sourceJson, "imagePath", ""));
+            source.imageWidth = JsonHelper::GetInt(sourceJson, "imageWidth", 0);
+            source.imageHeight = JsonHelper::GetInt(sourceJson, "imageHeight", 0);
+            source.tileWidth = JsonHelper::GetInt(sourceJson, "tileWidth", 0);
+            source.tileHeight = JsonHelper::GetInt(sourceJson, "tileHeight", 0);
+            source.columns = JsonHelper::GetInt(sourceJson, "columns", 0);
+            source.spacing = JsonHelper::GetInt(sourceJson, "spacing", 0);
+            source.margin = JsonHelper::GetInt(sourceJson, "margin", 0);
             if (sourceJson.contains("clips") && sourceJson["clips"].is_array()) {
                 for (const auto& clipJson : sourceJson["clips"]) {
                     SourceDefinition::ClipDefinition clip;
@@ -652,7 +668,68 @@ void AnimationGraphDocument::RebuildAvailableClips()
             m_availableClips.push_back(clip.id);
 }
 
-std::string AnimationGraphDocument::NormalizePath(const std::string& path) { std::string result = path; std::replace(result.begin(), result.end(), '\\', '/'); return result; }
+std::string AnimationGraphDocument::NormalizePath(const std::string& path)
+{
+    if (path.empty())
+        return "";
+
+    // Keep persisted paths project-relative while resolving the "../"
+    // traversal commonly used by image sources in TSX files.
+    std::string normalized = path;
+    std::replace(normalized.begin(), normalized.end(), '\\', '/');
+
+    std::string prefix;
+    size_t position = 0;
+    bool absolute = false;
+    if (normalized.size() >= 2 && normalized[1] == ':')
+    {
+        prefix = normalized.substr(0, 2);
+        position = 2;
+        absolute = position < normalized.size() && normalized[position] == '/';
+    }
+    else if (!normalized.empty() && normalized[0] == '/')
+    {
+        absolute = true;
+    }
+    while (position < normalized.size() && normalized[position] == '/')
+        ++position;
+
+    std::vector<std::string> segments;
+    while (position <= normalized.size())
+    {
+        const size_t separator = normalized.find('/', position);
+        const std::string segment = normalized.substr(position, separator == std::string::npos
+            ? std::string::npos : separator - position);
+        if (!segment.empty() && segment != ".")
+        {
+            if (segment == "..")
+            {
+                if (!segments.empty() && segments.back() != "..")
+                    segments.pop_back();
+                else if (!absolute)
+                    segments.push_back(segment);
+            }
+            else
+            {
+                segments.push_back(segment);
+            }
+        }
+        if (separator == std::string::npos)
+            break;
+        position = separator + 1;
+    }
+
+    std::string result = prefix;
+    if (absolute)
+        result += "/";
+    for (size_t index = 0; index < segments.size(); ++index)
+    {
+        if (!result.empty() && result.back() != '/')
+            result += "/";
+        result += segments[index];
+    }
+    return result.empty() ? "." : result;
+}
 std::string AnimationGraphDocument::ExtractClipNameFromTsx(const json& root, const std::string& fallbackName) { if (root.contains("name") && root["name"].is_string()) return root["name"].get<std::string>(); return fallbackName; }
 
 bool AnimationGraphDocument::ImportTSXSource(const std::string& filePath, std::vector<std::string>* errors)
@@ -737,6 +814,19 @@ bool AnimationGraphDocument::ImportTSXFile(const std::string& filePath, std::vec
     SourceDefinition source;
     source.filePath = resolvedPath;
     source.sourceName = tileset.name.empty() ? ExtractClipNameFromTsx(json::object(), filePath) : tileset.name;
+    source.imageWidth = tileset.imagewidth;
+    source.imageHeight = tileset.imageheight;
+    source.tileWidth = tileset.tilewidth;
+    source.tileHeight = tileset.tileheight;
+    source.columns = tileset.columns;
+    source.spacing = tileset.spacing;
+    source.margin = tileset.margin;
+    if (!tileset.image.empty())
+    {
+        const size_t separator = resolvedPath.find_last_of("/\\");
+        const std::string directory = separator == std::string::npos ? "" : resolvedPath.substr(0, separator + 1);
+        source.imagePath = NormalizePath(directory + tileset.image);
+    }
 
     // A TSX is a source collection, not a single animation state.  Each
     // animated tile is a separately addressable clip with its own frame

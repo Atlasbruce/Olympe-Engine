@@ -83,6 +83,16 @@ public:
 
         std::string filePath;
         std::string sourceName;
+        // Atlas metadata is preserved from TSX so the editor preview and the
+        // runtime can address an exact tile/frame without reparsing the TSX.
+        std::string imagePath;
+        int imageWidth = 0;
+        int imageHeight = 0;
+        int tileWidth = 0;
+        int tileHeight = 0;
+        int columns = 0;
+        int spacing = 0;
+        int margin = 0;
         std::vector<ClipDefinition> clips;
     };
 

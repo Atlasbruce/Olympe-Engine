@@ -24,19 +24,19 @@ spécifiques.
 - [x] Ctrl+clic : ajout/retrait à la sélection.
 - [x] Rectangle de sélection ; Ctrl conserve la sélection existante.
 - [x] Ctrl+A sélectionne tous les states.
-- [ ] Déplacer un groupe sélectionné déplace tous ses states dans une seule
+- [x] Déplacer un groupe sélectionné déplace tous ses states dans une seule
   commande Undo/Redo.
-- [ ] Delete supprime la sélection, avec toutes les transitions internes ou
+- [x] Delete supprime la sélection, avec toutes les transitions internes ou
   incidentes, dans une seule commande Undo/Redo.
-- [ ] La sélection reste cohérente après création, collage, Undo et Redo.
+- [x] La sélection reste cohérente après création, collage, Undo et Redo.
 
 ## 3. Clipboard partagé
 
-- [ ] Ctrl+C et menu canvas copient states, propriétés et transitions internes.
-- [ ] Ctrl+V et menu canvas collent au curseur, avec nouveaux identifiants et
+- [x] Ctrl+C et menu canvas copient states, propriétés et transitions internes.
+- [x] Ctrl+V et menu canvas collent au curseur, avec nouveaux identifiants et
   sélectionnent le groupe collé.
-- [ ] Le clipboard est transportable entre tabs Animation Graph compatibles.
-- [ ] Chaque collage est une commande Undo/Redo atomique.
+- [x] Le clipboard est transportable entre tabs Animation Graph compatibles.
+- [x] Chaque collage est une commande Undo/Redo atomique.
 
 ## 4. States, pins et transitions
 
@@ -45,23 +45,23 @@ spécifiques.
 - [x] Clic droit sur lien sans effacer la sélection active ; menu lien.
 - [x] Édition auto-validée des propriétés de transition à la perte de focus.
 - [x] Undo/Redo et rafraîchissement immédiat de l'inspecteur de transition.
-- [ ] Menus contextuels homogènes : canvas, state, transition et listes.
-- [ ] Suppression depuis tout menu contextuel, avec fermeture fiable du popup.
+- [x] Menus contextuels homogènes : canvas, state, transition et listes.
+- [x] Suppression depuis tout menu contextuel, avec fermeture fiable du popup.
 - [ ] Snap de liens/pins et géométrie Bézier lisible à toutes distances.
 
 ## 5. Persistance et robustesse
 
 - [x] Sérialisation des states, transitions, propriétés et sources.
 - [x] Import TSX vers clips d'une Animation Bank, y compris frames animées.
-- [ ] Validation explicite des références de clips, transitions, état par défaut
+- [x] Validation explicite des références de clips, transitions, état par défaut
   et données d'animation manquantes.
-- [ ] Sauvegarde/chargement ne conserve aucune sélection ou interaction
+- [x] Sauvegarde/chargement ne conserve aucune sélection ou interaction
   transitoire invalide.
-- [ ] Save As sans collision d'identifiants ImGui.
+- [x] Save As sans collision d'identifiants ImGui.
 
 ## 6. Parcours Animation Pipeline
 
-- [ ] Animation Bank : inspection des clips, directions, loop, FPS et frames.
+- [x] Animation Bank : inspection des clips, directions, loop, FPS et frames.
 - [ ] État : choix du clip, paramètres de lecture et aperçu local.
 - [x] Événements structurés par état (`type`, phase normalisée, action/asset),
   persistés et rétrocompatibles avec les anciens événements texte.
@@ -76,8 +76,7 @@ spécifiques.
   séquenceur d'événements à gauche, lecteur d'animation à droite. Aucun
   panneau n'est dupliqué dans les onglets de l'inspecteur.
 - [x] Une seule zone d'inspection organisée par étape métier : `Inspector`
-  (graphe/état sélectionné), `Banks` (import et clips), `Transitions` et
-  `Events`.
+  (graphe/état sélectionné), `Banks` (import et clips) et `Transitions`.
 - [x] La banque TSX constitue l'unité de création normale : son dépôt crée un
   state sémantique directionnel (`Run`, `Walk`, etc.) ; le dépôt d'un clip
   individuel reste une opération avancée.

@@ -15,6 +15,7 @@
 #include "../BlueprintEditor/blueprinteditor.h"
 #include "../BlueprintEditor/BlueprintEditorGUI.h"
 #include "../AI/BehaviorTreeDebugWindow.h"
+#include "../GameEngine.h"
 #include <iostream>
 
 // This provides the platform-specific entry point implementation for SDL3
@@ -64,6 +65,12 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         SDL_Quit();
         return SDL_APP_FAILURE;
     }
+
+    // The standalone Blueprint Editor owns an SDL renderer, whereas shared
+    // editor services such as DataManager historically use GameEngine::renderer
+    // to create textures. Bind the standalone renderer so previews can load
+    // their atlas textures without starting the game runtime.
+    GameEngine::renderer = g_BlueprintEditorRenderer;
     
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -197,6 +204,7 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result)
     
     if (g_BlueprintEditorRenderer)
     {
+        GameEngine::renderer = nullptr;
         SDL_DestroyRenderer(g_BlueprintEditorRenderer);
         g_BlueprintEditorRenderer = nullptr;
     }

@@ -107,6 +107,9 @@ private:
     bool m_showRunPreview;
     float m_previewTime;
     float m_previewDuration;
+    float m_previousPreviewTime;
+    std::string m_previewStateName;
+    std::vector<std::string> m_previewEventLog;
     float m_rightPanelWidth;
     float m_timelinePanelHeight;
     int m_draggedStateIndex;
